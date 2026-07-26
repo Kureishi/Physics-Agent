@@ -14,9 +14,10 @@ the planner retries once with a corrective follow-up message before giving up.
 from __future__ import annotations
 
 import json
-import re
 import time
 from typing import Any, Dict, List
+
+from .json_utils import extract_json
 
 DOMAIN_TAXONOMY = [
     "kinematics",
@@ -49,22 +50,6 @@ this shape:
 """
 
 
-def _extract_json(text: str) -> Dict[str, Any]:
-    """
-    Best-effort JSON extraction. Strips markdown code fences and pulls the
-    first {...} block out of the response, since local models sometimes
-    wrap valid JSON in prose ("Sure, here's the JSON: ...") or fences
-    despite being told not to.
-    """
-    stripped = text.strip()
-    stripped = re.sub(r"^```(json)?", "", stripped, flags=re.IGNORECASE).strip()
-    stripped = re.sub(r"```$", "", stripped).strip()
-    match = re.search(r"\{.*\}", stripped, flags=re.DOTALL)
-    if not match:
-        raise ValueError(f"No JSON object found in planner output: {text!r}")
-    return json.loads(match.group(0))
-
-
 class TaskPlanner:
     def __init__(self, llm_client, max_retries: int = 1):
         self.llm = llm_client
@@ -93,7 +78,7 @@ class TaskPlanner:
         for _ in range(self.max_retries + 1):
             raw = self.llm.chat(messages)
             try:
-                parsed = _extract_json(raw)
+                parsed = extract_json(raw)
                 domain_tags = [t for t in parsed.get("domain_tags", []) if isinstance(t, str)]
                 subtasks = [s for s in parsed.get("subtasks", []) if isinstance(s, str)]
                 if not subtasks:

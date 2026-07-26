@@ -46,9 +46,16 @@ class MockLLMClient:
 
     Matches LLMClient's interface exactly so calling code never needs to
     know which one it has.
+
+    The pipeline now makes three distinct kinds of calls (planner
+    decomposition, tool selection, solution synthesis), each with its own
+    system prompt and expected response shape. `chat` recognizes which one
+    it's serving by a marker substring unique to each system prompt, and
+    returns a matching schema-valid default -- unless a caller-supplied
+    canned response matches first.
     """
 
-    DEFAULT_RESPONSE = (
+    DEFAULT_PLANNER_RESPONSE = (
         '{"domain_tags": ["dynamics", "energy"], '
         '"subtasks": ["Identify knowns and unknowns", '
         '"Choose the governing equation(s)", '
@@ -56,17 +63,42 @@ class MockLLMClient:
         '"Check units and limiting cases"]}'
     )
 
+    DEFAULT_TOOL_SELECTION_RESPONSE = (
+        '{"tool_calls": [{"tool": "symbolic_math", "input": '
+        '{"expression": "Eq(m*g*h, 0.5*m*v**2)", "solve_for": "v", '
+        '"substitutions": {"m": 2, "g": 9.8, "h": 5}}}]}'
+    )
+
+    DEFAULT_SYNTHESIS_RESPONSE = (
+        "Using conservation of energy (m*g*h = 0.5*m*v^2), the mass cancels "
+        "and v = sqrt(2*g*h). The symbolic math tool solved this and returned "
+        "the numeric result -- see the final answer in tool_results above."
+    )
+
+    # Marker substrings unique to each system prompt, used to pick the
+    # right default when nothing in `canned` matches.
+    _TOOL_SELECTION_MARKER = "tool-selection component"
+    _SYNTHESIS_MARKER = "synthesis component"
+
     def __init__(self, canned_responses: Optional[Dict[str, str]] = None):
-        # canned_responses: maps a substring of the user prompt -> the
-        # response to return when that substring is present, so tests can
-        # target specific problems without needing a real model.
+        # canned_responses: maps a substring -> the response to return when
+        # that substring appears anywhere in the accumulated conversation
+        # (system + user + any retry messages), so tests can target
+        # specific problems or specific pipeline stages without needing a
+        # real model.
         self.canned = canned_responses or {}
         self.calls: List[List[Dict[str, str]]] = []
 
     def chat(self, messages: List[Dict[str, str]], temperature: Optional[float] = None) -> str:
         self.calls.append(messages)
-        user_content = messages[-1]["content"]
+        full_text = "\n".join(m["content"] for m in messages)
+
         for key, response in self.canned.items():
-            if key in user_content:
+            if key in full_text:
                 return response
-        return self.DEFAULT_RESPONSE
+
+        if self._TOOL_SELECTION_MARKER in full_text:
+            return self.DEFAULT_TOOL_SELECTION_RESPONSE
+        if self._SYNTHESIS_MARKER in full_text:
+            return self.DEFAULT_SYNTHESIS_RESPONSE
+        return self.DEFAULT_PLANNER_RESPONSE

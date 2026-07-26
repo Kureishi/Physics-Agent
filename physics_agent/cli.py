@@ -15,6 +15,7 @@ import argparse
 
 from .config import Config
 from .llm_client import LLMClient, MockLLMClient
+from .orchestrator import ToolOrchestrator
 from .planner import TaskPlanner
 from .retrieval import SemanticStore
 from .trace import Trace, EpisodicMemory
@@ -34,11 +35,13 @@ def run(problem_text: str, dry_run: bool = False, config: Config = None) -> Trac
     )
 
     planner = TaskPlanner(llm)
+    orchestrator = ToolOrchestrator(llm)
     store = SemanticStore(config.semantic_store_path)
     memory = EpisodicMemory(config.episodic_memory_path)
 
     trace = Trace.new(problem_text)
 
+    # Stage 1: plan + retrieve
     plan = planner.decompose(problem_text)
     trace.domain_tags = plan["domain_tags"]
     trace.subtasks = plan["subtasks"]
@@ -46,6 +49,9 @@ def run(problem_text: str, dry_run: bool = False, config: Config = None) -> Trac
     trace.planning_time_ms = plan["planning_time_ms"]
 
     trace.retrieved_knowledge = store.retrieve(problem_text, domain_tags=trace.domain_tags, k=3)
+
+    # Stage 2: select + execute tools, synthesize an initial solution
+    orchestrator.run(trace)
 
     memory.write(trace)
     return trace
@@ -67,6 +73,19 @@ def _print_trace(trace: Trace) -> None:
         print(f"        conditions: {k['conditions']}  |  confidence: {k['confidence']}")
 
     print(f"\nPlanning time: {trace.planning_time_ms:.1f} ms")
+
+    print("\nTool calls:")
+    if not trace.tool_calls:
+        print("  (none made)")
+    for tc in trace.tool_calls:
+        print(f"  - {tc.tool}  ({tc.latency_ms:.1f} ms)")
+        print(f"      input:  {tc.input}")
+        print(f"      output: {tc.output}")
+
+    print("\nInitial solution:")
+    print(f"  {trace.initial_solution}")
+
+    print(f"\nOrchestration time: {trace.orchestration_time_ms:.1f} ms")
     print("Trace written to episodic memory.")
 
 

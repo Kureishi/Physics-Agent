@@ -9,10 +9,9 @@ retrofitting a trace schema after Stage 3-4 exist means losing the ability
 to analyze anything solved before the retrofit.
 
 Field ownership by stage (who fills each field in):
-    Stage 1 (this implementation): problem_id, problem_text, timestamp,
-        domain_tags, subtasks, retrieved_knowledge, planner_raw_response,
-        planning_time_ms
-    Stage 2 (tool orchestration):   tool_calls
+    Stage 1: problem_id, problem_text, timestamp, domain_tags, subtasks,
+        retrieved_knowledge, planner_raw_response, planning_time_ms
+    Stage 2 (this implementation): tool_calls, initial_solution
     Stage 3 (self-evaluation):      checks_run, checks_failed
     Stage 5 (self-correction):      error_type, revision_count
     Final outcome (any stage):      final_answer, final_confidence,
@@ -50,8 +49,10 @@ class Trace:
     planner_raw_response: Optional[str] = None
     planning_time_ms: Optional[float] = None
 
-    # --- Stage 2+: tool orchestration (empty until that stage is built) ----
+    # --- Stage 2: tool orchestration ----------------------------------------
     tool_calls: List[ToolCall] = field(default_factory=list)
+    initial_solution: Optional[str] = None
+    orchestration_time_ms: Optional[float] = None
 
     # --- Stage 3: self-evaluation / verification (empty until built) -------
     checks_run: List[str] = field(default_factory=list)

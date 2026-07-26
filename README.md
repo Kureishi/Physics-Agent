@@ -1,23 +1,31 @@
-# Physics Agent — Stage 1: Task Planner + Retrieval
+# Physics Agent — Stage 1 + Stage 2
 
-This is Stage 1 of the roadmap: **task planner + retrieval**, plus the
-**trace schema** that every later stage (tool orchestration, multi-agent
-critique, structured memory, self-correction, meta-learning) will read and
-write. See `physics_agent/trace.py` for the full schema and a field-by-field
-note on which stage owns which field.
+Stage 1: **task planner + retrieval**, plus the **trace schema** that every
+later stage (multi-agent critique, structured memory, self-correction,
+meta-learning) reads and writes. Stage 2: **tool orchestration** — symbolic
+math, numerical simulation, and literature search, wired up behind a
+domain-aware tool selector, producing an initial solution. See
+`physics_agent/trace.py` for the full schema and a field-by-field note on
+which stage owns which field.
 
 ## What this does right now
 
 Given a raw physics problem, the pipeline:
-1. **Classifies** it into 1-3 domain tags from a fixed physics taxonomy.
-2. **Decomposes** it into an ordered list of subtasks.
-3. **Retrieves** relevant formulas/concepts from a seeded semantic-memory store.
-4. **Writes a trace** of all of the above to append-only episodic memory (JSONL).
+1. **Classifies** it into 1-3 domain tags from a fixed physics taxonomy. *(Stage 1)*
+2. **Decomposes** it into an ordered list of subtasks. *(Stage 1)*
+3. **Retrieves** relevant formulas/concepts from a seeded semantic-memory store. *(Stage 1)*
+4. **Selects tools** relevant to the problem's domain and decides which to call, with what inputs. *(Stage 2)*
+5. **Executes** those tool calls — symbolic algebra (SymPy), numerical ODE
+   integration (SciPy), or arXiv literature search — capturing every call
+   (including failures) into the trace. *(Stage 2)*
+6. **Synthesizes an initial solution** from the tool outputs. *(Stage 2)*
+7. **Writes a trace** of all of the above to append-only episodic memory (JSONL).
 
-It does *not* yet solve the problem, run tool orchestration, verify an
-answer, or self-correct — those are Stages 2, 2, 3, and 5 respectively.
-This stage's job is to produce reliable decomposition + retrieval, and to
-start populating the trace log those later stages depend on.
+It does *not* yet verify the initial solution, detect errors, or
+self-correct — those are Stages 3 and 5. This stage's job is to produce a
+reasonable first-pass answer using real computational tools (not just LLM
+arithmetic), and to log everything those later stages will need to check
+and correct it.
 
 ## Setup
 
@@ -60,18 +68,28 @@ uses — the tests never require LM Studio to be running.
 
 ```
 physics_agent/
-  config.py        LM Studio connection settings + file paths (env-overridable)
-  llm_client.py     LLMClient (real, OpenAI-compatible) + MockLLMClient (offline/tests)
-  planner.py        TaskPlanner: domain classification + subtask decomposition
-  retrieval.py      SemanticStore: keyword-scored retrieval over seeded physics facts
-  trace.py          Trace schema + EpisodicMemory (JSONL append-only store)
-  cli.py            Entry point wiring the above together
+  config.py         LM Studio connection settings + file paths (env-overridable)
+  llm_client.py      LLMClient (real, OpenAI-compatible) + MockLLMClient (offline/tests)
+  json_utils.py      Shared defensive JSON extraction, used by planner + orchestrator
+  planner.py         TaskPlanner: domain classification + subtask decomposition        (Stage 1)
+  retrieval.py        SemanticStore: keyword-scored retrieval over seeded physics facts  (Stage 1)
+  orchestrator.py     ToolOrchestrator: tool selection, execution, solution synthesis   (Stage 2)
+  tools/
+    registry.py        ToolRegistry + domain-tag -> tool hints ("Physics Tool Selection")
+    symbolic_math.py    SymbolicMathTool: SymPy-backed equation solving
+    simulation.py        SimulationTool: SciPy-backed numerical ODE integration
+    literature.py         LiteratureSearchTool: arXiv search (injectable fetch for tests)
+  trace.py            Trace schema + EpisodicMemory (JSONL append-only store)
+  cli.py              Entry point wiring the full Stage 1 + 2 pipeline together
 data/
   semantic_seed.json  Seed knowledge base (~13 core physics formulas across domains)
 tests/
-  test_trace.py       Trace roundtrip + episodic memory read/write
-  test_planner.py      Decomposition, JSON-parsing robustness, retry/failure paths
-  test_retrieval.py    Keyword scoring, domain-tag bonus, persistence
+  test_trace.py         Trace roundtrip + episodic memory read/write
+  test_planner.py         Decomposition, JSON-parsing robustness, retry/failure paths
+  test_retrieval.py       Keyword scoring, domain-tag bonus, persistence
+  test_tools.py            SymPy/SciPy/arXiv tools: correctness + failure handling
+  test_registry.py          Domain-tag -> tool hint mapping
+  test_orchestrator.py       Tool selection, execution, failure capture, synthesis
 memory/
   episodic.jsonl      Created at runtime — one JSON line per problem run
 ```
@@ -82,7 +100,10 @@ memory/
 pytest tests/ -v
 ```
 
-All 14 tests run offline (no LM Studio required) using `MockLLMClient`.
+All 38 tests run offline (no LM Studio required) using `MockLLMClient`.
+The physics tools themselves (SymPy solving, SciPy integration) are
+exercised with real computation in `test_tools.py`, not mocked — only the
+LLM calls (planning, tool selection, synthesis) are mocked.
 
 ## Design notes carried over from the spec
 
@@ -105,8 +126,37 @@ All 14 tests run offline (no LM Studio required) using `MockLLMClient`.
   discussion: retrofitting the schema after those stages exist would mean
   losing structured data for every problem solved before the retrofit.
 
-## Next steps (Stage 2)
+## Design notes for Stage 2 specifically
 
-Tool orchestration: wire in a symbolic math tool (e.g. SymPy), a numerical
-simulation tool, and a literature-retrieval tool, each populating
-`trace.tool_calls` as they're invoked from the planner's subtask list.
+- **Tool selection is domain-restricted, not open-ended.** `ToolRegistry.relevant_tools`
+  filters which tools the LLM is even offered, based on the Stage 1 domain
+  tags (`tools/registry.py::DOMAIN_TOOL_HINTS`). This cuts down on the model
+  reaching for an irrelevant tool (e.g. literature search for a basic
+  kinematics problem) and keeps the tool-selection call cheap.
+- **Hallucinated tool names are silently dropped, not errored on.** If the
+  model names a tool that wasn't offered, `_select_tool_calls` filters it
+  out rather than crashing — a local model naming a tool it wasn't given is
+  a parsing/prompt-following issue, not grounds to abort the whole solve.
+- **Tool execution failures are captured, never raised.** Every tool
+  (`SymbolicMathTool`, `SimulationTool`, `LiteratureSearchTool`) raises
+  `ValueError` on bad input internally, and the orchestrator catches that
+  and writes `{"error": "..."}` as the tool call's output rather than
+  letting the exception propagate. This is deliberate: a failed tool call
+  is exactly the kind of signal Stage 3 (self-evaluation) and Stage 5
+  (self-correction) need to see in the trace later. Silently swallowing or
+  crashing on it would destroy that signal.
+- **Simulation and symbolic math are independent methods**, both callable
+  on the same problem. This is what enables the "simulation and closed-form
+  disagree" self-correction check from the design doc — Stage 3 can compare
+  `symbolic_math`'s answer against `simulation`'s numerical integration of
+  the same physical setup once both are called.
+- **Literature search returns excerpts, not full abstracts**, and the tool
+  is scoped to point at sources rather than to be treated as ground truth
+  text to quote from downstream.
+
+## Next steps (Stage 3)
+
+Self-evaluation pipeline: build the Logic Check, Physics Check (dimensional
+analysis + conservation-law checks per the design doc), Math Check, and
+Confidence Check components that consume `trace.initial_solution` and
+`trace.tool_calls`, populating `trace.checks_run` / `trace.checks_failed`.
