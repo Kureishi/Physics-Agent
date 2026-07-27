@@ -11,11 +11,13 @@ to analyze anything solved before the retrofit.
 Field ownership by stage (who fills each field in):
     Stage 1: problem_id, problem_text, timestamp, domain_tags, subtasks,
         retrieved_knowledge, planner_raw_response, planning_time_ms
-    Stage 2 (this implementation): tool_calls, initial_solution
-    Stage 3 (self-evaluation):      checks_run, checks_failed
+    Stage 2: tool_calls, initial_solution, orchestration_time_ms
+    Stage 3 (this implementation): checks_run, checks_failed, check_details,
+        final_confidence (initial estimate -- Stage 5 may revise it after
+        a correction pass)
     Stage 5 (self-correction):      error_type, revision_count
-    Final outcome (any stage):      final_answer, final_confidence,
-        final_correct, time_to_solve_ms
+    Final outcome (any stage):      final_answer, final_correct,
+        time_to_solve_ms
 """
 from __future__ import annotations
 
@@ -54,9 +56,10 @@ class Trace:
     initial_solution: Optional[str] = None
     orchestration_time_ms: Optional[float] = None
 
-    # --- Stage 3: self-evaluation / verification (empty until built) -------
+    # --- Stage 3: self-evaluation / verification ----------------------------
     checks_run: List[str] = field(default_factory=list)
     checks_failed: List[str] = field(default_factory=list)
+    check_details: List[Dict[str, Any]] = field(default_factory=list)
 
     # --- Stage 5: self-correction (empty until built) -----------------------
     error_type: Optional[str] = None

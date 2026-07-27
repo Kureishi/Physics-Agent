@@ -75,10 +75,17 @@ class MockLLMClient:
         "the numeric result -- see the final answer in tool_results above."
     )
 
+    DEFAULT_LOGIC_RESPONSE = '{"passed": true, "issues": []}'
+    DEFAULT_PHYSICS_RESPONSE = '{"passed": true, "issues": []}'
+    DEFAULT_CONFIDENCE_RESPONSE = '{"confidence": 0.85, "rationale": "Checks passed and the setup is standard."}'
+
     # Marker substrings unique to each system prompt, used to pick the
     # right default when nothing in `canned` matches.
     _TOOL_SELECTION_MARKER = "tool-selection component"
     _SYNTHESIS_MARKER = "synthesis component"
+    _LOGIC_CHECK_MARKER = "logic-check component"
+    _PHYSICS_CHECK_MARKER = "physics-check component"
+    _CONFIDENCE_CHECK_MARKER = "confidence-check component"
 
     def __init__(self, canned_responses: Optional[Dict[str, str]] = None):
         # canned_responses: maps a substring -> the response to return when
@@ -101,4 +108,10 @@ class MockLLMClient:
             return self.DEFAULT_TOOL_SELECTION_RESPONSE
         if self._SYNTHESIS_MARKER in full_text:
             return self.DEFAULT_SYNTHESIS_RESPONSE
+        if self._LOGIC_CHECK_MARKER in full_text:
+            return self.DEFAULT_LOGIC_RESPONSE
+        if self._PHYSICS_CHECK_MARKER in full_text:
+            return self.DEFAULT_PHYSICS_RESPONSE
+        if self._CONFIDENCE_CHECK_MARKER in full_text:
+            return self.DEFAULT_CONFIDENCE_RESPONSE
         return self.DEFAULT_PLANNER_RESPONSE

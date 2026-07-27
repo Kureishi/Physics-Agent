@@ -18,6 +18,7 @@ from .llm_client import LLMClient, MockLLMClient
 from .orchestrator import ToolOrchestrator
 from .planner import TaskPlanner
 from .retrieval import SemanticStore
+from .self_eval.pipeline import SelfEvaluationPipeline
 from .trace import Trace, EpisodicMemory
 
 
@@ -36,6 +37,7 @@ def run(problem_text: str, dry_run: bool = False, config: Config = None) -> Trac
 
     planner = TaskPlanner(llm)
     orchestrator = ToolOrchestrator(llm)
+    self_eval = SelfEvaluationPipeline(llm)
     store = SemanticStore(config.semantic_store_path)
     memory = EpisodicMemory(config.episodic_memory_path)
 
@@ -52,6 +54,9 @@ def run(problem_text: str, dry_run: bool = False, config: Config = None) -> Trac
 
     # Stage 2: select + execute tools, synthesize an initial solution
     orchestrator.run(trace)
+
+    # Stage 3: self-evaluate the initial solution
+    self_eval.run(trace)
 
     memory.write(trace)
     return trace
@@ -86,7 +91,19 @@ def _print_trace(trace: Trace) -> None:
     print(f"  {trace.initial_solution}")
 
     print(f"\nOrchestration time: {trace.orchestration_time_ms:.1f} ms")
-    print("Trace written to episodic memory.")
+
+    print("\nSelf-evaluation:")
+    for detail in trace.check_details:
+        status = "PASS" if detail["passed"] else "FAIL"
+        print(f"  [{status}] {detail['check']}: {detail['details']}")
+
+    if trace.checks_failed:
+        print(f"\n  {len(trace.checks_failed)} check(s) failed: {trace.checks_failed}")
+    else:
+        print("\n  All checks passed.")
+    print(f"  Confidence: {trace.final_confidence}")
+
+    print("\nTrace written to episodic memory.")
 
 
 def main() -> None:
