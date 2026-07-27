@@ -23,7 +23,7 @@ from __future__ import annotations
 
 import json
 import time
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 from .json_utils import extract_json
 from .tools.registry import ToolRegistry
@@ -49,6 +49,11 @@ Respond with ONLY valid JSON, no commentary, no markdown fences, in exactly
 this shape:
 {{"tool_calls": [{{"tool": "<name>", "input": {{...}}}}, ...]}}
 If no tool call is useful, respond with {{"tool_calls": []}}.
+
+If the user message includes a "revision_feedback" field, a previous
+attempt at this problem failed verification for the reasons described
+there -- choose tool calls that specifically address those issues rather
+than repeating the same approach.
 """
 
 _SYNTHESIS_SYSTEM_PROMPT = """You are the synthesis component of a physics problem-solving agent.
@@ -57,6 +62,11 @@ made, write a clear, step-by-step initial solution, ending with the final
 numeric or symbolic answer including units. If a tool call failed or
 returned nothing useful, work around it using the retrieved physics facts
 and your own reasoning, and note explicitly where you had to do so.
+
+If the user message includes a "revision_feedback" field, a previous
+attempt failed verification for the reasons described there -- make sure
+your solution specifically corrects those issues, not just restates the
+same reasoning.
 """
 
 
@@ -68,20 +78,21 @@ class ToolOrchestrator:
 
     # -- tool selection -------------------------------------------------
 
-    def _select_tool_calls(self, trace: Trace) -> List[Dict[str, Any]]:
+    def _select_tool_calls(self, trace: Trace, feedback: Optional[str] = None) -> List[Dict[str, Any]]:
         available = self.registry.relevant_tools(trace.domain_tags)
         system_prompt = _TOOL_SELECTION_SYSTEM_PROMPT_TEMPLATE.format(available_tools=available)
 
-        user_content = json.dumps(
-            {
-                "problem": trace.problem_text,
-                "subtasks": trace.subtasks,
-                "retrieved_knowledge": [
-                    {"statement": k["statement"], "conditions": k["conditions"]}
-                    for k in trace.retrieved_knowledge
-                ],
-            }
-        )
+        payload = {
+            "problem": trace.problem_text,
+            "subtasks": trace.subtasks,
+            "retrieved_knowledge": [
+                {"statement": k["statement"], "conditions": k["conditions"]}
+                for k in trace.retrieved_knowledge
+            ],
+        }
+        if feedback:
+            payload["revision_feedback"] = feedback
+        user_content = json.dumps(payload)
 
         messages = [
             {"role": "system", "content": system_prompt},
@@ -153,32 +164,82 @@ class ToolOrchestrator:
 
     # -- synthesis ----------------------------------------------------------
 
-    def _synthesize_solution(self, trace: Trace) -> str:
+    def _synthesize_solution(self, trace: Trace, feedback: Optional[str] = None) -> str:
         tool_results_summary = [
             {"tool": tc.tool, "input": tc.input, "output": tc.output} for tc in trace.tool_calls
         ]
-        user_content = json.dumps(
-            {
-                "problem": trace.problem_text,
-                "subtasks": trace.subtasks,
-                "retrieved_knowledge": [k["statement"] for k in trace.retrieved_knowledge],
-                "tool_results": tool_results_summary,
-            }
-        )
+        payload = {
+            "problem": trace.problem_text,
+            "subtasks": trace.subtasks,
+            "retrieved_knowledge": [k["statement"] for k in trace.retrieved_knowledge],
+            "tool_results": tool_results_summary,
+        }
+        if feedback:
+            payload["revision_feedback"] = feedback
+        user_content = json.dumps(payload)
         messages = [
             {"role": "system", "content": _SYNTHESIS_SYSTEM_PROMPT},
             {"role": "user", "content": user_content},
         ]
         return self.llm.chat(messages)
 
-    # -- public entry point ---------------------------------------------------
+    # -- public entry points ---------------------------------------------------
 
-    def run(self, trace: Trace) -> Trace:
-        """Mutates and returns `trace`: populates trace.tool_calls,
-        trace.initial_solution, and trace.orchestration_time_ms."""
+    def run(self, trace: Trace, feedback: Optional[str] = None) -> Trace:
+        """
+        Mutates and returns `trace`: populates trace.tool_calls,
+        trace.initial_solution, and trace.orchestration_time_ms.
+
+        `feedback`, if given, is Stage 4's mechanism for asking for a
+        revised attempt: it's threaded into both the tool-selection and
+        synthesis prompts as "revision_feedback", so a from-scratch
+        re-derivation can specifically address what failed verification
+        last time, rather than the LLM having no idea a previous attempt
+        existed.
+        """
         start = time.time()
-        tool_calls = self._select_tool_calls(trace)
+        tool_calls = self._select_tool_calls(trace, feedback=feedback)
         trace.tool_calls = self._execute_tool_calls(tool_calls)
-        trace.initial_solution = self._synthesize_solution(trace)
+        trace.initial_solution = self._synthesize_solution(trace, feedback=feedback)
         trace.orchestration_time_ms = (time.time() - start) * 1000
+        return trace
+
+    def resynthesize(self, trace: Trace, feedback: Optional[str] = None) -> str:
+        """
+        Stage 4's "resynthesize" correction strategy: re-run only the
+        synthesis step, leaving trace.tool_calls untouched. Used when the
+        self-eval failure was about the reasoning/write-up (Logic Check),
+        not about the tool calls or physics setup themselves -- redoing
+        tool calls in that case would be wasted work.
+        """
+        solution = self._synthesize_solution(trace, feedback=feedback)
+        trace.initial_solution = solution
+        return solution
+
+    def escalate_with_literature_search(self, trace: Trace, feedback: Optional[str] = None) -> Trace:
+        """
+        Stage 4's "escalate_verification" correction strategy: used when
+        confidence is low but no specific check failed, so there's no
+        concrete error to fix. Rather than blindly redoing work that
+        already passed every specific check, pull in one more independent
+        signal (a literature search) and let synthesis incorporate it.
+        """
+        tool = self.registry.get("literature_search")
+        start = time.time()
+        try:
+            output = tool.run({"query": trace.problem_text, "max_results": 2})
+            output_str = json.dumps(output)
+        except Exception as e:
+            output_str = json.dumps({"error": str(e)})
+        latency_ms = (time.time() - start) * 1000
+
+        trace.tool_calls.append(
+            ToolCall(
+                tool="literature_search",
+                input=json.dumps({"query": trace.problem_text, "max_results": 2}),
+                output=output_str,
+                latency_ms=latency_ms,
+            )
+        )
+        trace.initial_solution = self._synthesize_solution(trace, feedback=feedback)
         return trace

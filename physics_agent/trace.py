@@ -12,12 +12,16 @@ Field ownership by stage (who fills each field in):
     Stage 1: problem_id, problem_text, timestamp, domain_tags, subtasks,
         retrieved_knowledge, planner_raw_response, planning_time_ms
     Stage 2: tool_calls, initial_solution, orchestration_time_ms
-    Stage 3 (this implementation): checks_run, checks_failed, check_details,
-        final_confidence (initial estimate -- Stage 5 may revise it after
-        a correction pass)
-    Stage 5 (self-correction):      error_type, revision_count
-    Final outcome (any stage):      final_answer, final_correct,
+    Stage 3: checks_run, checks_failed, check_details, final_confidence
+        (initial estimate)
+    Stage 4 -- self-correction (this implementation): error_type,
+        revision_count, revision_history, resolution_status, final_answer,
         time_to_solve_ms
+    final_correct: intentionally left unset by every stage above. It would
+        require comparison against an external ground-truth answer, which
+        isn't implemented yet -- our own checks passing is evidence of
+        self-consistency, not proof of correctness, and conflating the two
+        would be a false claim baked into the trace log itself.
 """
 from __future__ import annotations
 
@@ -61,9 +65,11 @@ class Trace:
     checks_failed: List[str] = field(default_factory=list)
     check_details: List[Dict[str, Any]] = field(default_factory=list)
 
-    # --- Stage 5: self-correction (empty until built) -----------------------
+    # --- Stage 4: self-correction --------------------------------------------
     error_type: Optional[str] = None
     revision_count: int = 0
+    revision_history: List[Dict[str, Any]] = field(default_factory=list)
+    resolution_status: Optional[str] = None
 
     # --- final outcome (populated once a full solve pipeline exists) -------
     final_answer: Optional[str] = None
@@ -94,8 +100,8 @@ class Trace:
 
 class EpisodicMemory:
     """
-    Append-only JSONL store for traces. This is the raw substrate for
-    Stage 4 (structured memory) — one line per solved problem, easy to
+    Append-only JSONL store for traces. This is the raw substrate for a
+    later structured-memory stage — one line per solved problem, easy to
     stream, diff, or re-process as later stages add richer fields.
     """
 

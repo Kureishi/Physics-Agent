@@ -4,6 +4,8 @@ import pytest
 
 from physics_agent.llm_client import MockLLMClient
 from physics_agent.orchestrator import ToolOrchestrator
+from physics_agent.tools.literature import LiteratureSearchTool
+from physics_agent.tools.registry import ToolRegistry
 from physics_agent.trace import Trace
 
 
@@ -120,3 +122,51 @@ def test_orchestrator_raises_after_exhausting_selection_retries():
 
     with pytest.raises(ValueError):
         orchestrator.run(trace)
+
+
+def test_orchestrator_run_threads_feedback_into_prompts():
+    llm = MockLLMClient()
+    orchestrator = ToolOrchestrator(llm)
+    trace = _make_trace()
+
+    orchestrator.run(trace, feedback="Previous attempt had a sign error.")
+
+    # feedback should appear in at least one of the calls made (tool
+    # selection and/or synthesis)
+    all_text = "\n".join(
+        m["content"] for call in llm.calls for m in call
+    )
+    assert "Previous attempt had a sign error." in all_text
+
+
+def test_orchestrator_resynthesize_does_not_touch_tool_calls():
+    llm = MockLLMClient()
+    orchestrator = ToolOrchestrator(llm)
+    trace = _make_trace()
+    orchestrator.run(trace)  # establish an initial state with tool calls
+
+    original_tool_calls = list(trace.tool_calls)
+    new_solution = orchestrator.resynthesize(trace, feedback="Fix the reasoning gap.")
+
+    assert trace.tool_calls == original_tool_calls  # untouched
+    assert trace.initial_solution == new_solution
+
+
+def test_orchestrator_escalate_with_literature_search_appends_tool_call():
+    llm = MockLLMClient()
+    fake_arxiv_response = (
+        '<?xml version="1.0"?><feed xmlns="http://www.w3.org/2005/Atom"></feed>'
+    )
+    registry = ToolRegistry()
+    registry._tools["literature_search"] = LiteratureSearchTool(
+        fetch_fn=lambda url: fake_arxiv_response
+    )
+    orchestrator = ToolOrchestrator(llm, registry=registry)
+    trace = _make_trace()
+    orchestrator.run(trace)  # establish an initial state
+
+    n_calls_before = len(trace.tool_calls)
+    orchestrator.escalate_with_literature_search(trace, feedback="Low confidence, no specific fault.")
+
+    assert len(trace.tool_calls) == n_calls_before + 1
+    assert trace.tool_calls[-1].tool == "literature_search"

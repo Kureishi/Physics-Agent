@@ -28,3 +28,8 @@ class Config:
 
     episodic_memory_path: str = os.environ.get("EPISODIC_MEMORY_PATH", "memory/episodic.jsonl")
     semantic_store_path: str = os.environ.get("SEMANTIC_STORE_PATH", "data/semantic_seed.json")
+
+    # Safety rail for the Stage 4 self-correction loop: stop retrying after
+    # this many revision attempts and ship the best-effort answer marked
+    # "unresolved_max_revisions" rather than looping indefinitely.
+    max_revisions: int = int(os.environ.get("MAX_REVISIONS", "3"))

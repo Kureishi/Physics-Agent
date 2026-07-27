@@ -1,12 +1,14 @@
-# Physics Agent — Stage 1 + Stage 2 + Stage 3
+# Physics Agent — Stage 1 + Stage 2 + Stage 3 + Stage 4
 
 Stage 1: **task planner + retrieval**, plus the **trace schema** that every
 later stage reads and writes. Stage 2: **tool orchestration** — symbolic
 math, numerical simulation, and literature search, producing an initial
 solution. Stage 3: **self-evaluation pipeline** — Logic, Physics, Math, and
-Confidence checks that independently critique that initial solution. See
-`physics_agent/trace.py` for the full schema and a field-by-field note on
-which stage owns which field.
+Confidence checks that independently critique that initial solution.
+Stage 4: **self-correction mapping** — a deterministic Error Detector plus
+Revision Planner that loop back through Stages 2/3 until the candidate
+passes verification or a safety rail is hit. See `physics_agent/trace.py`
+for the full schema and a field-by-field note on which stage owns which field.
 
 ## What this does right now
 
@@ -19,25 +21,23 @@ Given a raw physics problem, the pipeline:
    integration (SciPy), or arXiv literature search — capturing every call
    (including failures) into the trace. *(Stage 2)*
 6. **Synthesizes an initial solution** from the tool outputs. *(Stage 2)*
-7. **Self-evaluates** that solution with four independent checks:
-   - **Logic Check** (LLM): is the reasoning internally consistent, does it
-     actually address every subtask, no contradictions or unjustified leaps?
-   - **Physics Check** (deterministic + LLM): do `symbolic_math` and
-     `simulation` results agree with each other, and does an LLM critique
-     find dimensional inconsistencies or conservation-law violations?
-   - **Math Check** (deterministic): does re-substituting each
-     `symbolic_math` solution back into its original equation actually
-     satisfy it?
-   - **Confidence Check** (LLM): a calibrated 0-1 confidence estimate,
-     informed by whether the other three checks passed.
-   *(Stage 3)*
-8. **Writes a trace** of all of the above to append-only episodic memory (JSONL).
+7. **Self-evaluates** that solution with four independent checks: Logic,
+   Physics (cross-tool agreement + LLM critique), Math (re-substitution
+   verification), Confidence. *(Stage 3)*
+8. **If any check failed:** classifies *why* using a deterministic error
+   taxonomy (algebra error, physics setup error, reasoning inconsistency,
+   or unexplained low confidence), applies the matching correction strategy
+   (re-derive math, re-derive physics setup, resynthesize the write-up, or
+   escalate with an extra literature search), and **re-runs Stage 3** on the
+   updated candidate. Repeats up to `max_revisions` times (default 3). *(Stage 4)*
+9. **Writes a trace** of all of the above — including a full
+   `revision_history` of every corrected attempt — to append-only episodic
+   memory (JSONL).
 
-It does *not* yet act on a failed check by revising the solution — that's
-Stage 5 (self-correction). This stage's job is to independently verify the
-initial solution and produce a structured, trustworthy signal
-(`checks_run`, `checks_failed`, `check_details`, `final_confidence`) about
-whether it's actually right.
+It does *not* yet learn across problems (no meta-learning, no
+tool-selection-policy adjustment, no knowledge-graph updates) — this stage
+fixes *this* problem's answer; it doesn't yet make the agent better at the
+next one. That's the outer loop from the design doc, still to come.
 
 ## Setup
 
@@ -97,8 +97,12 @@ physics_agent/
     physics_check.py       PhysicsCheck: cross-tool agreement + LLM physics critique
     math_check.py           MathCheck: deterministic re-substitution verification
     confidence_check.py     ConfidenceCheck: calibrated confidence, sees prior check results
+  self_correction/
+    error_taxonomy.py      classify_error: deterministic checks_failed -> (error_type, strategy)
+    revision_planner.py     RevisionPlanner: strategy -> concrete orchestrator action
+    engine.py                 SelfCorrectionEngine: the detect-revise-reverify loop + safety rail
   trace.py            Trace schema + EpisodicMemory (JSONL append-only store)
-  cli.py              Entry point wiring the full Stage 1 + 2 + 3 pipeline together
+  cli.py              Entry point wiring the full Stage 1 + 2 + 3 + 4 pipeline together
 data/
   semantic_seed.json  Seed knowledge base (~13 core physics formulas across domains)
 tests/
@@ -107,12 +111,14 @@ tests/
   test_retrieval.py       Keyword scoring, domain-tag bonus, persistence
   test_tools.py            SymPy/SciPy/arXiv tools: correctness + failure handling
   test_registry.py          Domain-tag -> tool hint mapping
-  test_orchestrator.py       Tool selection, execution, failure capture, synthesis
+  test_orchestrator.py       Tool selection, execution, failure capture, synthesis, revision methods
   test_logic_check.py         LogicCheck behavior + retry/failure handling
   test_physics_check.py        Cross-tool agreement logic + LLM critique combination
   test_math_check.py            Re-substitution verification, correct + incorrect solutions
   test_confidence_check.py       Threshold behavior, clamping, unparseable responses
   test_self_eval_pipeline.py      Full pipeline, crash isolation, check-ordering dependency
+  test_error_taxonomy.py           Every classification rule + priority ordering
+  test_self_correction_engine.py    Full loop: resolves, exhausts retries, archives history
 memory/
   episodic.jsonl      Created at runtime — one JSON line per problem run
 ```
@@ -123,7 +129,7 @@ memory/
 pytest tests/ -v
 ```
 
-All 60 tests run offline (no LM Studio required) using `MockLLMClient`.
+All 75 tests run offline (no LM Studio required) using `MockLLMClient`.
 The physics tools themselves (SymPy solving, SciPy integration) and the
 Math Check's re-substitution verification are exercised with real
 computation, not mocked — only the LLM calls (planning, tool selection,
@@ -217,12 +223,61 @@ synthesis, logic/physics/confidence critique) are mocked.
   Stage 5 exists, a correction pass may update it; the field itself doesn't
   change, only who last wrote to it.
 
-## Next steps (Stage 5)
+## Design notes for Stage 4 specifically
 
-Self-correction engine: build the error-taxonomy mapping from the design
-doc (detected check failure -> root-cause hypothesis -> corrective action),
-an Error Detector that classifies `trace.checks_failed` + `check_details`
-into a `trace.error_type`, and a Revision Planner that re-invokes Stage 2
-tools differently based on that classification, incrementing
-`trace.revision_count` and looping back through Stage 3 until checks pass
-or a max-retry safety rail is hit.
+- **The Error Detector is a deterministic lookup table, not another LLM
+  call.** By the time it runs, Stage 3 has already produced structured
+  signal (`checks_failed`, `check_details`); re-asking an LLM "why did this
+  fail" would just be re-deriving something already known, less reliably.
+  `error_taxonomy.classify_error` is a fixed, inspectable mapping — exactly
+  the kind of thing a later meta-learning stage could retune (e.g. "does
+  the 'rederive_physics_setup' strategy actually resolve
+  `cross_method_disagreement` more often than not?") if it stayed an LLM
+  judgment call, there'd be nothing stable to retune.
+- **Priority order encodes a root-cause assumption, made explicit rather
+  than implicit.** If math, physics, and logic all fail simultaneously,
+  the algebra error is treated as the fix to try first, since a wrong
+  derivation can itself produce what looks like a physics disagreement or
+  an incoherent write-up. This is a real modeling assumption, not a neutral
+  default — it's worth revisiting once there's enough revision-history data
+  to check whether it actually holds.
+- **Revising overwrites `trace.tool_calls`/`checks_failed`/`check_details`
+  each round; nothing is lost.** Stage 3's checks are written to evaluate
+  "the current candidate" — if a corrected attempt's tool calls sat
+  alongside the original broken ones, Math Check would fail forever on a
+  mistake that's no longer part of the answer. `trace.revision_history`
+  is where the pre-revision snapshot goes instead, so the full story
+  survives without corrupting what the checks operate on.
+- **The three "rederive" strategies and "resynthesize" are different
+  amounts of work on purpose.** A Logic Check failure means the tools and
+  physics were fine — only the write-up's reasoning was off — so
+  `resynthesize` skips re-running any tools at all. Redoing tool calls for
+  every failure type would waste real compute (a live LM Studio call, a
+  fresh SymPy solve) fixing things that were never broken.
+- **`escalate_verification` deliberately doesn't loop harder on the same
+  approach.** A confidence-only failure means nothing specific was flagged
+  as wrong — repeating the exact same tool calls would likely just
+  reproduce the exact same (already-passing) result. Pulling in one
+  external signal (literature search) is a genuinely different kind of
+  evidence, which is the point.
+- **The safety rail stops *trying*, it doesn't fabricate success.** At
+  `max_revisions`, `resolution_status` is explicitly set to
+  `"unresolved_max_revisions"` and `checks_failed` is left non-empty in the
+  trace — nothing here quietly reports a passing result that didn't
+  actually pass.
+
+## Next steps
+
+With Stages 1-4 done, the agent can solve a problem, verify its own answer
+against independent methods, and correct itself when verification fails —
+but every problem still starts from zero. What's still missing, per the
+design doc's roadmap: **structured memory** (persisting what was learned
+from each solve — not just the trace log, but semantic/procedural/error
+memories that get *retrieved* on future problems), a **knowledge graph**
+(confidence-tracked concepts and their conditions of validity, built up
+over many solves), **meta-learning** (adjusting tool-selection policy,
+verification depth, and the error-taxonomy priority ordering itself based
+on what the accumulating revision_history actually shows works), and an
+**autonomous curriculum** (generating new practice problems targeted at
+whatever the knowledge graph shows is weakest). Let me know which of these
+you'd like to tackle next.
