@@ -25,24 +25,24 @@
     "id": "dyn-001",
     "statement": "F = m*a (Newton's second law)",
     "conditions": "Valid in inertial reference frames, non-relativistic speeds",
-    "confidence": 0.991,
+    "confidence": 0.99,
     "provenance": "seed:classical-mechanics-standard",
     "tags": [
       "dynamics"
     ],
-    "last_validated": 1785117024.273442
+    "last_validated": 0
   },
   {
     "id": "eng-001",
     "statement": "KE = 0.5*m*v^2 (kinetic energy)",
     "conditions": "Non-relativistic (v << c)",
-    "confidence": 0.991,
+    "confidence": 0.99,
     "provenance": "seed:classical-mechanics-standard",
     "tags": [
       "energy",
       "dynamics"
     ],
-    "last_validated": 1785117024.2727852
+    "last_validated": 0
   },
   {
     "id": "eng-002",
@@ -137,12 +137,12 @@
     "id": "rel-001",
     "statement": "Relativistic kinetic energy: KE = (gamma - 1)*m*c^2, gamma = 1/sqrt(1 - v^2/c^2); reduces to 0.5*m*v^2 as v/c -> 0",
     "conditions": "Special relativity, inertial frames",
-    "confidence": 0.973,
+    "confidence": 0.97,
     "provenance": "seed:special-relativity-standard",
     "tags": [
       "special-relativity",
       "energy"
     ],
-    "last_validated": 1785117024.2731633
+    "last_validated": 0
   }
 ]

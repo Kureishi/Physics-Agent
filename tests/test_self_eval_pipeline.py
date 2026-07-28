@@ -70,3 +70,41 @@ def test_pipeline_confidence_check_sees_prior_failures():
 
     assert trace.checks_run[-1] == "confidence"
     assert "physics" in trace.checks_failed
+
+
+def test_pipeline_threads_knowledge_graph_into_physics_check(tmp_path):
+    import json as _json
+
+    from physics_agent.knowledge_graph.graph import KnowledgeGraph
+    from physics_agent.retrieval import SemanticStore
+
+    semantic_path = tmp_path / "semantic.json"
+    with semantic_path.open("w") as f:
+        _json.dump(
+            [
+                {
+                    "id": "eng-001",
+                    "statement": "KE = 0.5*m*v^2",
+                    "conditions": "Non-relativistic",
+                    "confidence": 0.99,
+                    "provenance": "seed",
+                    "tags": ["energy"],
+                    "last_validated": 0,
+                }
+            ],
+            f,
+        )
+    store = SemanticStore(semantic_path)
+    graph = KnowledgeGraph(tmp_path / "edges.json", store)
+    graph.add_edge("eng-001", relation="requires_assumption", condition="non_relativistic")
+
+    llm = MockLLMClient()  # LLM critique defaults to passing
+    pipeline = SelfEvaluationPipeline(llm, knowledge_graph=graph)
+
+    trace = _make_trace()
+    trace.domain_tags = ["special-relativity"]
+    trace.retrieved_knowledge = [{"id": "eng-001", "statement": "KE = 0.5*m*v^2", "conditions": "Non-relativistic"}]
+
+    pipeline.run(trace)
+
+    assert "physics" in trace.checks_failed  # caught via the knowledge graph, not the LLM

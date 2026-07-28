@@ -1,0 +1,122 @@
+[
+  {
+    "id": "edge-0000",
+    "source": "rel-001",
+    "target": "eng-001",
+    "relation": "special_case_of",
+    "condition": "v/c -> 0 (low-speed limit)",
+    "confidence": 0.97,
+    "provenance": "derived:special-relativity-standard",
+    "last_validated": 0
+  },
+  {
+    "id": "edge-0001",
+    "source": "eng-001",
+    "target": null,
+    "relation": "requires_assumption",
+    "condition": "non_relativistic",
+    "confidence": 0.99,
+    "provenance": "seed:classical-mechanics-standard",
+    "last_validated": 0
+  },
+  {
+    "id": "edge-0002",
+    "source": "dyn-001",
+    "target": null,
+    "relation": "requires_assumption",
+    "condition": "non_relativistic",
+    "confidence": 0.99,
+    "provenance": "seed:classical-mechanics-standard",
+    "last_validated": 0
+  },
+  {
+    "id": "edge-0003",
+    "source": "eng-002",
+    "target": "grav-001",
+    "relation": "derives_from",
+    "condition": "uniform gravitational field approximation near Earth's surface (h << R_earth)",
+    "confidence": 0.9,
+    "provenance": "derived:classical-mechanics-standard",
+    "last_validated": 0
+  },
+  {
+    "id": "edge-0004",
+    "source": "eng-003",
+    "target": null,
+    "relation": "requires_assumption",
+    "condition": "no_non_conservative_forces",
+    "confidence": 0.98,
+    "provenance": "seed:classical-mechanics-standard",
+    "last_validated": 0
+  },
+  {
+    "id": "edge-0005",
+    "source": "mom-001",
+    "target": null,
+    "relation": "requires_assumption",
+    "condition": "isolated_system_no_external_force",
+    "confidence": 0.97,
+    "provenance": "seed:classical-mechanics-standard",
+    "last_validated": 0
+  },
+  {
+    "id": "edge-0006",
+    "source": "kin-001",
+    "target": null,
+    "relation": "requires_assumption",
+    "condition": "constant_acceleration",
+    "confidence": 0.99,
+    "provenance": "seed:classical-mechanics-standard",
+    "last_validated": 0
+  },
+  {
+    "id": "edge-0007",
+    "source": "kin-002",
+    "target": null,
+    "relation": "requires_assumption",
+    "condition": "constant_acceleration",
+    "confidence": 0.99,
+    "provenance": "seed:classical-mechanics-standard",
+    "last_validated": 0
+  },
+  {
+    "id": "edge-0008",
+    "source": "rot-001",
+    "target": null,
+    "relation": "requires_assumption",
+    "condition": "rigid_body",
+    "confidence": 0.95,
+    "provenance": "seed:classical-mechanics-standard",
+    "last_validated": 0
+  },
+  {
+    "id": "edge-0009",
+    "source": "thermo-001",
+    "target": null,
+    "relation": "requires_assumption",
+    "condition": "ideal_gas_approximation",
+    "confidence": 0.95,
+    "provenance": "seed:thermodynamics-standard",
+    "last_validated": 0
+  },
+  {
+    "id": "edge-0010",
+    "source": "osc-001",
+    "target": null,
+    "relation": "requires_assumption",
+    "condition": "hookes_law_regime_no_damping",
+    "confidence": 0.95,
+    "provenance": "seed:classical-mechanics-standard",
+    "last_validated": 0
+  },
+  {
+    "id": "edge-0011",
+    "source": "em-001",
+    "target": null,
+    "relation": "requires_assumption",
+    "condition": "point_charge_vacuum_non_relativistic",
+    "confidence": 0.95,
+    "provenance": "seed:electromagnetism-standard",
+    "last_validated": 0
+  }
+]

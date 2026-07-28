@@ -1,4 +1,4 @@
-# Physics Agent — Stage 1 + Stage 2 + Stage 3 + Stage 4 + Stage 5
+# Physics Agent — Stage 1 + Stage 2 + Stage 3 + Stage 4 + Stage 5 + Stage 6
 
 Stage 1: **task planner + retrieval**, plus the **trace schema** that every
 later stage reads and writes. Stage 2: **tool orchestration** — symbolic
@@ -9,10 +9,12 @@ Stage 4: **self-correction mapping** — a deterministic Error Detector plus
 Revision Planner that loop back through Stages 2/3 until the candidate
 passes verification or a safety rail is hit. Stage 5: **memory
 architecture** — episodic, semantic, procedural, and error memory, plus the
-consolidator that writes to all four after each solve, so what the agent
-learns from one problem is actually available on the next one. See
-`physics_agent/trace.py` for the full schema and a field-by-field note on
-which stage owns which field.
+consolidator that writes to all four after each solve. Stage 6:
+**knowledge graph** — typed edges between semantic-memory facts
+(derivation, special-case, required-assumption, contradiction), enabling a
+deterministic "is this formula valid here" check and low-confidence
+clustering for a future curriculum stage. See `physics_agent/trace.py` for
+the full schema and a field-by-field note on which stage owns which field.
 
 ## What this does right now
 
@@ -26,31 +28,30 @@ Given a raw physics problem, the pipeline:
    (including failures) into the trace. *(Stage 2)*
 6. **Synthesizes an initial solution** from the tool outputs. *(Stage 2)*
 7. **Self-evaluates** that solution with four independent checks: Logic,
-   Physics (cross-tool agreement + LLM critique), Math (re-substitution
-   verification), Confidence. *(Stage 3)*
+   Physics (cross-tool agreement + **knowledge graph validity** + LLM
+   critique), Math (re-substitution verification), Confidence. *(Stage 3, extended Stage 6)*
 8. **If any check failed:** classifies *why* using a deterministic error
    taxonomy, applies the matching correction strategy, and **re-runs
    Stage 3** on the updated candidate. Repeats up to `max_revisions` times
    (default 3). *(Stage 4)*
-9. **Consolidates the solve into memory:**
-   - **Episodic** — the full trace (including `revision_history`) appended
-     to the JSONL log, queryable by domain tag, resolution status, or error type.
-   - **Semantic** — every retrieved formula's confidence nudged up or down
-     based on whether the final candidate passed verification.
-   - **Procedural** — for every revision round, whether the corrective
-     strategy tried actually resolved what it was meant to fix, tracked as
-     a running success rate per (domain, error_type, strategy).
-   - **Error** — every revision round's failure signature, root cause, and
-     fix, with a recurrence counter that persists and accumulates *across
-     separate runs* (confirmed: running the pipeline twice on similar
-     problems shows `frequency` go 1 → 2, loaded fresh from disk each time).
-   *(Stage 5)*
+9. **Consolidates the solve into memory:** episodic, semantic confidence
+   updates, procedural strategy success rates, and error-signature
+   frequency tracking. *(Stage 5)*
+10. **Knowledge graph relationships** connect the underlying semantic
+    facts: `rel-001` (relativistic KE) is `special_case_of` `eng-001`
+    (classical KE); `eng-001` `requires_assumption` `non_relativistic`;
+    `eng-002` (U=mgh) `derives_from` `grav-001` (universal gravitation);
+    and so on for all 13 seeded formulas. `PhysicsCheck` queries this graph
+    directly — confirmed to independently catch a classical formula being
+    applied to a problem tagged `special-relativity`, even when the LLM
+    critique alone says nothing's wrong. *(Stage 6)*
 
-It does *not* yet **act** on procedural/error memory to change future
-behavior (e.g. overriding error_taxonomy's fixed strategy choice, or
-adjusting tool-selection policy) — that's meta-learning, still to come.
-Stage 5's job is specifically to make sure that data exists and accumulates
-correctly; deciding what to do with it is a deliberately separate step.
+It does *not* yet **act** on procedural/error memory or knowledge-graph
+clusters to change future behavior (adjusting tool-selection policy,
+retuning error_taxonomy, generating targeted practice problems) — that's
+meta-learning and the autonomous curriculum, still to come. This stage's
+job is to make the *relationships between facts* queryable and correct,
+not to decide what to do differently because of them.
 
 ## Setup
 
@@ -118,11 +119,16 @@ physics_agent/
     procedural.py            ProceduralMemory: strategy success rates per (domain, error_type)
     error_memory.py           ErrorMemory: recurring failure signatures, root cause, fix, frequency
     consolidator.py            MemoryConsolidator: writes all four memory types after a solve
+  knowledge_graph/
+    graph.py                  KnowledgeGraph: typed edges over SemanticStore's nodes, validity
+                              queries, low-confidence clustering, contradiction surfacing
   trace.py            Trace schema + EpisodicMemory (JSONL append-only store, now with queries)
   retrieval.py        SemanticStore (Stage 1 retrieval + Stage 5 record_outcome confidence updates)
-  cli.py              Entry point wiring the full Stage 1-5 pipeline together
+  cli.py              Entry point wiring the full Stage 1-6 pipeline together
 data/
-  semantic_seed.json  Seed knowledge base (~13 core physics formulas across domains)
+  semantic_seed.json         Seed knowledge base (~13 core physics formulas across domains)
+  knowledge_graph_edges.json  Seed edges over those 13 formulas (derives_from/special_case_of/
+                              requires_assumption relationships)
 tests/
   test_trace.py         Trace roundtrip + episodic memory read/write
   test_planner.py         Decomposition, JSON-parsing robustness, retry/failure paths
@@ -131,15 +137,16 @@ tests/
   test_registry.py          Domain-tag -> tool hint mapping
   test_orchestrator.py       Tool selection, execution, failure capture, synthesis, revision methods
   test_logic_check.py         LogicCheck behavior + retry/failure handling
-  test_physics_check.py        Cross-tool agreement logic + LLM critique combination
+  test_physics_check.py        Cross-tool agreement, knowledge graph validity integration, LLM critique
   test_math_check.py            Re-substitution verification, correct + incorrect solutions
   test_confidence_check.py       Threshold behavior, clamping, unparseable responses
-  test_self_eval_pipeline.py      Full pipeline, crash isolation, check-ordering dependency
+  test_self_eval_pipeline.py      Full pipeline, crash isolation, knowledge graph wiring
   test_error_taxonomy.py           Every classification rule + priority ordering
   test_self_correction_engine.py    Full loop: resolves, exhausts retries, archives history
   test_procedural_memory.py          Success-rate tracking, key normalization, min-uses gating
   test_error_memory.py                Recurrence frequency, signature grouping, persistence
   test_memory_consolidator.py          All four memory types updated correctly from one trace
+  test_knowledge_graph.py               Edges, validity queries, clustering, contradictions
 memory/
   episodic.jsonl      Created at runtime — one JSON line per problem run
   procedural.json      Created at runtime — strategy success-rate table
@@ -152,11 +159,12 @@ memory/
 pytest tests/ -v
 ```
 
-All 100 tests run offline (no LM Studio required) using `MockLLMClient`.
-The physics tools themselves (SymPy solving, SciPy integration) and the
-Math Check's re-substitution verification are exercised with real
-computation, not mocked — only the LLM calls (planning, tool selection,
-synthesis, logic/physics/confidence critique) are mocked.
+All 124 tests run offline (no LM Studio required) using `MockLLMClient`.
+The physics tools themselves (SymPy solving, SciPy integration), the Math
+Check's re-substitution verification, and the knowledge graph's validity
+queries are exercised with real computation, not mocked — only the LLM
+calls (planning, tool selection, synthesis, logic/physics/confidence
+critique) are mocked.
 
 ## Design notes carried over from the spec
 
@@ -325,23 +333,64 @@ synthesis, logic/physics/confidence critique) are mocked.
   memory, not just per-run bookkeeping that happens to look like memory
   in an in-process test.
 
+## Design notes for Stage 6 specifically
+
+- **Nodes are not duplicated data.** `KnowledgeGraph.get_node` delegates
+  straight to `SemanticStore` by id — the graph adds edges *on top of* the
+  facts Stage 1/5 already maintain, rather than maintaining a second copy
+  of confidence/provenance that could drift out of sync with what
+  `record_outcome` is actually updating.
+- **`check_validity` is honest about how narrow it is.** Only one
+  assumption tag (`non_relativistic`, checked against a
+  `special-relativity` domain tag) has a genuinely reliable signal
+  derivable from domain tags alone. Every other seeded assumption
+  (`ideal_gas_approximation`, `rigid_body`, `constant_acceleration`, etc.)
+  is recorded as an edge — so the *structure* exists and grows as more
+  reliable checks become possible — but deliberately can't fail a check
+  yet, since a domain tag alone can't confirm or deny it. A clean
+  `check_validity` result is evidence against one specific, checkable
+  failure mode, not proof of correct usage.
+- **Confirmed the catch is real, not just unit-tested**: ran `PhysicsCheck`
+  against the actual seed data and actual graph (not fixtures) with a
+  problem tagged `special-relativity` retrieving the classical
+  (non-relativistic) kinetic energy formula, with the LLM critique mocked
+  to pass — and the knowledge-graph sub-check failed it independently.
+  That's the difference between "the check exists" and "the check catches
+  something the other checks wouldn't."
+- **Edge confidence is seeded, not dynamically updated, in this stage.**
+  Per the design doc, node confidence updates via verification outcomes
+  (already true, via `SemanticStore.record_outcome`, reused unchanged from
+  Stage 5). Edges represent *structural* relationships between formulas
+  (this is a special case of that; this requires that assumption) which
+  don't get individually exercised by a single solve the way a retrieved
+  fact does — there's no clean signal from one solve about whether a
+  `derives_from` edge itself was "used correctly." Extending edges to
+  update their own confidence would need a real signal source, which
+  doesn't exist yet; recorded here as a known gap rather than faked with an
+  arbitrary update rule.
+- **`find_low_confidence_clusters` only groups nodes that are BOTH
+  connected AND individually low-confidence** — not just anything
+  connected to a low-confidence node. Verified directly: after repeatedly
+  recording failures against `eng-002` (dragging its confidence down) while
+  its `derives_from` neighbor `grav-001` stayed untouched, the resulting
+  cluster was `["eng-002"]` alone, not `["eng-002", "grav-001"]`. A
+  neighbor being high-confidence isn't itself suspect just for being
+  adjacent to a weak fact.
+
 ## Next steps
 
-With Stages 1-5 done, the agent can solve a problem, verify its own answer,
-correct itself when verification fails, and persist what happened across
-all four memory types — but nothing yet *acts* on procedural/error memory
-to change future behavior, and there's no knowledge graph connecting
-individual semantic facts to each other. Per the design doc's roadmap,
-what's still missing: a **knowledge graph** (nodes for concepts/equations,
-edges for derivation/special-case/contradiction relationships, each with
-confidence and provenance — letting the planner check "is this formula
-valid under these assumptions" as a graph query instead of re-deriving
-validity conditions every time), **meta-learning** (this is where
-`ProceduralMemory.best_strategy_for` and `ErrorMemory.most_frequent`
-finally get consumed — adjusting tool-selection policy, verification
-depth, and possibly overriding error_taxonomy's fixed priority ordering
-based on real accumulated outcomes), and an **autonomous curriculum**
-(generating new practice problems targeted at whatever
-`EpisodicMemory.query_by_resolution_status("unresolved_max_revisions")` or
-`ErrorMemory.most_frequent()` shows is weakest). Let me know which of these
-you'd like to tackle next.
+With Stages 1-6 done, the agent solves problems, verifies its own answers
+against multiple independent methods (including a real relational check
+over how facts relate to and constrain each other), corrects itself when
+verification fails, and persists everything it learns — but nothing yet
+*decides differently* because of what's been recorded. Per the design
+doc's roadmap, what's still missing: **meta-learning** (this is where
+`ProceduralMemory.best_strategy_for`, `ErrorMemory.most_frequent`, and
+`KnowledgeGraph.find_low_confidence_clusters` finally get *consumed* rather
+than just populated — adjusting tool-selection policy, verification depth,
+and possibly error_taxonomy's fixed priority ordering based on real
+accumulated outcomes) and an **autonomous curriculum** (generating new
+practice problems targeted at whatever
+`EpisodicMemory.query_by_resolution_status("unresolved_max_revisions")`,
+`ErrorMemory.most_frequent()`, or a low-confidence knowledge-graph cluster
+shows is weakest). Let me know which you'd like to tackle next.

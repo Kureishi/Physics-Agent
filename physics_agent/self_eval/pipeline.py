@@ -32,15 +32,20 @@ class SelfEvaluationPipeline:
         llm_client=None,
         confidence_threshold: float = 0.6,
         checks: Optional[List] = None,
+        knowledge_graph=None,
     ):
         """
         `checks`, if given, overrides the default check list entirely
         (mainly for testing pipeline-level behavior, e.g. crash handling,
         without needing a real or mock LLM client wired through every check).
+
+        `knowledge_graph` (Stage 6), if given, is threaded into PhysicsCheck
+        so it can run its deterministic assumption-validity sub-check
+        alongside cross-tool agreement and the LLM critique.
         """
         self.checks = checks if checks is not None else [
             LogicCheck(llm_client),
-            PhysicsCheck(llm_client),
+            PhysicsCheck(llm_client, knowledge_graph=knowledge_graph),
             MathCheck(),
             ConfidenceCheck(llm_client, threshold=confidence_threshold),
         ]

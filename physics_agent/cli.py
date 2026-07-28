@@ -15,6 +15,7 @@ from __future__ import annotations
 import argparse
 
 from .config import Config
+from .knowledge_graph.graph import KnowledgeGraph
 from .llm_client import LLMClient, MockLLMClient
 from .memory.consolidator import MemoryConsolidator
 from .memory.error_memory import ErrorMemory
@@ -40,12 +41,14 @@ def run(problem_text: str, dry_run: bool = False, config: Config = None) -> Trac
         )
     )
 
+    store = SemanticStore(config.semantic_store_path)
+    knowledge_graph = KnowledgeGraph(config.knowledge_graph_path, store)
+
     planner = TaskPlanner(llm)
     orchestrator = ToolOrchestrator(llm)
-    self_eval = SelfEvaluationPipeline(llm)
+    self_eval = SelfEvaluationPipeline(llm, knowledge_graph=knowledge_graph)
     self_correction = SelfCorrectionEngine(orchestrator, self_eval, max_revisions=config.max_revisions)
 
-    store = SemanticStore(config.semantic_store_path)
     episodic = EpisodicMemory(config.episodic_memory_path)
     procedural = ProceduralMemory(config.procedural_memory_path)
     error_memory = ErrorMemory(config.error_memory_path)

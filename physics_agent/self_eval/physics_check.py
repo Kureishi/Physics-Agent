@@ -1,19 +1,26 @@
 """
-Physics Check (Stage 3) -- the "Physics Check" box in the self-evaluation
-pipeline.
+Physics Check (Stage 3, extended in Stage 6) -- the "Physics Check" box in
+the self-evaluation pipeline.
 
-Two independent sub-checks, combined:
+Three independent sub-checks, combined -- any of them failing fails the
+overall check:
   1. Cross-tool agreement (deterministic, no LLM): if both a symbolic_math
      and a simulation tool call were made, do their numeric answers agree?
      This directly implements the "simulation and closed-form disagree"
      row of the self-correction mapping table from the design doc.
-  2. Physics critique (LLM): reviews the solution for dimensional
-     consistency and conservation-law violations, using the conditions of
-     validity attached to any retrieved formulas.
+  2. Knowledge graph validity (Stage 6, deterministic, no LLM): for each
+     retrieved fact, is it being used outside a known assumption it
+     requires, given the problem's domain tags? This is the design doc's
+     "check formula validity as a graph query instead of re-deriving it
+     every time" -- narrow (see KnowledgeGraph.check_validity's docstring
+     for exactly how narrow), but genuinely deterministic where it applies.
+  3. Physics critique (LLM): reviews the solution for dimensional
+     consistency and conservation-law violations that aren't captured by
+     the two checks above.
 
-Either sub-check can fail the overall physics check; if there aren't tool
-calls of both kinds to cross-check, only the LLM critique determines the
-result.
+If there aren't tool calls of both kinds to cross-check, sub-check 1 is
+skipped. If no knowledge_graph was provided, sub-check 2 is skipped. The
+LLM critique always runs.
 """
 from __future__ import annotations
 
@@ -100,22 +107,57 @@ def _cross_tool_agreement_check(tool_calls: List[ToolCall]) -> Optional[Dict[str
     }
 
 
+def _knowledge_graph_validity_check(
+    knowledge_graph, retrieved_knowledge: List[Dict[str, Any]], domain_tags: List[str]
+) -> Optional[Dict[str, Any]]:
+    """
+    Returns None if no knowledge_graph was provided (check doesn't apply).
+    Otherwise checks every retrieved fact's requires_assumption edges
+    against the problem's domain_tags and reports any violations.
+    """
+    if knowledge_graph is None:
+        return None
+
+    violations = []
+    for fact in retrieved_knowledge:
+        node_id = fact.get("id")
+        if not node_id:
+            continue
+        result = knowledge_graph.check_validity(node_id, domain_tags)
+        if not result["valid"]:
+            violations.append((node_id, result["violated_assumptions"]))
+
+    if not violations:
+        return {
+            "passed": True,
+            "details": "Knowledge graph validity check: no assumption violations detected.",
+        }
+
+    detail_strs = [f"{node_id} violates assumption(s) {va}" for node_id, va in violations]
+    return {
+        "passed": False,
+        "details": "Knowledge graph validity check failed: " + "; ".join(detail_strs),
+    }
+
+
 class PhysicsCheck:
     name = "physics"
 
-    def __init__(self, llm_client, max_retries: int = 1):
+    def __init__(self, llm_client, max_retries: int = 1, knowledge_graph=None):
         self.llm = llm_client
         self.max_retries = max_retries
+        self.knowledge_graph = knowledge_graph
 
     def run(self, trace: Trace) -> Dict[str, Any]:
         agreement_result = _cross_tool_agreement_check(trace.tool_calls)
+        kg_result = _knowledge_graph_validity_check(
+            self.knowledge_graph, trace.retrieved_knowledge, trace.domain_tags
+        )
         llm_result = self._llm_critique(trace)
 
-        if agreement_result is None:
-            return llm_result
-
-        passed = agreement_result["passed"] and llm_result["passed"]
-        details = agreement_result["details"] + " | " + llm_result["details"]
+        sub_results = [r for r in (agreement_result, kg_result, llm_result) if r is not None]
+        passed = all(r["passed"] for r in sub_results)
+        details = " | ".join(r["details"] for r in sub_results)
         return {"passed": passed, "details": details}
 
     def _llm_critique(self, trace: Trace) -> Dict[str, Any]:
