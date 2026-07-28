@@ -1,4 +1,4 @@
-# Physics Agent — Stage 1 + Stage 2 + Stage 3 + Stage 4
+# Physics Agent — Stage 1 + Stage 2 + Stage 3 + Stage 4 + Stage 5
 
 Stage 1: **task planner + retrieval**, plus the **trace schema** that every
 later stage reads and writes. Stage 2: **tool orchestration** — symbolic
@@ -7,8 +7,12 @@ solution. Stage 3: **self-evaluation pipeline** — Logic, Physics, Math, and
 Confidence checks that independently critique that initial solution.
 Stage 4: **self-correction mapping** — a deterministic Error Detector plus
 Revision Planner that loop back through Stages 2/3 until the candidate
-passes verification or a safety rail is hit. See `physics_agent/trace.py`
-for the full schema and a field-by-field note on which stage owns which field.
+passes verification or a safety rail is hit. Stage 5: **memory
+architecture** — episodic, semantic, procedural, and error memory, plus the
+consolidator that writes to all four after each solve, so what the agent
+learns from one problem is actually available on the next one. See
+`physics_agent/trace.py` for the full schema and a field-by-field note on
+which stage owns which field.
 
 ## What this does right now
 
@@ -25,19 +29,28 @@ Given a raw physics problem, the pipeline:
    Physics (cross-tool agreement + LLM critique), Math (re-substitution
    verification), Confidence. *(Stage 3)*
 8. **If any check failed:** classifies *why* using a deterministic error
-   taxonomy (algebra error, physics setup error, reasoning inconsistency,
-   or unexplained low confidence), applies the matching correction strategy
-   (re-derive math, re-derive physics setup, resynthesize the write-up, or
-   escalate with an extra literature search), and **re-runs Stage 3** on the
-   updated candidate. Repeats up to `max_revisions` times (default 3). *(Stage 4)*
-9. **Writes a trace** of all of the above — including a full
-   `revision_history` of every corrected attempt — to append-only episodic
-   memory (JSONL).
+   taxonomy, applies the matching correction strategy, and **re-runs
+   Stage 3** on the updated candidate. Repeats up to `max_revisions` times
+   (default 3). *(Stage 4)*
+9. **Consolidates the solve into memory:**
+   - **Episodic** — the full trace (including `revision_history`) appended
+     to the JSONL log, queryable by domain tag, resolution status, or error type.
+   - **Semantic** — every retrieved formula's confidence nudged up or down
+     based on whether the final candidate passed verification.
+   - **Procedural** — for every revision round, whether the corrective
+     strategy tried actually resolved what it was meant to fix, tracked as
+     a running success rate per (domain, error_type, strategy).
+   - **Error** — every revision round's failure signature, root cause, and
+     fix, with a recurrence counter that persists and accumulates *across
+     separate runs* (confirmed: running the pipeline twice on similar
+     problems shows `frequency` go 1 → 2, loaded fresh from disk each time).
+   *(Stage 5)*
 
-It does *not* yet learn across problems (no meta-learning, no
-tool-selection-policy adjustment, no knowledge-graph updates) — this stage
-fixes *this* problem's answer; it doesn't yet make the agent better at the
-next one. That's the outer loop from the design doc, still to come.
+It does *not* yet **act** on procedural/error memory to change future
+behavior (e.g. overriding error_taxonomy's fixed strategy choice, or
+adjusting tool-selection policy) — that's meta-learning, still to come.
+Stage 5's job is specifically to make sure that data exists and accumulates
+correctly; deciding what to do with it is a deliberately separate step.
 
 ## Setup
 
@@ -100,15 +113,20 @@ physics_agent/
   self_correction/
     error_taxonomy.py      classify_error: deterministic checks_failed -> (error_type, strategy)
     revision_planner.py     RevisionPlanner: strategy -> concrete orchestrator action
-    engine.py                 SelfCorrectionEngine: the detect-revise-reverify loop + safety rail
-  trace.py            Trace schema + EpisodicMemory (JSONL append-only store)
-  cli.py              Entry point wiring the full Stage 1 + 2 + 3 + 4 pipeline together
+    engine.py                 SelfCorrectionEngine: detect-revise-reverify loop + safety rail
+  memory/
+    procedural.py            ProceduralMemory: strategy success rates per (domain, error_type)
+    error_memory.py           ErrorMemory: recurring failure signatures, root cause, fix, frequency
+    consolidator.py            MemoryConsolidator: writes all four memory types after a solve
+  trace.py            Trace schema + EpisodicMemory (JSONL append-only store, now with queries)
+  retrieval.py        SemanticStore (Stage 1 retrieval + Stage 5 record_outcome confidence updates)
+  cli.py              Entry point wiring the full Stage 1-5 pipeline together
 data/
   semantic_seed.json  Seed knowledge base (~13 core physics formulas across domains)
 tests/
   test_trace.py         Trace roundtrip + episodic memory read/write
   test_planner.py         Decomposition, JSON-parsing robustness, retry/failure paths
-  test_retrieval.py       Keyword scoring, domain-tag bonus, persistence
+  test_retrieval.py       Keyword scoring, domain-tag bonus, persistence, confidence updates
   test_tools.py            SymPy/SciPy/arXiv tools: correctness + failure handling
   test_registry.py          Domain-tag -> tool hint mapping
   test_orchestrator.py       Tool selection, execution, failure capture, synthesis, revision methods
@@ -119,8 +137,13 @@ tests/
   test_self_eval_pipeline.py      Full pipeline, crash isolation, check-ordering dependency
   test_error_taxonomy.py           Every classification rule + priority ordering
   test_self_correction_engine.py    Full loop: resolves, exhausts retries, archives history
+  test_procedural_memory.py          Success-rate tracking, key normalization, min-uses gating
+  test_error_memory.py                Recurrence frequency, signature grouping, persistence
+  test_memory_consolidator.py          All four memory types updated correctly from one trace
 memory/
   episodic.jsonl      Created at runtime — one JSON line per problem run
+  procedural.json      Created at runtime — strategy success-rate table
+  error_memory.json     Created at runtime — recurring failure catalog
 ```
 
 ## Running the tests
@@ -129,7 +152,7 @@ memory/
 pytest tests/ -v
 ```
 
-All 75 tests run offline (no LM Studio required) using `MockLLMClient`.
+All 100 tests run offline (no LM Studio required) using `MockLLMClient`.
 The physics tools themselves (SymPy solving, SciPy integration) and the
 Math Check's re-substitution verification are exercised with real
 computation, not mocked — only the LLM calls (planning, tool selection,
@@ -266,18 +289,59 @@ synthesis, logic/physics/confidence critique) are mocked.
   trace — nothing here quietly reports a passing result that didn't
   actually pass.
 
+## Design notes for Stage 5 specifically
+
+- **Consolidation and adaptation are kept as separate steps on purpose.**
+  `MemoryConsolidator` only *writes* — it never changes error_taxonomy's
+  fixed strategy choices or tool-selection behavior based on what it's
+  recording. `ProceduralMemory.best_strategy_for` exists and is tested, but
+  nothing calls it yet. Mixing "record what happened" with "change future
+  behavior because of it" in one component would make both harder to get
+  right and harder to audit — a later meta-learning stage is a better home
+  for the second half.
+- **Error signatures are coarse `(error_type, domain_tags)` pairs, not
+  full check-detail text.** A finer-grained signature would fragment into
+  near-unique entries and never accumulate a meaningful `frequency` —
+  the whole point of error memory is noticing *patterns* across many
+  different problems, which requires deliberately losing some
+  per-incident detail (the `root_cause` field keeps the most recent
+  occurrence's specific text, so nothing is fully discarded).
+- **Semantic memory's confidence update is a soft nudge, not a hard
+  overwrite** (`SemanticStore.record_outcome`, exponential moving average).
+  One solve's outcome is weak evidence about a fact that may have been
+  correctly applied in dozens of prior solves — a single confused problem
+  shouldn't be able to tank a formula's confidence in one step.
+- **Procedural memory requires a minimum of 3 uses before
+  `best_strategy_for` returns anything**, specifically to avoid a single
+  lucky/unlucky outcome looking like a real success-rate signal. This
+  matters more here than almost anywhere else in the system, since
+  procedural memory is the thing most likely to eventually *change* what
+  the agent does automatically — bad early data compounding there is a
+  worse failure mode than in, say, episodic memory, which is just a log.
+- **The cross-run persistence was verified directly, not just unit
+  tested**: two separate Python processes, each loading `ProceduralMemory`
+  / `ErrorMemory` fresh from disk, showed `n_uses`/`frequency` correctly
+  accumulate from 1 → 2 across the "sessions" — confirming this is real
+  memory, not just per-run bookkeeping that happens to look like memory
+  in an in-process test.
+
 ## Next steps
 
-With Stages 1-4 done, the agent can solve a problem, verify its own answer
-against independent methods, and correct itself when verification fails —
-but every problem still starts from zero. What's still missing, per the
-design doc's roadmap: **structured memory** (persisting what was learned
-from each solve — not just the trace log, but semantic/procedural/error
-memories that get *retrieved* on future problems), a **knowledge graph**
-(confidence-tracked concepts and their conditions of validity, built up
-over many solves), **meta-learning** (adjusting tool-selection policy,
-verification depth, and the error-taxonomy priority ordering itself based
-on what the accumulating revision_history actually shows works), and an
-**autonomous curriculum** (generating new practice problems targeted at
-whatever the knowledge graph shows is weakest). Let me know which of these
+With Stages 1-5 done, the agent can solve a problem, verify its own answer,
+correct itself when verification fails, and persist what happened across
+all four memory types — but nothing yet *acts* on procedural/error memory
+to change future behavior, and there's no knowledge graph connecting
+individual semantic facts to each other. Per the design doc's roadmap,
+what's still missing: a **knowledge graph** (nodes for concepts/equations,
+edges for derivation/special-case/contradiction relationships, each with
+confidence and provenance — letting the planner check "is this formula
+valid under these assumptions" as a graph query instead of re-deriving
+validity conditions every time), **meta-learning** (this is where
+`ProceduralMemory.best_strategy_for` and `ErrorMemory.most_frequent`
+finally get consumed — adjusting tool-selection policy, verification
+depth, and possibly overriding error_taxonomy's fixed priority ordering
+based on real accumulated outcomes), and an **autonomous curriculum**
+(generating new practice problems targeted at whatever
+`EpisodicMemory.query_by_resolution_status("unresolved_max_revisions")` or
+`ErrorMemory.most_frequent()` shows is weakest). Let me know which of these
 you'd like to tackle next.

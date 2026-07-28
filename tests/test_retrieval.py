@@ -78,3 +78,47 @@ def test_add_persists_to_disk(store_path):
     reloaded = SemanticStore(store_path)
     ids = [e["id"] for e in reloaded.entries]
     assert "mom-999" in ids
+
+
+def test_record_outcome_nudges_confidence_up_on_success(store_path):
+    store = SemanticStore(store_path)
+    before = next(e for e in store.entries if e["id"] == "eng-001")["confidence"]
+
+    updated = store.record_outcome("eng-001", success=True, learning_rate=0.1)
+
+    assert updated["confidence"] > before
+    assert updated["confidence"] <= 1.0
+
+
+def test_record_outcome_nudges_confidence_down_on_failure(store_path):
+    store = SemanticStore(store_path)
+    before = next(e for e in store.entries if e["id"] == "eng-001")["confidence"]
+
+    updated = store.record_outcome("eng-001", success=False, learning_rate=0.1)
+
+    assert updated["confidence"] < before
+    assert updated["confidence"] >= 0.0
+
+
+def test_record_outcome_persists_across_reload(store_path):
+    store = SemanticStore(store_path)
+    store.record_outcome("eng-001", success=False, learning_rate=0.5)
+
+    reloaded = SemanticStore(store_path)
+    entry = next(e for e in reloaded.entries if e["id"] == "eng-001")
+    assert entry["confidence"] < 0.99  # seed value was 0.99
+
+
+def test_record_outcome_returns_none_for_unknown_id(store_path):
+    store = SemanticStore(store_path)
+    result = store.record_outcome("does-not-exist", success=True)
+    assert result is None
+
+
+def test_record_outcome_converges_toward_target_with_repeated_success(store_path):
+    store = SemanticStore(store_path)
+    for _ in range(20):
+        store.record_outcome("grav-001", success=True, learning_rate=0.3)
+    entry = next(e for e in store.entries if e["id"] == "grav-001")
+    assert entry["confidence"] > 0.99  # started at 0.99, converges toward 1.0
+    assert entry["confidence"] <= 1.0

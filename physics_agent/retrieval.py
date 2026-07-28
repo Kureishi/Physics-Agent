@@ -1,6 +1,6 @@
 """
-Retrieval (Stage 1): a minimal semantic-memory store for physics formulas
-and concepts.
+Retrieval (Stage 1) / Semantic Memory (Stage 5): a semantic-memory store
+for physics formulas and concepts.
 
 Schema per entry matches the semantic-memory design:
     {id, statement, conditions, confidence, provenance, tags, last_validated}
@@ -9,6 +9,11 @@ Retrieval is deliberately simple here — keyword-overlap scoring, no
 embeddings — so Stage 1 can run end-to-end with zero extra ML dependencies
 beyond the LLM call itself. `SemanticStore.retrieve` is the seam to swap in
 an embedding-based version later without touching any calling code.
+
+`record_outcome` (Stage 5) is what makes this genuinely a *memory* rather
+than a static lookup table: a fact's confidence moves based on whether
+solutions that leaned on it actually passed verification, instead of
+staying frozen at its seed value forever.
 """
 from __future__ import annotations
 
@@ -80,5 +85,34 @@ class SemanticStore:
                 "last_validated": time.time(),
             }
         )
+        self._persist()
+
+    def record_outcome(
+        self, entry_id: str, success: bool, learning_rate: float = 0.1
+    ) -> Optional[Dict[str, Any]]:
+        """
+        Stage 5: nudges an entry's confidence toward 1.0 on success or
+        toward 0.0 on failure, via a simple exponential moving average
+        (bounded to [0, 1] automatically since it's a convex combination of
+        two values already in that range). Returns the updated entry, or
+        None if entry_id wasn't found.
+
+        This is deliberately a soft nudge rather than a hard overwrite: one
+        solve's outcome is weak evidence about a fact that may have been
+        used correctly for years before a single confused problem leaned
+        on it in a case where something else was actually at fault.
+        """
+        for entry in self.entries:
+            if entry["id"] == entry_id:
+                target = 1.0 if success else 0.0
+                entry["confidence"] = entry["confidence"] + learning_rate * (
+                    target - entry["confidence"]
+                )
+                entry["last_validated"] = time.time()
+                self._persist()
+                return entry
+        return None
+
+    def _persist(self) -> None:
         with self.path.open("w", encoding="utf-8") as f:
             json.dump(self.entries, f, indent=2)

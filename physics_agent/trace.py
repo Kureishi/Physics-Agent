@@ -125,5 +125,28 @@ class EpisodicMemory:
                 traces.append(Trace.from_dict(json.loads(line)))
         return traces
 
+    def query_by_domain_tags(self, tags: List[str]) -> List[Trace]:
+        """Stage 5: traces whose domain_tags overlap with `tags` at all --
+        e.g. for a later meta-learning stage asking "how are we doing on
+        oscillations-waves problems lately?" Deliberately a simple linear
+        scan/tag-overlap check, consistent with SemanticStore.retrieve's
+        keyword approach -- no embeddings, no external index, just enough
+        to be useful at the scale a single local agent operates at."""
+        tag_set = set(tags)
+        return [t for t in self.read_all() if tag_set & set(t.domain_tags)]
+
+    def query_by_resolution_status(self, status: str) -> List[Trace]:
+        """Stage 5: e.g. query_by_resolution_status("unresolved_max_revisions")
+        to find problems the agent never actually managed to self-correct --
+        exactly the set a later curriculum/meta-learning stage would want
+        to prioritize."""
+        return [t for t in self.read_all() if t.resolution_status == status]
+
+    def query_by_error_type(self, error_type: str) -> List[Trace]:
+        """Stage 5: all traces where this error_type was the last one
+        detected -- useful for spotting a recurring failure pattern across
+        many different problems, not just within one problem's revision_history."""
+        return [t for t in self.read_all() if t.error_type == error_type]
+
     def __len__(self) -> int:
         return len(self.read_all())

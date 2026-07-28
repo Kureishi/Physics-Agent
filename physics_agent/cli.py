@@ -1,6 +1,7 @@
 """
-Stage 1 CLI: run a physics problem through the Task Planner + Retrieval,
-and write the resulting (partial) trace to episodic memory.
+Physics agent CLI: runs the full Stage 1-5 pipeline (plan + retrieve, tool
+orchestration, self-evaluation, self-correction, memory consolidation) on
+a single problem.
 
 Usage:
     # Against a running LM Studio server (defaults to http://localhost:1234/v1)
@@ -15,6 +16,9 @@ import argparse
 
 from .config import Config
 from .llm_client import LLMClient, MockLLMClient
+from .memory.consolidator import MemoryConsolidator
+from .memory.error_memory import ErrorMemory
+from .memory.procedural import ProceduralMemory
 from .orchestrator import ToolOrchestrator
 from .planner import TaskPlanner
 from .retrieval import SemanticStore
@@ -40,8 +44,12 @@ def run(problem_text: str, dry_run: bool = False, config: Config = None) -> Trac
     orchestrator = ToolOrchestrator(llm)
     self_eval = SelfEvaluationPipeline(llm)
     self_correction = SelfCorrectionEngine(orchestrator, self_eval, max_revisions=config.max_revisions)
+
     store = SemanticStore(config.semantic_store_path)
-    memory = EpisodicMemory(config.episodic_memory_path)
+    episodic = EpisodicMemory(config.episodic_memory_path)
+    procedural = ProceduralMemory(config.procedural_memory_path)
+    error_memory = ErrorMemory(config.error_memory_path)
+    consolidator = MemoryConsolidator(episodic, store, procedural, error_memory)
 
     trace = Trace.new(problem_text)
 
@@ -63,7 +71,9 @@ def run(problem_text: str, dry_run: bool = False, config: Config = None) -> Trac
     # Stage 4: detect + correct, looping back through Stage 2/3 as needed
     self_correction.run(trace)
 
-    memory.write(trace)
+    # Stage 5: consolidate this solve into episodic/semantic/procedural/error memory
+    consolidator.consolidate(trace)
+
     return trace
 
 
@@ -115,7 +125,8 @@ def _print_trace(trace: Trace) -> None:
     print(f"\nFinal answer:\n  {trace.final_answer}")
     print(f"\nTotal time to solve: {trace.time_to_solve_ms:.1f} ms")
 
-    print("\nTrace written to episodic memory.")
+    print("\nMemory consolidated: episodic trace, semantic confidence updates, "
+          "procedural + error memory (if any revisions occurred).")
 
 
 def main() -> None:
@@ -124,7 +135,9 @@ def main() -> None:
     parser.add_argument(
         "--dry-run", action="store_true", help="Use a mock LLM instead of calling LM Studio"
     )
-    parser.add_argument("--memory-path", default=None, help="Override episodic memory path")
+    parser.add_argument(
+        "--memory-path", default=None, help="Override episodic memory path (procedural/error/semantic paths are set via Config or env vars)"
+    )
     args = parser.parse_args()
 
     config = Config()

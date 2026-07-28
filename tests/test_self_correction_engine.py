@@ -78,6 +78,8 @@ def test_engine_resolves_after_one_revision():
     assert trace.error_type == "algebra_error"
     assert len(trace.revision_history) == 1
     assert trace.revision_history[0]["error_type"] == "algebra_error"
+    assert trace.revision_history[0]["strategy"] == "rederive_math"
+    assert trace.revision_history[0]["resolved"] is True
     assert trace.checks_failed == []
 
 
@@ -110,6 +112,7 @@ def test_engine_stops_at_max_revisions_when_never_resolved():
     assert trace.resolution_status == "unresolved_max_revisions"
     assert trace.error_type == "algebra_error"
     assert len(trace.revision_history) == 2
+    assert all(r["resolved"] is False for r in trace.revision_history)
     assert trace.checks_failed == ["math"]  # still failing when we gave up
 
 

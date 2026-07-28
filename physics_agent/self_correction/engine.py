@@ -16,6 +16,12 @@ tool calls from a since-corrected earlier round would make e.g. MathCheck
 fail forever on an old mistake that's no longer part of the answer. The
 history list is what preserves the full story for later inspection /
 meta-learning without breaking that invariant.
+
+Each archived round also records `strategy` (which correction was applied)
+and `resolved` (did the specific check(s) that triggered this round's
+correction actually stop failing afterward) -- Stage 5's memory
+consolidation is what actually reads these two fields, so they're recorded
+here, at the only point where both are known.
 """
 from __future__ import annotations
 
@@ -59,15 +65,18 @@ class SelfCorrectionEngine:
             if trace.revision_count >= self.max_revisions:
                 break  # safety rail: stop trying, ship best-effort as unresolved
 
+            checks_failed_before = list(trace.checks_failed)
             trace.revision_history.append(
                 {
                     "round": trace.revision_count,
                     "error_type": error_type,
+                    "strategy": strategy,
                     "rationale": rationale,
                     "tool_calls": [asdict(tc) for tc in trace.tool_calls],
                     "initial_solution": trace.initial_solution,
-                    "checks_failed": list(trace.checks_failed),
+                    "checks_failed": checks_failed_before,
                     "check_details": list(trace.check_details),
+                    "resolved": None,  # filled in below, once we know the outcome
                 }
             )
 
@@ -81,6 +90,13 @@ class SelfCorrectionEngine:
             trace.checks_failed = []
             trace.check_details = []
             self.self_eval.run(trace)
+
+            # "Resolved" means the specific check(s) that triggered this
+            # round's correction are no longer failing -- not that every
+            # check in the whole trace passes (a different check could
+            # still be failing and get its own round next iteration).
+            still_failing = set(checks_failed_before) & set(trace.checks_failed)
+            trace.revision_history[-1]["resolved"] = len(still_failing) == 0
 
         trace.final_answer = trace.initial_solution
         trace.time_to_solve_ms = (time.time() - trace.timestamp) * 1000
