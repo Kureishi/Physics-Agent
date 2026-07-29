@@ -1,4 +1,4 @@
-# Physics Agent — Stage 1 + Stage 2 + Stage 3 + Stage 4 + Stage 5 + Stage 6
+# Physics Agent — Stage 1 through Stage 7
 
 Stage 1: **task planner + retrieval**, plus the **trace schema** that every
 later stage reads and writes. Stage 2: **tool orchestration** — symbolic
@@ -10,11 +10,16 @@ Revision Planner that loop back through Stages 2/3 until the candidate
 passes verification or a safety rail is hit. Stage 5: **memory
 architecture** — episodic, semantic, procedural, and error memory, plus the
 consolidator that writes to all four after each solve. Stage 6:
-**knowledge graph** — typed edges between semantic-memory facts
-(derivation, special-case, required-assumption, contradiction), enabling a
-deterministic "is this formula valid here" check and low-confidence
-clustering for a future curriculum stage. See `physics_agent/trace.py` for
-the full schema and a field-by-field note on which stage owns which field.
+**knowledge graph** — typed edges between semantic-memory facts, enabling
+a deterministic "is this formula valid here" check and low-confidence
+clustering. Stage 7: **meta-learning / adaptive adjustments** — the outer
+loop that actually *consumes* what Stages 5-6 collected: a tool-selection
+policy that narrows which tools get offered per domain based on their real
+track record, and a verification-depth policy that raises the confidence
+bar for domains the agent has been overconfident about — plus reporting
+tools (check-value rates, declining-strategy flags, ranked weak areas) for
+a human or future Stage 8 to act on. See `physics_agent/trace.py` for the
+full schema and a field-by-field note on which stage owns which field.
 
 ## What this does right now
 
@@ -22,14 +27,21 @@ Given a raw physics problem, the pipeline:
 1. **Classifies** it into 1-3 domain tags from a fixed physics taxonomy. *(Stage 1)*
 2. **Decomposes** it into an ordered list of subtasks. *(Stage 1)*
 3. **Retrieves** relevant formulas/concepts from a seeded semantic-memory store. *(Stage 1)*
-4. **Selects tools** relevant to the problem's domain and decides which to call, with what inputs. *(Stage 2)*
+4. **Selects tools** relevant to the problem's domain — narrowed by
+   **Stage 7's learned tool policy**, which drops tools with a
+   well-established poor track record for that domain (never below one
+   tool; unproven tools are never penalized) — and decides which to call,
+   with what inputs. *(Stage 2, adjusted Stage 7)*
 5. **Executes** those tool calls — symbolic algebra (SymPy), numerical ODE
    integration (SciPy), or arXiv literature search — capturing every call
    (including failures) into the trace. *(Stage 2)*
 6. **Synthesizes an initial solution** from the tool outputs. *(Stage 2)*
 7. **Self-evaluates** that solution with four independent checks: Logic,
-   Physics (cross-tool agreement + **knowledge graph validity** + LLM
-   critique), Math (re-substitution verification), Confidence. *(Stage 3, extended Stage 6)*
+   Physics (cross-tool agreement + knowledge graph validity + LLM
+   critique), Math (re-substitution verification), Confidence — whose pass
+   threshold may be **raised by Stage 7's verification-depth policy** for
+   domains where confidence has historically run ahead of what this
+   system's own outcomes justify. *(Stage 3, adjusted Stage 7)*
 8. **If any check failed:** classifies *why* using a deterministic error
    taxonomy, applies the matching correction strategy, and **re-runs
    Stage 3** on the updated candidate. Repeats up to `max_revisions` times
@@ -38,20 +50,26 @@ Given a raw physics problem, the pipeline:
    updates, procedural strategy success rates, and error-signature
    frequency tracking. *(Stage 5)*
 10. **Knowledge graph relationships** connect the underlying semantic
-    facts: `rel-001` (relativistic KE) is `special_case_of` `eng-001`
-    (classical KE); `eng-001` `requires_assumption` `non_relativistic`;
-    `eng-002` (U=mgh) `derives_from` `grav-001` (universal gravitation);
-    and so on for all 13 seeded formulas. `PhysicsCheck` queries this graph
-    directly — confirmed to independently catch a classical formula being
-    applied to a problem tagged `special-relativity`, even when the LLM
-    critique alone says nothing's wrong. *(Stage 6)*
+    facts and let `PhysicsCheck` query formula validity directly. *(Stage 6)*
+11. A separate periodic entry point (`python -m physics_agent.meta_report`,
+    not run per-problem) reviews accumulated memory: which checks actually
+    catch anything, which correction strategies have a declining success
+    rate, and a ranked list of weak areas (recurring error signatures,
+    unresolved problems, low-confidence knowledge-graph clusters) for a
+    future curriculum stage to target. *(Stage 7)*
 
-It does *not* yet **act** on procedural/error memory or knowledge-graph
-clusters to change future behavior (adjusting tool-selection policy,
-retuning error_taxonomy, generating targeted practice problems) — that's
-meta-learning and the autonomous curriculum, still to come. This stage's
-job is to make the *relationships between facts* queryable and correct,
-not to decide what to do differently because of them.
+Confirmed live, not just unit-tested: seeded 6 synthetic traces where
+`simulation` never led to a clean optics solve while `symbolic_math`
+always did — the tool policy correctly excluded `simulation` from what's
+offered on a brand-new optics problem. Separately, seeded 6 traces where
+`quantum-mechanics` problems reported 0.9 confidence but frequently ended
+up unresolved — the verification-depth policy raised the effective
+threshold to 0.90, correctly failing a new solution reporting 0.85
+confidence that would have passed under the static 0.6 default.
+
+It does **not** yet generate new practice problems from the weak-area
+signals it computes, or retune error_taxonomy's fixed priority ordering —
+that's the autonomous curriculum, still to come.
 
 ## Setup
 
@@ -122,9 +140,20 @@ physics_agent/
   knowledge_graph/
     graph.py                  KnowledgeGraph: typed edges over SemanticStore's nodes, validity
                               queries, low-confidence clustering, contradiction surfacing
+  meta_learning/
+    tool_policy.py             ToolSelectionPolicy: learns per-domain tool track records (ACTIVE --
+                              wired into ToolOrchestrator)
+    verification_depth.py       VerificationDepthPolicy: calibrates confidence threshold per domain,
+                              only ever raises it (ACTIVE -- wired into ConfidenceCheck)
+    check_value.py               compute_check_value_report: per-check catch rate (reporting only)
+    pruning.py                     flag_declining_strategies: read-only signal over procedural memory
+    curriculum_signals.py            weak_areas: ranks recurring errors / unresolved traces / low-
+                              confidence KG clusters, for a future Stage 8 to consume
+    report.py                          build_report: ties the reporting-only signals together
   trace.py            Trace schema + EpisodicMemory (JSONL append-only store, now with queries)
   retrieval.py        SemanticStore (Stage 1 retrieval + Stage 5 record_outcome confidence updates)
-  cli.py              Entry point wiring the full Stage 1-6 pipeline together
+  cli.py              Entry point: solves one problem through the full Stage 1-7 pipeline
+  meta_report.py       Separate entry point: periodic review of accumulated memory (Stage 7)
 data/
   semantic_seed.json         Seed knowledge base (~13 core physics formulas across domains)
   knowledge_graph_edges.json  Seed edges over those 13 formulas (derives_from/special_case_of/
@@ -135,11 +164,11 @@ tests/
   test_retrieval.py       Keyword scoring, domain-tag bonus, persistence, confidence updates
   test_tools.py            SymPy/SciPy/arXiv tools: correctness + failure handling
   test_registry.py          Domain-tag -> tool hint mapping
-  test_orchestrator.py       Tool selection, execution, failure capture, synthesis, revision methods
+  test_orchestrator.py       Tool selection/execution/synthesis/revision + tool_policy wiring
   test_logic_check.py         LogicCheck behavior + retry/failure handling
-  test_physics_check.py        Cross-tool agreement, knowledge graph validity integration, LLM critique
+  test_physics_check.py        Cross-tool agreement, knowledge graph validity, LLM critique
   test_math_check.py            Re-substitution verification, correct + incorrect solutions
-  test_confidence_check.py       Threshold behavior, clamping, unparseable responses
+  test_confidence_check.py       Threshold behavior, clamping + threshold_policy wiring
   test_self_eval_pipeline.py      Full pipeline, crash isolation, knowledge graph wiring
   test_error_taxonomy.py           Every classification rule + priority ordering
   test_self_correction_engine.py    Full loop: resolves, exhausts retries, archives history
@@ -147,6 +176,12 @@ tests/
   test_error_memory.py                Recurrence frequency, signature grouping, persistence
   test_memory_consolidator.py          All four memory types updated correctly from one trace
   test_knowledge_graph.py               Edges, validity queries, clustering, contradictions
+  test_tool_policy.py                    Round-0 tool extraction, success rates, filtering, safety
+  test_verification_depth_policy.py       Overconfidence detection, one-directional threshold raise
+  test_check_value.py                      Catch-rate computation across final + archived rounds
+  test_pruning.py                           Declining-strategy flagging, thresholds, sort order
+  test_curriculum_signals.py                 Weak-area ranking across all three sources
+  test_meta_report.py                          Consolidated report shape and data reflection
 memory/
   episodic.jsonl      Created at runtime — one JSON line per problem run
   procedural.json      Created at runtime — strategy success-rate table
@@ -159,12 +194,18 @@ memory/
 pytest tests/ -v
 ```
 
-All 124 tests run offline (no LM Studio required) using `MockLLMClient`.
+All 167 tests run offline (no LM Studio required) using `MockLLMClient`.
 The physics tools themselves (SymPy solving, SciPy integration), the Math
 Check's re-substitution verification, and the knowledge graph's validity
 queries are exercised with real computation, not mocked — only the LLM
 calls (planning, tool selection, synthesis, logic/physics/confidence
 critique) are mocked.
+
+To review accumulated memory after solving several problems:
+
+```bash
+python -m physics_agent.meta_report
+```
 
 ## Design notes carried over from the spec
 
@@ -377,20 +418,70 @@ critique) are mocked.
   neighbor being high-confidence isn't itself suspect just for being
   adjacent to a weak fact.
 
+## Design notes for Stage 7 specifically
+
+- **Only two signals actually change behavior; the rest only report, and
+  that split is deliberate.** `ToolSelectionPolicy` and
+  `VerificationDepthPolicy` are consulted live in Stages 2/3.
+  `check_value.py`, `pruning.py`, and `curriculum_signals.py` only compute
+  and return data. The dividing line isn't arbitrary: the two active
+  policies each have a single, auditable, one-directional lever (narrow
+  tool choices given a proven-poor track record; raise a safety threshold
+  given proven overconfidence) where the worst case of being wrong is
+  "slightly less efficient," never "slightly less safe." Auto-disabling a
+  verification check or auto-retiring a correction strategy is a
+  fundamentally different kind of lever — the worst case there is losing a
+  safety guarantee based on a proxy signal — so those stay as reports for
+  a human (or a more conservative future mechanism) to act on.
+- **Every active policy is gated by a minimum sample size**
+  (`MIN_USES_BEFORE_ACTING`, `MIN_TRACES_BEFORE_ACTING`) and has a defined
+  "not enough data yet" return value (`None`, or the untouched default).
+  This mirrors `ProceduralMemory.best_strategy_for`'s pattern from Stage 5
+  for the same reason: a policy that acts on a 1-sample or 2-sample rate is
+  more likely to encode noise than signal, and unlike a report a human can
+  sanity-check, an active policy's mistakes get repeated automatically.
+- **`VerificationDepthPolicy` only ever raises the threshold, never lowers
+  it below the system default.** This is the one asymmetric design choice
+  worth calling out explicitly: a domain that looks "underconfident" (low
+  reported confidence, but outcomes are actually fine) never gets an
+  automatically *relaxed* bar, even though the data would technically
+  support it. Lowering the bar trades safety for speed on a proxy signal;
+  this system doesn't make that trade automatically, only the reverse one.
+- **`ToolSelectionPolicy` reconstructs "what tools were used in the very
+  first attempt"** from `trace.revision_history[0]` when any revision ever
+  happened, rather than reading `trace.tool_calls` directly — a reminder of
+  Stage 4's invariant that `tool_calls` always reflects only the *current*
+  round. Getting this wrong would have quietly attributed a later,
+  corrected round's tool choices to "what worked from the start."
+- **Both active policies were confirmed changing real behavior, not just
+  passing unit tests against fixtures**: seeded synthetic episodic history
+  showing `simulation` never leading to a clean optics solve, and watched
+  `ToolOrchestrator` genuinely stop offering it on a new problem; seeded
+  history showing `quantum-mechanics` reporting 0.9 confidence while
+  frequently ending up unresolved, and watched `ConfidenceCheck` correctly
+  fail a new 0.85-confidence solution that a static 0.6 threshold would
+  have passed.
+- **Policies are recomputed fresh from disk on every single solve**, not
+  cached and refreshed on a schedule, even though the design doc frames
+  meta-learning as something that runs "periodically... over a batch." At
+  this project's scale (a JSONL file, read linearly) that's cheap enough
+  not to matter; a system solving at high volume would more likely
+  recompute on a schedule instead of per-solve, but the policies'
+  *behavior* wouldn't need to change to support that -- just how often
+  `ToolSelectionPolicy(episodic)` gets re-instantiated.
+
 ## Next steps
 
-With Stages 1-6 done, the agent solves problems, verifies its own answers
-against multiple independent methods (including a real relational check
-over how facts relate to and constrain each other), corrects itself when
-verification fails, and persists everything it learns — but nothing yet
-*decides differently* because of what's been recorded. Per the design
-doc's roadmap, what's still missing: **meta-learning** (this is where
-`ProceduralMemory.best_strategy_for`, `ErrorMemory.most_frequent`, and
-`KnowledgeGraph.find_low_confidence_clusters` finally get *consumed* rather
-than just populated — adjusting tool-selection policy, verification depth,
-and possibly error_taxonomy's fixed priority ordering based on real
-accumulated outcomes) and an **autonomous curriculum** (generating new
-practice problems targeted at whatever
-`EpisodicMemory.query_by_resolution_status("unresolved_max_revisions")`,
-`ErrorMemory.most_frequent()`, or a low-confidence knowledge-graph cluster
-shows is weakest). Let me know which you'd like to tackle next.
+With Stages 1-7 done, the agent solves problems, verifies its own answers,
+corrects itself, remembers what happened, relates facts to each other, and
+now genuinely adapts its own behavior based on accumulated outcomes — narrower
+tool choices where a tool has proven unreliable, stricter verification
+where confidence has proven unwarranted. What's still missing, per the
+design doc's roadmap: the **autonomous curriculum** — actually generating
+new practice problems from `meta_learning.curriculum_signals.weak_areas`'s
+output (recurring error signatures, unresolved-problem domains,
+low-confidence knowledge-graph clusters) rather than just ranking them,
+and continuously benchmarking against them. That closes the loop the very
+first design doc described: solving and learning as separate processes that
+now actually feed each other. Let me know if you'd like to build that next,
+or revisit/extend anything in Stages 1-7.

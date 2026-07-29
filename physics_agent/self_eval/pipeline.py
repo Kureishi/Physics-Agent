@@ -33,6 +33,7 @@ class SelfEvaluationPipeline:
         confidence_threshold: float = 0.6,
         checks: Optional[List] = None,
         knowledge_graph=None,
+        verification_depth_policy=None,
     ):
         """
         `checks`, if given, overrides the default check list entirely
@@ -42,12 +43,19 @@ class SelfEvaluationPipeline:
         `knowledge_graph` (Stage 6), if given, is threaded into PhysicsCheck
         so it can run its deterministic assumption-validity sub-check
         alongside cross-tool agreement and the LLM critique.
+
+        `verification_depth_policy` (Stage 7), if given, is threaded into
+        ConfidenceCheck so it can raise the effective pass threshold for
+        domains where confidence has historically run ahead of what this
+        system's own outcomes justify.
         """
         self.checks = checks if checks is not None else [
             LogicCheck(llm_client),
             PhysicsCheck(llm_client, knowledge_graph=knowledge_graph),
             MathCheck(),
-            ConfidenceCheck(llm_client, threshold=confidence_threshold),
+            ConfidenceCheck(
+                llm_client, threshold=confidence_threshold, threshold_policy=verification_depth_policy
+            ),
         ]
 
     def run(self, trace: Trace) -> Trace:

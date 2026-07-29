@@ -170,3 +170,39 @@ def test_orchestrator_escalate_with_literature_search_appends_tool_call():
 
     assert len(trace.tool_calls) == n_calls_before + 1
     assert trace.tool_calls[-1].tool == "literature_search"
+
+
+def test_orchestrator_tool_policy_filters_offered_tools():
+    llm = MockLLMClient()
+
+    class StubToolPolicy:
+        def filter_tools(self, domain_tags, available_tools):
+            return [t for t in available_tools if t != "simulation"]
+
+    orchestrator = ToolOrchestrator(llm, tool_policy=StubToolPolicy())
+    trace = _make_trace(domain_tags=["dynamics"])  # normally offers both symbolic_math and simulation
+
+    orchestrator.run(trace)
+
+    # The "Available tools for this problem: [...]" line is what actually
+    # constrains selection; the prompt separately documents all three
+    # tools' input formats unconditionally, so we check that specific line
+    # rather than the whole prompt text.
+    selection_call = llm.calls[0]
+    system_prompt = selection_call[0]["content"]
+    available_line = next(line for line in system_prompt.splitlines() if line.startswith("Available tools"))
+    assert "simulation" not in available_line
+    assert "symbolic_math" in available_line
+
+
+def test_orchestrator_without_tool_policy_offers_full_default_set():
+    llm = MockLLMClient()
+    orchestrator = ToolOrchestrator(llm)  # no tool_policy -- pre-Stage-7 behavior
+    trace = _make_trace(domain_tags=["dynamics"])
+
+    orchestrator.run(trace)
+
+    selection_call = llm.calls[0]
+    system_prompt = selection_call[0]["content"]
+    available_line = next(line for line in system_prompt.splitlines() if line.startswith("Available tools"))
+    assert "simulation" in available_line

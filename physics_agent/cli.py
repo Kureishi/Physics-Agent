@@ -1,7 +1,7 @@
 """
-Physics agent CLI: runs the full Stage 1-5 pipeline (plan + retrieve, tool
-orchestration, self-evaluation, self-correction, memory consolidation) on
-a single problem.
+Physics agent CLI: runs the full Stage 1-7 pipeline (plan + retrieve, tool
+orchestration, self-evaluation, self-correction, memory consolidation,
+meta-learning policies) on a single problem.
 
 Usage:
     # Against a running LM Studio server (defaults to http://localhost:1234/v1)
@@ -9,6 +9,11 @@ Usage:
 
     # Offline, no LM Studio needed (uses a mock LLM):
     python -m physics_agent.cli --dry-run "A 2 kg block slides down..."
+
+See physics_agent/meta_report.py for a separate entry point that reviews
+accumulated memory (check-value report, declining strategies, weak areas)
+rather than solving a single problem -- consistent with meta-learning being
+an "outer loop" over many solves, not a per-solve step.
 """
 from __future__ import annotations
 
@@ -20,6 +25,8 @@ from .llm_client import LLMClient, MockLLMClient
 from .memory.consolidator import MemoryConsolidator
 from .memory.error_memory import ErrorMemory
 from .memory.procedural import ProceduralMemory
+from .meta_learning.tool_policy import ToolSelectionPolicy
+from .meta_learning.verification_depth import VerificationDepthPolicy
 from .orchestrator import ToolOrchestrator
 from .planner import TaskPlanner
 from .retrieval import SemanticStore
@@ -44,15 +51,25 @@ def run(problem_text: str, dry_run: bool = False, config: Config = None) -> Trac
     store = SemanticStore(config.semantic_store_path)
     knowledge_graph = KnowledgeGraph(config.knowledge_graph_path, store)
 
-    planner = TaskPlanner(llm)
-    orchestrator = ToolOrchestrator(llm)
-    self_eval = SelfEvaluationPipeline(llm, knowledge_graph=knowledge_graph)
-    self_correction = SelfCorrectionEngine(orchestrator, self_eval, max_revisions=config.max_revisions)
-
     episodic = EpisodicMemory(config.episodic_memory_path)
     procedural = ProceduralMemory(config.procedural_memory_path)
     error_memory = ErrorMemory(config.error_memory_path)
     consolidator = MemoryConsolidator(episodic, store, procedural, error_memory)
+
+    # Stage 7: policies computed fresh from accumulated episodic memory each
+    # run. At this project's scale that's cheap enough to just do live; a
+    # system solving at high volume would more likely cache these and
+    # recompute on a schedule rather than every single solve, but the
+    # policies themselves don't change based on which of those you pick.
+    tool_policy = ToolSelectionPolicy(episodic)
+    verification_depth_policy = VerificationDepthPolicy(episodic)
+
+    planner = TaskPlanner(llm)
+    orchestrator = ToolOrchestrator(llm, tool_policy=tool_policy)
+    self_eval = SelfEvaluationPipeline(
+        llm, knowledge_graph=knowledge_graph, verification_depth_policy=verification_depth_policy
+    )
+    self_correction = SelfCorrectionEngine(orchestrator, self_eval, max_revisions=config.max_revisions)
 
     trace = Trace.new(problem_text)
 
@@ -65,10 +82,12 @@ def run(problem_text: str, dry_run: bool = False, config: Config = None) -> Trac
 
     trace.retrieved_knowledge = store.retrieve(problem_text, domain_tags=trace.domain_tags, k=3)
 
-    # Stage 2: select + execute tools, synthesize an initial solution
+    # Stage 2: select + execute tools (Stage 7's tool_policy may narrow the
+    # offered set), synthesize an initial solution
     orchestrator.run(trace)
 
-    # Stage 3: self-evaluate the initial solution
+    # Stage 3: self-evaluate the initial solution (Stage 7's
+    # verification_depth_policy may raise ConfidenceCheck's threshold)
     self_eval.run(trace)
 
     # Stage 4: detect + correct, looping back through Stage 2/3 as needed

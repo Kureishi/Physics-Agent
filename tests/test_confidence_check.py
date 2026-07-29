@@ -51,3 +51,30 @@ def test_confidence_check_handles_unparseable_response():
     result = check.run(trace)  # should not raise
     assert result["passed"] is False
     assert trace.final_confidence == 0.0
+
+
+def test_confidence_check_threshold_policy_raises_effective_threshold():
+    class StubThresholdPolicy:
+        def recommended_confidence_threshold(self, domain_tags, default_threshold):
+            return 0.95  # simulate an overconfidence-triggered raise
+
+    llm = MockLLMClient()  # default confidence is 0.85
+    check = ConfidenceCheck(llm, threshold=0.6, threshold_policy=StubThresholdPolicy())
+    trace = _make_trace()
+
+    result = check.run(trace)
+
+    # 0.85 clears the static 0.6 threshold but not the policy-raised 0.95
+    assert result["passed"] is False
+    assert "raised" in result["details"]
+
+
+def test_confidence_check_without_threshold_policy_uses_static_threshold():
+    llm = MockLLMClient()  # default confidence is 0.85
+    check = ConfidenceCheck(llm, threshold=0.6)  # no threshold_policy -- pre-Stage-7 behavior
+    trace = _make_trace()
+
+    result = check.run(trace)
+
+    assert result["passed"] is True
+    assert "raised" not in result["details"]

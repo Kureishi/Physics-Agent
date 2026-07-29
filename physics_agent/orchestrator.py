@@ -71,15 +71,22 @@ same reasoning.
 
 
 class ToolOrchestrator:
-    def __init__(self, llm_client, registry: ToolRegistry = None, max_retries: int = 1):
+    def __init__(self, llm_client, registry: ToolRegistry = None, max_retries: int = 1, tool_policy=None):
         self.llm = llm_client
         self.registry = registry or ToolRegistry()
         self.max_retries = max_retries
+        # Stage 7: an optional learned policy that can narrow (never widen
+        # or empty) which tools get offered for a domain, based on which
+        # tools' presence in past first-attempts correlated with not
+        # needing any correction. None preserves pre-Stage-7 behavior exactly.
+        self.tool_policy = tool_policy
 
     # -- tool selection -------------------------------------------------
 
     def _select_tool_calls(self, trace: Trace, feedback: Optional[str] = None) -> List[Dict[str, Any]]:
         available = self.registry.relevant_tools(trace.domain_tags)
+        if self.tool_policy is not None:
+            available = self.tool_policy.filter_tools(trace.domain_tags, available)
         system_prompt = _TOOL_SELECTION_SYSTEM_PROMPT_TEMPLATE.format(available_tools=available)
 
         payload = {
