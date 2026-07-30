@@ -71,6 +71,8 @@ def test_error_memory_signal_included(env):
     result = weak_areas(episodic, error_memory, graph)
     sources = [s["source"] for s in result]
     assert "error_memory" in sources
+    error_signal = next(s for s in result if s["source"] == "error_memory")
+    assert error_signal["error_type"] == "algebra_error"  # structured field for Stage 8 consumers
 
 
 def test_unresolved_traces_signal_included(env):
@@ -92,6 +94,7 @@ def test_knowledge_graph_cluster_signal_included_with_resolved_tags(env):
     kg_signals = [s for s in result if s["source"] == "knowledge_graph"]
     assert len(kg_signals) == 1
     assert set(kg_signals[0]["domain_tags"]) == {"gravitation", "orbital-mechanics"}
+    assert set(kg_signals[0]["node_ids"]) == {"grav-001", "orbit-001"}  # structured field for Stage 8
 
 
 def test_results_ranked_by_weight_descending(env):

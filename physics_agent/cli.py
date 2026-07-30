@@ -35,7 +35,19 @@ from .self_eval.pipeline import SelfEvaluationPipeline
 from .trace import Trace, EpisodicMemory
 
 
-def run(problem_text: str, dry_run: bool = False, config: Config = None) -> Trace:
+def run(
+    problem_text: str,
+    dry_run: bool = False,
+    config: Config = None,
+    source: str = "user",
+    curriculum_target: dict = None,
+) -> Trace:
+    """
+    `source` and `curriculum_target` (Stage 8) let CurriculumRunner tag a
+    self-generated practice problem as such, so it stays distinguishable
+    from user-submitted problems in episodic memory -- nothing about how
+    it's solved differs, only how it's later identified.
+    """
     config = config or Config()
 
     llm = (
@@ -72,6 +84,8 @@ def run(problem_text: str, dry_run: bool = False, config: Config = None) -> Trac
     self_correction = SelfCorrectionEngine(orchestrator, self_eval, max_revisions=config.max_revisions)
 
     trace = Trace.new(problem_text)
+    trace.source = source
+    trace.curriculum_target = curriculum_target
 
     # Stage 1: plan + retrieve
     plan = planner.decompose(problem_text)

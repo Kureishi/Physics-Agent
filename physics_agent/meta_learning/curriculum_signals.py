@@ -1,17 +1,22 @@
 """
-Curriculum Signals (Stage 7 -> feeds a future Stage 8).
+Curriculum Signals (Stage 7 -> consumed by Stage 8).
 
 Combines the three "what's weak" sources this system already tracks into
-one ranked list a later autonomous-curriculum stage could consume to
-generate targeted practice problems:
+one ranked list a curriculum stage can consume to generate targeted
+practice problems:
   - ErrorMemory: recurring failure signatures, ranked by frequency.
   - EpisodicMemory: traces that never resolved (unresolved_max_revisions),
     grouped by domain tag.
   - KnowledgeGraph: connected clusters of low-confidence facts.
 
+Each returned signal includes a human-readable "reason" string plus
+source-specific structured fields (`error_type` for error_memory signals,
+`node_ids` for knowledge_graph signals) so a consumer like Stage 8's
+CurriculumRunner can re-measure the exact same underlying metric later
+without re-parsing the reason text.
+
 This module only ranks and summarizes; it does not generate problems --
-that's explicitly out of scope here per the design doc (problem
-generation is Stage 8's job, not Stage 7's).
+that's Stage 8's job, not this one's.
 """
 from __future__ import annotations
 
@@ -35,6 +40,7 @@ def weak_areas(
             {
                 "source": "error_memory",
                 "domain_tags": entry["domain_tags"],
+                "error_type": entry["error_type"],
                 "reason": f"error type '{entry['error_type']}' recurred {entry['frequency']}x",
                 "weight": entry["frequency"],
             }
@@ -65,6 +71,7 @@ def weak_areas(
             {
                 "source": "knowledge_graph",
                 "domain_tags": sorted(tags),
+                "node_ids": cluster,
                 "reason": f"low-confidence fact cluster: {cluster}",
                 "weight": len(cluster),
             }

@@ -31,6 +31,7 @@ class Config:
     procedural_memory_path: str = os.environ.get("PROCEDURAL_MEMORY_PATH", "memory/procedural.json")
     error_memory_path: str = os.environ.get("ERROR_MEMORY_PATH", "memory/error_memory.json")
     knowledge_graph_path: str = os.environ.get("KNOWLEDGE_GRAPH_PATH", "data/knowledge_graph_edges.json")
+    curriculum_log_path: str = os.environ.get("CURRICULUM_LOG_PATH", "memory/curriculum_log.jsonl")
 
     # Safety rail for the Stage 4 self-correction loop: stop retrying after
     # this many revision attempts and ship the best-effort answer marked

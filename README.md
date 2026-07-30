@@ -1,4 +1,4 @@
-# Physics Agent — Stage 1 through Stage 7
+# Physics Agent — Stage 1 through Stage 8
 
 Stage 1: **task planner + retrieval**, plus the **trace schema** that every
 later stage reads and writes. Stage 2: **tool orchestration** — symbolic
@@ -12,26 +12,39 @@ architecture** — episodic, semantic, procedural, and error memory, plus the
 consolidator that writes to all four after each solve. Stage 6:
 **knowledge graph** — typed edges between semantic-memory facts, enabling
 a deterministic "is this formula valid here" check and low-confidence
-clustering. Stage 7: **meta-learning / adaptive adjustments** — the outer
-loop that actually *consumes* what Stages 5-6 collected: a tool-selection
-policy that narrows which tools get offered per domain based on their real
-track record, and a verification-depth policy that raises the confidence
-bar for domains the agent has been overconfident about — plus reporting
-tools (check-value rates, declining-strategy flags, ranked weak areas) for
-a human or future Stage 8 to act on. See `physics_agent/trace.py` for the
-full schema and a field-by-field note on which stage owns which field.
+clustering. Stage 7: **meta-learning / adaptive adjustments** — a
+tool-selection policy and a verification-depth policy that actually change
+future behavior based on accumulated outcomes, plus reporting tools for a
+human to act on. Stage 8: **autonomous curriculum** — closes the loop:
+generates new practice problems targeting Stage 7's ranked weak areas,
+solves them through the exact same pipeline as any other problem, and
+measures (honestly, not just optimistically) whether the practice actually
+moved the underlying metric that was flagged. See `physics_agent/trace.py`
+for the full schema and a field-by-field note on which stage owns which field.
+
+## Three separate entry points
+
+- **`python -m physics_agent.cli "<problem>"`** — solves one problem
+  (Stages 1-7). What a person interacts with directly.
+- **`python -m physics_agent.meta_report`** — reviews accumulated memory
+  (check-value rates, declining strategies, ranked weak areas) without
+  changing anything. An outer loop over many past solves, not a step in
+  solving any one of them.
+- **`python -m physics_agent.curriculum_cli`** — generates and solves new
+  practice problems targeting the current weak areas (`--n N`), or
+  summarizes past curriculum rounds (`--report`). The one entry point that
+  writes new episodic traces without a person supplying the problem text —
+  every generated trace is tagged `source="curriculum"` specifically so
+  it stays distinguishable from ones a person submitted.
 
 ## What this does right now
 
-Given a raw physics problem, the pipeline:
+Given a raw physics problem, the solving pipeline (`cli.py`):
 1. **Classifies** it into 1-3 domain tags from a fixed physics taxonomy. *(Stage 1)*
 2. **Decomposes** it into an ordered list of subtasks. *(Stage 1)*
 3. **Retrieves** relevant formulas/concepts from a seeded semantic-memory store. *(Stage 1)*
 4. **Selects tools** relevant to the problem's domain — narrowed by
-   **Stage 7's learned tool policy**, which drops tools with a
-   well-established poor track record for that domain (never below one
-   tool; unproven tools are never penalized) — and decides which to call,
-   with what inputs. *(Stage 2, adjusted Stage 7)*
+   Stage 7's learned tool policy — and decides which to call, with what inputs. *(Stage 2, adjusted Stage 7)*
 5. **Executes** those tool calls — symbolic algebra (SymPy), numerical ODE
    integration (SciPy), or arXiv literature search — capturing every call
    (including failures) into the trace. *(Stage 2)*
@@ -39,37 +52,36 @@ Given a raw physics problem, the pipeline:
 7. **Self-evaluates** that solution with four independent checks: Logic,
    Physics (cross-tool agreement + knowledge graph validity + LLM
    critique), Math (re-substitution verification), Confidence — whose pass
-   threshold may be **raised by Stage 7's verification-depth policy** for
-   domains where confidence has historically run ahead of what this
-   system's own outcomes justify. *(Stage 3, adjusted Stage 7)*
-8. **If any check failed:** classifies *why* using a deterministic error
-   taxonomy, applies the matching correction strategy, and **re-runs
-   Stage 3** on the updated candidate. Repeats up to `max_revisions` times
-   (default 3). *(Stage 4)*
+   threshold may be raised by Stage 7's verification-depth policy. *(Stage 3, adjusted Stage 7)*
+8. **If any check failed:** classifies *why*, applies the matching
+   correction strategy, and re-runs Stage 3 on the updated candidate, up to
+   `max_revisions` times. *(Stage 4)*
 9. **Consolidates the solve into memory:** episodic, semantic confidence
-   updates, procedural strategy success rates, and error-signature
-   frequency tracking. *(Stage 5)*
-10. **Knowledge graph relationships** connect the underlying semantic
-    facts and let `PhysicsCheck` query formula validity directly. *(Stage 6)*
-11. A separate periodic entry point (`python -m physics_agent.meta_report`,
-    not run per-problem) reviews accumulated memory: which checks actually
-    catch anything, which correction strategies have a declining success
-    rate, and a ranked list of weak areas (recurring error signatures,
-    unresolved problems, low-confidence knowledge-graph clusters) for a
-    future curriculum stage to target. *(Stage 7)*
+   updates, procedural strategy success rates, error-signature frequency
+   tracking. *(Stage 5)*
+10. **Knowledge graph relationships** let `PhysicsCheck` query formula
+    validity directly. *(Stage 6)*
 
-Confirmed live, not just unit-tested: seeded 6 synthetic traces where
-`simulation` never led to a clean optics solve while `symbolic_math`
-always did — the tool policy correctly excluded `simulation` from what's
-offered on a brand-new optics problem. Separately, seeded 6 traces where
-`quantum-mechanics` problems reported 0.9 confidence but frequently ended
-up unresolved — the verification-depth policy raised the effective
-threshold to 0.90, correctly failing a new solution reporting 0.85
-confidence that would have passed under the static 0.6 default.
+Separately, `curriculum_cli.py` (Stage 8):
+1. Calls Stage 7's `weak_areas()` to get the current top N ranked weak spots.
+2. For each, measures the exact underlying metric that flagged it (error
+   recurrence frequency, unresolved-problem count, or knowledge-graph
+   cluster confidence) — the "before" snapshot.
+3. Generates a new, self-contained practice problem targeting it (LLM-based,
+   optionally grounded in a real `literature_search` result — never
+   reproducing source text verbatim; see `problem_generator.py`).
+4. Solves that problem through the *identical* Stage 1-7 pipeline
+   (`physics_agent.cli.run`), tagged `source="curriculum"`.
+5. Re-measures the same metric — the "after" snapshot — and logs the
+   before/after comparison, honestly, to `memory/curriculum_log.jsonl`.
 
-It does **not** yet generate new practice problems from the weak-area
-signals it computes, or retune error_taxonomy's fixed priority ordering —
-that's the autonomous curriculum, still to come.
+Confirmed live, not just unit-tested: seeded 3 recurrences of a
+`cross_method_disagreement` error, ran a curriculum round targeting it, and
+watched it generate a real practice problem, solve it end-to-end
+(`resolution_status: passed_initial`), and correctly report the metric as
+**unchanged** (3.0 → 3.0) rather than fabricating an improvement — the
+practice problem simply didn't happen to trigger the same failure again,
+and the benchmark says so plainly.
 
 ## Setup
 
@@ -148,12 +160,21 @@ physics_agent/
     check_value.py               compute_check_value_report: per-check catch rate (reporting only)
     pruning.py                     flag_declining_strategies: read-only signal over procedural memory
     curriculum_signals.py            weak_areas: ranks recurring errors / unresolved traces / low-
-                              confidence KG clusters, for a future Stage 8 to consume
+                              confidence KG clusters, with structured fields (error_type, node_ids)
+                              for Stage 8 to re-measure without re-parsing text
     report.py                          build_report: ties the reporting-only signals together
+  curriculum/
+    problem_generator.py        ProblemGenerator: LLM-generated practice problems, optionally
+                              grounded in a real literature_search result (never verbatim)
+    curriculum_runner.py         CurriculumRunner: generate -> solve (via cli.run) -> measure
+                              before/after; CurriculumLog persists round results
+    benchmark.py                   summarize: honest improved/regressed/unchanged breakdown
+                              per signal source, across many rounds
   trace.py            Trace schema + EpisodicMemory (JSONL append-only store, now with queries)
   retrieval.py        SemanticStore (Stage 1 retrieval + Stage 5 record_outcome confidence updates)
-  cli.py              Entry point: solves one problem through the full Stage 1-7 pipeline
-  meta_report.py       Separate entry point: periodic review of accumulated memory (Stage 7)
+  cli.py              Solves one problem through the full Stage 1-7 pipeline
+  meta_report.py       Periodic review of accumulated memory (Stage 7) -- no problem-solving
+  curriculum_cli.py     Generates + solves practice problems, or reports on past rounds (Stage 8)
 data/
   semantic_seed.json         Seed knowledge base (~13 core physics formulas across domains)
   knowledge_graph_edges.json  Seed edges over those 13 formulas (derives_from/special_case_of/
@@ -180,12 +201,16 @@ tests/
   test_verification_depth_policy.py       Overconfidence detection, one-directional threshold raise
   test_check_value.py                      Catch-rate computation across final + archived rounds
   test_pruning.py                           Declining-strategy flagging, thresholds, sort order
-  test_curriculum_signals.py                 Weak-area ranking across all three sources
+  test_curriculum_signals.py                 Weak-area ranking + structured fields for Stage 8
   test_meta_report.py                          Consolidated report shape and data reflection
+  test_problem_generator.py                     Generation, literature grounding, retry/failure
+  test_curriculum_runner.py                      Full generate -> solve -> measure integration
+  test_curriculum_benchmark.py                    Improved/regressed/unchanged classification
 memory/
   episodic.jsonl      Created at runtime — one JSON line per problem run
   procedural.json      Created at runtime — strategy success-rate table
   error_memory.json     Created at runtime — recurring failure catalog
+  curriculum_log.jsonl   Created at runtime — one JSON line per curriculum round
 ```
 
 ## Running the tests
@@ -194,17 +219,25 @@ memory/
 pytest tests/ -v
 ```
 
-All 167 tests run offline (no LM Studio required) using `MockLLMClient`.
+All 190 tests run offline (no LM Studio required) using `MockLLMClient`.
 The physics tools themselves (SymPy solving, SciPy integration), the Math
 Check's re-substitution verification, and the knowledge graph's validity
 queries are exercised with real computation, not mocked — only the LLM
 calls (planning, tool selection, synthesis, logic/physics/confidence
-critique) are mocked.
+critique, curriculum problem generation) are mocked.
 
 To review accumulated memory after solving several problems:
 
 ```bash
 python -m physics_agent.meta_report
+```
+
+To run a curriculum round (generate + solve practice problems targeting
+current weak areas), or review past curriculum rounds:
+
+```bash
+python -m physics_agent.curriculum_cli --dry-run --n 2
+python -m physics_agent.curriculum_cli --report
 ```
 
 ## Design notes carried over from the spec
@@ -470,18 +503,76 @@ python -m physics_agent.meta_report
   *behavior* wouldn't need to change to support that -- just how often
   `ToolSelectionPolicy(episodic)` gets re-instantiated.
 
-## Next steps
+## Design notes for Stage 8 specifically
 
-With Stages 1-7 done, the agent solves problems, verifies its own answers,
-corrects itself, remembers what happened, relates facts to each other, and
-now genuinely adapts its own behavior based on accumulated outcomes — narrower
-tool choices where a tool has proven unreliable, stricter verification
-where confidence has proven unwarranted. What's still missing, per the
-design doc's roadmap: the **autonomous curriculum** — actually generating
-new practice problems from `meta_learning.curriculum_signals.weak_areas`'s
-output (recurring error signatures, unresolved-problem domains,
-low-confidence knowledge-graph clusters) rather than just ranking them,
-and continuously benchmarking against them. That closes the loop the very
-first design doc described: solving and learning as separate processes that
-now actually feed each other. Let me know if you'd like to build that next,
-or revisit/extend anything in Stages 1-7.
+- **Generated problems go through the exact same pipeline, not a
+  simplified one.** `CurriculumRunner.run_round` calls
+  `physics_agent.cli.run` directly — the same function a person's typed
+  problem goes through. This was a deliberate reuse decision, not just
+  convenience: a curriculum whose practice problems were solved by a
+  different, "practice-mode" code path could easily drift from what the
+  agent actually does in production, silently making the benchmark
+  meaningless.
+- **"Read literature" is honestly scoped.** `ProblemGenerator` can see a
+  real `literature_search` title and short excerpt and is explicitly told
+  it may draw on the *general subject matter*, but the prompt forbids
+  copying phrases verbatim — consistent with how `LiteratureSearchTool`
+  itself is scoped (see Stage 2's notes). This system does not "reproduce
+  papers" in the sense of full comprehension or replication; claiming that
+  would overstate what a short title+excerpt grounding actually provides.
+- **Before/after measurement re-derives the exact metric that produced the
+  signal**, not a proxy for it (`_measure_signal` dispatches on
+  `signal["source"]` and reads the same store — `ErrorMemory`,
+  `EpisodicMemory`, or the knowledge graph's node confidences — that
+  `weak_areas()` itself read). This is why `weak_areas()` gained
+  structured fields (`error_type`, `node_ids`) in this stage rather than
+  requiring the runner to re-parse a human-readable "reason" string.
+- **The benchmark reports "unchanged" and "regressed" as real, distinct
+  outcomes, not just "improved" with noise.** Confirmed directly: a
+  practice problem that didn't happen to retrigger a targeted
+  `cross_method_disagreement` error left that error's frequency at 3.0
+  both before and after, and the round was logged and reported as
+  `unchanged` — not silently folded into "improved" just because nothing
+  got worse. A system that only ever reports success isn't measuring
+  anything.
+- **Curriculum-generated problems are tagged, not hidden.**
+  `trace.source == "curriculum"` and `trace.curriculum_target` make every
+  self-generated practice problem distinguishable from a person's problem
+  in episodic memory — including to Stage 7's own policies, which read all
+  traces indiscriminately today. Whether curriculum-generated traces
+  *should* be weighted differently in `ToolSelectionPolicy` or
+  `VerificationDepthPolicy` (e.g. discounted, since their difficulty was
+  chosen by the system itself rather than arriving organically) is a real
+  open question this implementation doesn't resolve — it makes the
+  distinction available rather than making that judgment call silently.
+- **One-shot generation, not curated.** If the LLM produces an ill-posed or
+  unsolvable problem, nothing here filters it out before solving — it goes
+  through the pipeline like anything else, and a bad practice problem is
+  itself visible in the resulting trace (e.g. tool failures, a low
+  confidence score, or an unresolved status) rather than silently
+  discarded. Generation failures (bad JSON after retries) are the one
+  thing skipped outright, consistent with every other component's stance
+  of not crashing the whole round over one bad sub-step.
+
+## Where this leaves the design doc's roadmap
+
+All eight stages from the original roadmap are now implemented:
+task planner + retrieval, tool orchestration, self-evaluation,
+self-correction, memory architecture, knowledge graph, meta-learning, and
+the autonomous curriculum. The loop the very first design doc described —
+solving and learning as separate processes that feed each other — is now
+actually closed: solved problems accumulate into memory and a knowledge
+graph; meta-learning reads that accumulation and changes future
+tool-selection and verification behavior; the curriculum reads the same
+accumulation to generate new problems targeting exactly what's weakest;
+and those new problems solve through the identical pipeline, feeding the
+same memory that started the cycle.
+
+What would be worth doing next isn't a new stage so much as deepening the
+existing ones with real usage: running this against an actual LM Studio
+model on a real problem set to see which of the deliberately conservative
+choices throughout (confidence-only threshold raises, minimum sample sizes
+before any policy acts, narrow assumption-validity checks) turn out to be
+well-calibrated in practice versus too cautious or not cautious enough.
+Let me know if you'd like to do that, revisit anything in Stages 1-8, or
+take the project somewhere the original roadmap didn't anticipate.
