@@ -36,6 +36,15 @@ for the full schema and a field-by-field note on which stage owns which field.
   writes new episodic traces without a person supplying the problem text —
   every generated trace is tagged `source="curriculum"` specifically so
   it stays distinguishable from ones a person submitted.
+- **`python -m physics_agent.problem_set_cli`** — a batch harness that
+  runs a whole JSON problem set through `cli.run()` in one command and
+  prints a summary (resolution-status breakdown, average revisions,
+  average confidence, planner domain-classification accuracy against the
+  set's own hints). Not a new pipeline stage — just the fastest way to
+  build up enough real data for Stage 7's policies and Stage 8's
+  curriculum to have anything meaningful to act on. See
+  `data/problem_sets/intro_physics_set.json` for a ready-made 24-problem
+  set spanning all 14 domain tags.
 
 ## What this does right now
 
@@ -120,6 +129,69 @@ JSON so you can exercise the whole pipeline (parsing, retrieval, trace
 writing) without a model running at all. This is also what the test suite
 uses — the tests never require LM Studio to be running.
 
+### Running the problem set end-to-end (recommended first real test)
+
+This is the fastest way to see all eight stages working together on real
+data, rather than one-off single problems.
+
+1. Make sure LM Studio's server is running (see above).
+
+2. Run the full problem set (24 problems spanning all 14 domain tags —
+   kinematics, dynamics, energy, momentum, rotational dynamics,
+   gravitation, oscillations, thermodynamics, electromagnetism, optics,
+   fluid mechanics, special relativity, quantum mechanics, and statistical
+   mechanics):
+   ```bash
+   python -m physics_agent.problem_set_cli
+   ```
+   This solves each problem through the complete Stage 1-7 pipeline (plan
+   → tools → self-eval → self-correction → memory consolidation) and
+   prints a running log plus a final summary: resolution-status
+   breakdown, average revisions needed, average confidence, and how often
+   the planner's own domain classification agreed with the problem set's
+   human-assigned domain hint.
+
+   Options:
+   ```bash
+   python -m physics_agent.problem_set_cli --limit 5              # just the first 5, for a quick smoke test
+   python -m physics_agent.problem_set_cli --dry-run                # offline structural check, no LM Studio needed
+   python -m physics_agent.problem_set_cli path/to/other_set.json     # run a different problem set
+   ```
+   Problem sets are plain JSON: a list of `{"id", "domain_hint", "problem_text"}`
+   objects (`domain_hint` is optional, only used for the summary's
+   classification-accuracy check). See
+   `data/problem_sets/intro_physics_set.json` for the format.
+
+3. Review what accumulated in memory:
+   ```bash
+   python -m physics_agent.meta_report
+   ```
+   With only 24 problems this likely won't cross the minimum-sample-size
+   gates that let Stage 7's policies actually change behavior (5+ traces
+   per domain for the tool policy and the confidence-calibration policy) —
+   that's expected and by design, not a bug. Run the problem set a few
+   more times (or add more problems to the JSON file) to build up enough
+   history to see `check_value`, `declining_strategies`, and `weak_areas`
+   populate with real signal.
+
+4. Once there's enough history, run a curriculum round:
+   ```bash
+   python -m physics_agent.curriculum_cli --n 3
+   ```
+   This generates 3 new practice problems targeting the current top weak
+   areas, solves them the same way, and logs before/after measurements.
+   Review accumulated curriculum rounds any time with:
+   ```bash
+   python -m physics_agent.curriculum_cli --report
+   ```
+
+**A note on repeatability:** every run above writes to the same files
+under `memory/`, and mutates `data/semantic_seed.json`'s confidence values
+(Stage 5's `record_outcome`) plus `data/knowledge_graph_edges.json` if you
+ever call `add_edge` directly. For a clean slate, delete `memory/`'s
+contents (keep `.gitkeep`) and reset the two `data/*.json` files to their
+originally committed values first.
+
 ## Project layout
 
 ```
@@ -175,10 +247,13 @@ physics_agent/
   cli.py              Solves one problem through the full Stage 1-7 pipeline
   meta_report.py       Periodic review of accumulated memory (Stage 7) -- no problem-solving
   curriculum_cli.py     Generates + solves practice problems, or reports on past rounds (Stage 8)
+  problem_set_cli.py     Batch harness: runs a whole JSON problem set through cli.run(), prints summary
 data/
   semantic_seed.json         Seed knowledge base (~13 core physics formulas across domains)
   knowledge_graph_edges.json  Seed edges over those 13 formulas (derives_from/special_case_of/
                               requires_assumption relationships)
+  problem_sets/
+    intro_physics_set.json     24 problems spanning all 14 domain tags, for problem_set_cli.py
 tests/
   test_trace.py         Trace roundtrip + episodic memory read/write
   test_planner.py         Decomposition, JSON-parsing robustness, retry/failure paths
@@ -206,6 +281,7 @@ tests/
   test_problem_generator.py                     Generation, literature grounding, retry/failure
   test_curriculum_runner.py                      Full generate -> solve -> measure integration
   test_curriculum_benchmark.py                    Improved/regressed/unchanged classification
+  test_problem_set_cli.py                          Batch loading, crash isolation, limit handling
 memory/
   episodic.jsonl      Created at runtime — one JSON line per problem run
   procedural.json      Created at runtime — strategy success-rate table
@@ -219,7 +295,7 @@ memory/
 pytest tests/ -v
 ```
 
-All 190 tests run offline (no LM Studio required) using `MockLLMClient`.
+All 194 tests run offline (no LM Studio required) using `MockLLMClient`.
 The physics tools themselves (SymPy solving, SciPy integration), the Math
 Check's re-substitution verification, and the knowledge graph's validity
 queries are exercised with real computation, not mocked — only the LLM

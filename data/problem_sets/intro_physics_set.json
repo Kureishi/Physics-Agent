@@ -1,0 +1,122 @@
+[
+  {
+    "id": "kin-01",
+    "domain_hint": "kinematics",
+    "problem_text": "A car accelerates uniformly from rest to 25 m/s in 8 seconds. Find its acceleration and the distance it travels during this time."
+  },
+  {
+    "id": "kin-02",
+    "domain_hint": "kinematics",
+    "problem_text": "A stone is thrown vertically upward from ground level with an initial speed of 15 m/s. Ignoring air resistance, find the maximum height it reaches and the total time it is in the air before returning to the ground."
+  },
+  {
+    "id": "dyn-01",
+    "domain_hint": "dynamics",
+    "problem_text": "A 5 kg box is pushed across a frictionless floor by a constant horizontal force of 20 N. Find the box's acceleration."
+  },
+  {
+    "id": "dyn-02",
+    "domain_hint": "dynamics",
+    "problem_text": "A 10 kg crate sits on a horizontal floor where the coefficient of kinetic friction between the crate and floor is 0.3. Find the horizontal force required to slide the crate at constant velocity."
+  },
+  {
+    "id": "eng-01",
+    "domain_hint": "energy",
+    "problem_text": "A 2 kg block starts at rest at the top of a 6 m tall frictionless incline. Using conservation of energy, find its speed at the bottom of the incline."
+  },
+  {
+    "id": "eng-02",
+    "domain_hint": "energy",
+    "problem_text": "A spring with a spring constant of 200 N/m is compressed by 0.15 m from its natural length. Find the elastic potential energy stored in the spring."
+  },
+  {
+    "id": "mom-01",
+    "domain_hint": "momentum",
+    "problem_text": "A 1200 kg car moving at 15 m/s collides head-on with a stationary 1500 kg car, and the two cars stick together after the collision. Find their common velocity immediately after the collision."
+  },
+  {
+    "id": "mom-02",
+    "domain_hint": "momentum",
+    "problem_text": "A 0.15 kg baseball is moving at 40 m/s when it is struck by a bat and reverses direction, leaving at 45 m/s. Find the magnitude of the change in the ball's momentum."
+  },
+  {
+    "id": "rot-01",
+    "domain_hint": "rotational-dynamics",
+    "problem_text": "A uniform solid disk of mass 4 kg and radius 0.3 m rotates about an axis through its center, perpendicular to its face. Find its moment of inertia."
+  },
+  {
+    "id": "rot-02",
+    "domain_hint": "rotational-dynamics",
+    "problem_text": "A wheel has a moment of inertia of 2 kg*m^2. A net torque of 10 N*m is applied to it. Find the wheel's angular acceleration."
+  },
+  {
+    "id": "grav-01",
+    "domain_hint": "gravitation",
+    "problem_text": "Find the magnitude of the gravitational force between two 500 kg spheres whose centers are separated by 2 m."
+  },
+  {
+    "id": "grav-02",
+    "domain_hint": "gravitation",
+    "problem_text": "A satellite orbits Earth in a circular orbit of radius 7000 km, where the local gravitational acceleration is 8.7 m/s^2. Find the orbital speed required to maintain this circular orbit."
+  },
+  {
+    "id": "osc-01",
+    "domain_hint": "oscillations-waves",
+    "problem_text": "A 0.5 kg mass attached to a spring with spring constant 50 N/m oscillates in simple harmonic motion on a frictionless surface. Find the period of oscillation."
+  },
+  {
+    "id": "osc-02",
+    "domain_hint": "oscillations-waves",
+    "problem_text": "A simple pendulum has a length of 2 m and swings with small oscillations near Earth's surface (g = 9.8 m/s^2). Find its period of oscillation."
+  },
+  {
+    "id": "thermo-01",
+    "domain_hint": "thermodynamics",
+    "problem_text": "2 moles of an ideal gas are held at a temperature of 300 K in a container with a volume of 0.05 m^3. Find the pressure of the gas (R = 8.314 J/(mol*K))."
+  },
+  {
+    "id": "thermo-02",
+    "domain_hint": "thermodynamics",
+    "problem_text": "An ideal gas at a pressure of 100 kPa and a volume of 2 m^3 is compressed isothermally to a volume of 0.5 m^3. Find the new pressure of the gas."
+  },
+  {
+    "id": "em-01",
+    "domain_hint": "electromagnetism",
+    "problem_text": "Find the magnitude of the electric force between a +2 microcoulomb point charge and a -3 microcoulomb point charge separated by 0.1 m."
+  },
+  {
+    "id": "em-02",
+    "domain_hint": "electromagnetism",
+    "problem_text": "A point charge of 5 microcoulombs experiences an electric force of 0.02 N at a certain location. Find the magnitude of the electric field at that location."
+  },
+  {
+    "id": "opt-01",
+    "domain_hint": "optics",
+    "problem_text": "A converging lens has a focal length of 10 cm. An object is placed 30 cm from the lens. Using the thin lens equation, find the image distance."
+  },
+  {
+    "id": "fluid-01",
+    "domain_hint": "fluid-mechanics",
+    "problem_text": "A fluid with density 1000 kg/m^3 fills a column 5 m deep. Find the gauge pressure at the bottom of the column due to the weight of the fluid (ignore atmospheric pressure)."
+  },
+  {
+    "id": "rel-01",
+    "domain_hint": "special-relativity",
+    "problem_text": "An electron (rest mass 9.11e-31 kg) moves at a speed of 0.8c, where c is the speed of light (3e8 m/s). Find its relativistic kinetic energy in joules."
+  },
+  {
+    "id": "rel-02",
+    "domain_hint": "special-relativity",
+    "problem_text": "A spaceship travels at a speed of 0.9c relative to Earth, where c is the speed of light. Find the Lorentz factor gamma for this speed."
+  },
+  {
+    "id": "quantum-01",
+    "domain_hint": "quantum-mechanics",
+    "problem_text": "Find the energy of a single photon of visible light with a wavelength of 500 nm (Planck's constant h = 6.626e-34 J*s, speed of light c = 3e8 m/s)."
+  },
+  {
+    "id": "statmech-01",
+    "domain_hint": "statistical-mechanics",
+    "problem_text": "Using kinetic theory, estimate the average translational kinetic energy of a single gas molecule at a temperature of 300 K (Boltzmann constant k = 1.38e-23 J/K, using KE_avg = (3/2)*k*T)."
+  }
+]
