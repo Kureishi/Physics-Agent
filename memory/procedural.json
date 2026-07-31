@@ -1,0 +1,15 @@
+{
+  "energy+special-relativity::physics_conceptual_error::rederive_physics_setup": {
+    "id": "energy+special-relativity::physics_conceptual_error::rederive_physics_setup",
+    "domain_tags": [
+      "energy",
+      "special-relativity"
+    ],
+    "error_type": "physics_conceptual_error",
+    "strategy": "rederive_physics_setup",
+    "n_uses": 3,
+    "n_successes": 0,
+    "success_rate": 0.0,
+    "last_used": 1785448977.86646
+  }
+}

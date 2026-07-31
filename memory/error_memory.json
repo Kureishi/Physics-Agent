@@ -1,0 +1,17 @@
+{
+  "physics_conceptual_error::energy+special-relativity": {
+    "id": "physics_conceptual_error::energy+special-relativity",
+    "signature": "physics_conceptual_error::energy+special-relativity",
+    "error_type": "physics_conceptual_error",
+    "domain_tags": [
+      "energy",
+      "special-relativity"
+    ],
+    "root_cause": "Physics check failed (dimensional/conservation/validity issue): Knowledge graph validity check failed: eng-001 violates assumption(s) [{'assumption': 'non_relativistic', 'conflicting_domain_tags': ['special-relativity']}] | No physics issues found.",
+    "fix_applied": "rederive_physics_setup",
+    "resolved": false,
+    "frequency": 3,
+    "first_seen": 1785448977.8651843,
+    "last_seen": 1785448977.8669574
+  }
+}
