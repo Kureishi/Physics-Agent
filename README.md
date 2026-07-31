@@ -22,7 +22,7 @@ measures (honestly, not just optimistically) whether the practice actually
 moved the underlying metric that was flagged. See `physics_agent/trace.py`
 for the full schema and a field-by-field note on which stage owns which field.
 
-## Three separate entry points
+## Five separate entry points
 
 - **`python -m physics_agent.cli "<problem>"`** — solves one problem
   (Stages 1-7). What a person interacts with directly.
@@ -45,6 +45,18 @@ for the full schema and a field-by-field note on which stage owns which field.
   curriculum to have anything meaningful to act on. See
   `data/problem_sets/intro_physics_set.json` for a ready-made 24-problem
   set spanning all 14 domain tags.
+- **`python -m physics_agent.inspect_trace_cli`** — dumps the full detail
+  of exactly ONE solved problem: what was retrieved, every tool call, each
+  self-evaluation check's verdict, and (if any revisions happened) each
+  round's rationale, which check(s) failed, and whether that round's fix
+  actually worked. `meta_report.py` aggregates across all traces;
+  `problem_set_cli.py`'s summary tells you *that* one problem ended up
+  `unresolved_max_revisions` — this tells you *why*, round by round.
+  ```bash
+  python -m physics_agent.inspect_trace_cli --list          # see what's in episodic memory
+  python -m physics_agent.inspect_trace_cli "electron"       # search by substring in problem_text
+  python -m physics_agent.inspect_trace_cli --id <problem_id>  # exact match
+  ```
 
 ## What this does right now
 
@@ -162,7 +174,19 @@ data, rather than one-off single problems.
    classification-accuracy check). See
    `data/problem_sets/intro_physics_set.json` for the format.
 
-3. Review what accumulated in memory:
+3. If the summary flags anything unresolved, or you're just curious how a
+   specific problem went, inspect it directly:
+   ```bash
+   python -m physics_agent.inspect_trace_cli --list
+   python -m physics_agent.inspect_trace_cli "electron"   # substring of the problem text
+   ```
+   This shows exactly what was retrieved, every tool call, each
+   self-evaluation check's verdict, and — for anything that needed
+   revision — each round's rationale, which check(s) failed, and whether
+   that round's fix actually worked. This is what tells you *why* a
+   problem ended up `unresolved_max_revisions`, not just *that* it did.
+
+4. Review what accumulated in memory:
    ```bash
    python -m physics_agent.meta_report
    ```
@@ -174,7 +198,7 @@ data, rather than one-off single problems.
    history to see `check_value`, `declining_strategies`, and `weak_areas`
    populate with real signal.
 
-4. Once there's enough history, run a curriculum round:
+5. Once there's enough history, run a curriculum round:
    ```bash
    python -m physics_agent.curriculum_cli --n 3
    ```
@@ -248,6 +272,7 @@ physics_agent/
   meta_report.py       Periodic review of accumulated memory (Stage 7) -- no problem-solving
   curriculum_cli.py     Generates + solves practice problems, or reports on past rounds (Stage 8)
   problem_set_cli.py     Batch harness: runs a whole JSON problem set through cli.run(), prints summary
+  inspect_trace_cli.py    Dumps full detail (checks, revision history, rationale) for one trace
 data/
   semantic_seed.json         Seed knowledge base (~13 core physics formulas across domains)
   knowledge_graph_edges.json  Seed edges over those 13 formulas (derives_from/special_case_of/
@@ -282,6 +307,7 @@ tests/
   test_curriculum_runner.py                      Full generate -> solve -> measure integration
   test_curriculum_benchmark.py                    Improved/regressed/unchanged classification
   test_problem_set_cli.py                          Batch loading, crash isolation, limit handling
+  test_inspect_trace_cli.py                          Search/lookup logic, full-detail printing
 memory/
   episodic.jsonl      Created at runtime — one JSON line per problem run
   procedural.json      Created at runtime — strategy success-rate table
@@ -295,7 +321,7 @@ memory/
 pytest tests/ -v
 ```
 
-All 194 tests run offline (no LM Studio required) using `MockLLMClient`.
+All 204 tests run offline (no LM Studio required) using `MockLLMClient`.
 The physics tools themselves (SymPy solving, SciPy integration), the Math
 Check's re-substitution verification, and the knowledge graph's validity
 queries are exercised with real computation, not mocked — only the LLM

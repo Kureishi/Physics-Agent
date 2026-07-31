@@ -3,146 +3,146 @@
     "id": "kin-001",
     "statement": "v = v0 + a*t (velocity as a function of constant acceleration and time)",
     "conditions": "Valid only for constant acceleration",
-    "confidence": 0.9979410886790536,
+    "confidence": 0.99,
     "provenance": "seed:classical-mechanics-standard",
     "tags": [
       "kinematics"
     ],
-    "last_validated": 1785449034.577664
+    "last_validated": 0
   },
   {
     "id": "kin-002",
     "statement": "x = x0 + v0*t + 0.5*a*t^2 (position under constant acceleration)",
     "conditions": "Valid only for constant acceleration",
-    "confidence": 0.99717570463519,
+    "confidence": 0.99,
     "provenance": "seed:classical-mechanics-standard",
     "tags": [
       "kinematics"
     ],
-    "last_validated": 1785449034.578043
+    "last_validated": 0
   },
   {
     "id": "dyn-001",
     "statement": "F = m*a (Newton's second law)",
     "conditions": "Valid in inertial reference frames, non-relativistic speeds",
-    "confidence": 0.995217031,
+    "confidence": 0.99,
     "provenance": "seed:classical-mechanics-standard",
     "tags": [
       "dynamics"
     ],
-    "last_validated": 1785449015.3875024
+    "last_validated": 0
   },
   {
     "id": "eng-001",
     "statement": "KE = 0.5*m*v^2 (kinetic energy)",
     "conditions": "Non-relativistic (v << c)",
-    "confidence": 0.89468559,
+    "confidence": 0.99,
     "provenance": "seed:classical-mechanics-standard",
     "tags": [
       "energy",
       "dynamics"
     ],
-    "last_validated": 1785448977.8636603
+    "last_validated": 0
   },
   {
     "id": "eng-002",
     "statement": "U = m*g*h (gravitational potential energy near Earth's surface)",
     "conditions": "Valid for h small compared to Earth's radius, uniform g approximation",
-    "confidence": 0.9013906558,
+    "confidence": 0.98,
     "provenance": "seed:classical-mechanics-standard",
     "tags": [
       "energy",
       "gravitation"
     ],
-    "last_validated": 1785449015.3853762
+    "last_validated": 0
   },
   {
     "id": "eng-003",
     "statement": "Conservation of mechanical energy: KE_i + U_i = KE_f + U_f",
     "conditions": "Valid only when no non-conservative forces (e.g. friction, air resistance) do work",
-    "confidence": 0.982,
+    "confidence": 0.98,
     "provenance": "seed:classical-mechanics-standard",
     "tags": [
       "energy"
     ],
-    "last_validated": 1785448562.6451216
+    "last_validated": 0
   },
   {
     "id": "mom-001",
     "statement": "p = m*v (linear momentum), conserved in isolated systems with no external net force",
     "conditions": "Non-relativistic; system must be isolated for conservation to apply",
-    "confidence": 0.9919,
+    "confidence": 0.99,
     "provenance": "seed:classical-mechanics-standard",
     "tags": [
       "momentum"
     ],
-    "last_validated": 1785448622.74152
+    "last_validated": 0
   },
   {
     "id": "rot-001",
     "statement": "tau = I*alpha (rotational analog of F=ma), L = I*omega (angular momentum)",
     "conditions": "I depends on axis and mass distribution; rigid body assumption",
-    "confidence": 0.9757,
+    "confidence": 0.97,
     "provenance": "seed:classical-mechanics-standard",
     "tags": [
       "rotational-dynamics"
     ],
-    "last_validated": 1785448654.0152347
+    "last_validated": 0
   },
   {
     "id": "grav-001",
     "statement": "F = G*m1*m2/r^2 (Newton's law of universal gravitation)",
     "conditions": "Point masses or spherically symmetric bodies; non-relativistic regime",
-    "confidence": 0.993439,
+    "confidence": 0.99,
     "provenance": "seed:classical-mechanics-standard",
     "tags": [
       "gravitation"
     ],
-    "last_validated": 1785448735.2645252
+    "last_validated": 0
   },
   {
     "id": "osc-001",
     "statement": "Simple harmonic motion: x(t) = A*cos(omega*t + phi), omega = sqrt(k/m)",
     "conditions": "Valid for ideal spring (Hooke's law regime), no damping",
-    "confidence": 0.9757,
+    "confidence": 0.97,
     "provenance": "seed:classical-mechanics-standard",
     "tags": [
       "oscillations-waves"
     ],
-    "last_validated": 1785448735.2653973
+    "last_validated": 0
   },
   {
     "id": "thermo-001",
     "statement": "PV = nRT (ideal gas law)",
     "conditions": "Valid for ideal gas approximation; breaks down at high pressure/low temperature",
-    "confidence": 0.973,
+    "confidence": 0.97,
     "provenance": "seed:thermodynamics-standard",
     "tags": [
       "thermodynamics"
     ],
-    "last_validated": 1785448755.5116026
+    "last_validated": 0
   },
   {
     "id": "em-001",
     "statement": "F = q*E (electric force on a charge), E = k*Q/r^2 (point charge field)",
     "conditions": "Point charge, vacuum/air, non-relativistic",
-    "confidence": 0.98542,
+    "confidence": 0.98,
     "provenance": "seed:electromagnetism-standard",
     "tags": [
       "electromagnetism"
     ],
-    "last_validated": 1785448816.4585216
+    "last_validated": 0
   },
   {
     "id": "rel-001",
     "statement": "Relativistic kinetic energy: KE = (gamma - 1)*m*c^2, gamma = 1/sqrt(1 - v^2/c^2); reduces to 0.5*m*v^2 as v/c -> 0",
     "conditions": "Special relativity, inertial frames",
-    "confidence": 0.9073773853300001,
+    "confidence": 0.97,
     "provenance": "seed:special-relativity-standard",
     "tags": [
       "special-relativity",
       "energy"
     ],
-    "last_validated": 1785449034.5770588
+    "last_validated": 0
   }
 ]
