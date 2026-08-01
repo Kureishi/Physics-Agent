@@ -43,8 +43,8 @@ for the full schema and a field-by-field note on which stage owns which field.
   set's own hints). Not a new pipeline stage — just the fastest way to
   build up enough real data for Stage 7's policies and Stage 8's
   curriculum to have anything meaningful to act on. See
-  `data/problem_sets/intro_physics_set.json` for a ready-made 24-problem
-  set spanning all 14 domain tags.
+  `data/problem_sets/intro_physics_set.json` for a ready-made 25-problem
+  set spanning all 15 domain tags.
 - **`python -m physics_agent.inspect_trace_cli`** — dumps the full detail
   of exactly ONE solved problem: what was retrieved, every tool call, each
   self-evaluation check's verdict, and (if any revisions happened) each
@@ -162,11 +162,11 @@ data, rather than one-off single problems.
 
 1. Make sure LM Studio's server is running (see above).
 
-2. Run the full problem set (24 problems spanning all 14 domain tags —
+2. Run the full problem set (25 problems spanning all 15 domain tags —
    kinematics, dynamics, energy, momentum, rotational dynamics,
    gravitation, oscillations, thermodynamics, electromagnetism, optics,
-   fluid mechanics, special relativity, quantum mechanics, and statistical
-   mechanics):
+   fluid mechanics, special relativity, quantum mechanics, statistical
+   mechanics, and nuclear physics):
    ```bash
    python -m physics_agent.problem_set_cli
    ```
@@ -204,7 +204,7 @@ data, rather than one-off single problems.
    ```bash
    python -m physics_agent.meta_report
    ```
-   With only 24 problems this likely won't cross the minimum-sample-size
+   With only 25 problems this likely won't cross the minimum-sample-size
    gates that let Stage 7's policies actually change behavior (5+ traces
    per domain for the tool policy and the confidence-calibration policy) —
    that's expected and by design, not a bug. Run the problem set a few
@@ -293,7 +293,7 @@ data/
   knowledge_graph_edges.json  Seed edges over those 13 formulas (derives_from/special_case_of/
                               requires_assumption relationships)
   problem_sets/
-    intro_physics_set.json     24 problems spanning all 14 domain tags, for problem_set_cli.py
+    intro_physics_set.json     25 problems spanning all 15 domain tags, for problem_set_cli.py
 tests/
   test_trace.py         Trace roundtrip + episodic memory read/write
   test_planner.py         Decomposition, JSON-parsing robustness, retry/failure paths
@@ -693,9 +693,72 @@ choices throughout (confidence-only threshold raises, minimum sample sizes
 before any policy acts, narrow assumption-validity checks) turn out to be
 well-calibrated in practice versus too cautious or not cautious enough.
 
+## Adding a new domain
+
+`planner.DOMAIN_TAXONOMY` is a fixed vocabulary, not something the system
+infers on its own — a problem the planner can't classify into one of these
+tags gets its unrecognized tag silently dropped
+(`planner.py`'s `domain_tags = [t for t in domain_tags if t in DOMAIN_TAXONOMY]`).
+Adding a genuinely new domain (nuclear physics is the 15th, added exactly
+this way, live, as a worked example — see `git diff`-equivalent below):
+
+**Required — the system won't recognize the domain at all without this:**
+1. Add the tag string to `planner.DOMAIN_TAXONOMY`. That's it for
+   "the system accepts and classifies problems into this domain" — the
+   task-planner prompt is built from this list via an f-string, so nothing
+   else needs to change for classification to start working.
+
+**Strongly recommended — the system works without these, but with
+degraded quality:**
+2. Add an entry to `tools.registry.DOMAIN_TOOL_HINTS` mapping the new tag
+   to whichever of `symbolic_math` / `simulation` / `literature_search`
+   are actually relevant. Skipping this isn't a bug —
+   `ToolRegistry.relevant_tools` falls back to offering *all* tools when a
+   domain has no hint entry — but it means no domain-specific narrowing,
+   which was the whole point of that mapping (Stage 2's design notes).
+3. Add a few seed facts to `data/semantic_seed.json`, tagged with the new
+   domain. Without this, `SemanticStore.retrieve`'s tag-bonus scoring has
+   nothing to reward, and retrieval falls back to whatever keyword-only
+   matches happen to score highest — possibly nothing relevant at all, as
+   opposed to the domain's own formulas.
+4. Add corresponding `data/knowledge_graph_edges.json` entries for any new
+   facts' real `requires_assumption` / `special_case_of` / `derives_from`
+   relationships, so `PhysicsCheck`'s knowledge-graph sub-check (Stage 6)
+   has something to work with for the new domain.
+
+**Optional, situational:**
+5. If the new domain has an assumption whose violation is *reliably
+   detectable from a domain tag alone* — the way `non_relativistic` is
+   reliably violated by a `special-relativity` tag — add it to
+   `knowledge_graph.graph.ASSUMPTION_DOMAIN_CONFLICTS`. Most physics
+   assumptions aren't like this (see that dict's docstring); nuclear
+   physics's two new assumptions (`large_sample_statistical_average`,
+   `rest_frame_measurement`) don't have an analogous tag-detectable
+   conflict in the current taxonomy, so nothing was added there — the
+   edges still exist and are still inspectable, they just can't fail a
+   check on domain-tag evidence alone yet.
+6. Add example problems tagged with the new `domain_hint` to a problem set
+   for `problem_set_cli.py` to exercise it.
+
+**Nothing else needs to change.** `generate_problem_set_cli.py` imports
+`DOMAIN_TAXONOMY` directly, so its `--domains` default and validation stay
+in sync automatically. Every Stage 7 meta-learning policy
+(`ToolSelectionPolicy`, `VerificationDepthPolicy`), Stage 8's curriculum
+(`weak_areas`, `CurriculumRunner`), and `error_taxonomy.classify_error`
+all operate generically over whatever `domain_tags` show up in traces —
+none of them hardcode a domain list, so a new domain starts participating
+in all of them automatically as soon as traces with that tag exist.
+
+This was verified directly, not just described: after making steps 1-4
+above (nuclear physics), retrieval correctly surfaced `nuc-001` (the decay
+law) as the top match for a half-life problem tagged `nuclear-physics`,
+`ToolRegistry.relevant_tools(["nuclear-physics"])` returned exactly the
+three intended tools, and both new knowledge-graph edges resolved and
+passed `check_validity` correctly.
+
 ## Getting more problems to run against
 
-Three ways to scale up beyond the 24-problem starter set, roughly in
+Three ways to scale up beyond the 25-problem starter set, roughly in
 order of effort:
 
 1. **Bulk-generate with `generate_problem_set_cli.py`** (built for exactly

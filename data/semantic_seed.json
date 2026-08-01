@@ -144,5 +144,28 @@
       "energy"
     ],
     "last_validated": 0
+  },
+  {
+    "id": "nuc-001",
+    "statement": "Radioactive decay law: N(t) = N0*exp(-lambda*t); half-life T_half = ln(2)/lambda",
+    "conditions": "Large number of nuclei (statistical/ensemble average, not valid for predicting a single nucleus's decay time)",
+    "confidence": 0.97,
+    "provenance": "seed:nuclear-physics-standard",
+    "tags": [
+      "nuclear-physics"
+    ],
+    "last_validated": 0
+  },
+  {
+    "id": "nuc-002",
+    "statement": "Nuclear binding energy: E = |delta_m|*c^2, where delta_m is the mass defect between separated nucleons and the bound nucleus",
+    "conditions": "Mass defect measured in the nucleus's rest frame",
+    "confidence": 0.96,
+    "provenance": "seed:nuclear-physics-standard",
+    "tags": [
+      "nuclear-physics",
+      "special-relativity"
+    ],
+    "last_validated": 0
   }
 ]

@@ -90,7 +90,10 @@ def test_load_existing_reads_real_file(tmp_path):
     assert load_existing(str(path)) == data
 
 
-def test_all_domain_taxonomy_tags_are_valid_choices():
-    # sanity check that the CLI's default domain list stays in sync with
-    # the planner's actual taxonomy
-    assert len(DOMAIN_TAXONOMY) == 14
+def test_domain_taxonomy_has_no_duplicates_or_empty_entries():
+    # Deliberately does NOT hardcode a count -- planner.DOMAIN_TAXONOMY is
+    # expected to grow over time as new domains get added, and a test
+    # asserting an exact number would just be one more place someone has
+    # to remember to update alongside it.
+    assert len(DOMAIN_TAXONOMY) == len(set(DOMAIN_TAXONOMY))  # no duplicates
+    assert all(isinstance(tag, str) and tag for tag in DOMAIN_TAXONOMY)  # no empty/non-string entries

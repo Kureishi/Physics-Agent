@@ -118,5 +118,10 @@
     "id": "statmech-01",
     "domain_hint": "statistical-mechanics",
     "problem_text": "Using kinetic theory, estimate the average translational kinetic energy of a single gas molecule at a temperature of 300 K (Boltzmann constant k = 1.38e-23 J/K, using KE_avg = (3/2)*k*T)."
+  },
+  {
+    "id": "nuc-01",
+    "domain_hint": "nuclear-physics",
+    "problem_text": "A radioactive isotope has a half-life of 8 days. Find its decay constant (lambda), then find what fraction of the original sample remains after 24 days."
   }
 ]

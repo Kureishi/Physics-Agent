@@ -118,5 +118,25 @@
     "confidence": 0.95,
     "provenance": "seed:electromagnetism-standard",
     "last_validated": 0
+  },
+  {
+    "id": "edge-0012",
+    "source": "nuc-001",
+    "target": null,
+    "relation": "requires_assumption",
+    "condition": "large_sample_statistical_average",
+    "confidence": 0.96,
+    "provenance": "seed:nuclear-physics-standard",
+    "last_validated": 0
+  },
+  {
+    "id": "edge-0013",
+    "source": "nuc-002",
+    "target": null,
+    "relation": "requires_assumption",
+    "condition": "rest_frame_measurement",
+    "confidence": 0.95,
+    "provenance": "seed:nuclear-physics-standard",
+    "last_validated": 0
   }
 ]

@@ -32,6 +32,7 @@ DOMAIN_TOOL_HINTS: Dict[str, List[str]] = {
     "special-relativity": ["symbolic_math", "literature_search"],
     "quantum-mechanics": ["symbolic_math", "literature_search"],
     "statistical-mechanics": ["symbolic_math", "literature_search"],
+    "nuclear-physics": ["symbolic_math", "simulation", "literature_search"],
 }
 
 

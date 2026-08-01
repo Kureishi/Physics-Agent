@@ -34,6 +34,7 @@ DOMAIN_TAXONOMY = [
     "special-relativity",
     "quantum-mechanics",
     "statistical-mechanics",
+    "nuclear-physics",
 ]
 
 _DECOMPOSE_SYSTEM_PROMPT = f"""You are the task planner for a physics problem-solving agent.
