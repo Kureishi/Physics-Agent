@@ -22,7 +22,7 @@ measures (honestly, not just optimistically) whether the practice actually
 moved the underlying metric that was flagged. See `physics_agent/trace.py`
 for the full schema and a field-by-field note on which stage owns which field.
 
-## Five separate entry points
+## Six separate entry points
 
 - **`python -m physics_agent.cli "<problem>"`** — solves one problem
   (Stages 1-7). What a person interacts with directly.
@@ -56,6 +56,20 @@ for the full schema and a field-by-field note on which stage owns which field.
   python -m physics_agent.inspect_trace_cli --list          # see what's in episodic memory
   python -m physics_agent.inspect_trace_cli "electron"       # search by substring in problem_text
   python -m physics_agent.inspect_trace_cli --id <problem_id>  # exact match
+  ```
+- **`python -m physics_agent.generate_problem_set_cli`** — bulk-generates
+  new practice problems to expand what `problem_set_cli.py` runs against,
+  reusing Stage 8's `ProblemGenerator` directly but without needing any
+  accumulated weak-area data first (unlike `curriculum_cli.py`, this
+  doesn't solve what it generates — it's purely for growing the problem
+  set). Runs at a higher temperature than solving on purpose, and feeds
+  each domain's own previously-generated problems back in as an
+  "avoid duplicating" list so N calls in a row don't just restate the same
+  scenario with different numbers.
+  ```bash
+  python -m physics_agent.generate_problem_set_cli --n-per-domain 5 --out data/problem_sets/expanded_set.json
+  python -m physics_agent.generate_problem_set_cli --domains energy dynamics --n-per-domain 10
+  python -m physics_agent.generate_problem_set_cli --n-per-domain 3 --append data/problem_sets/intro_physics_set.json
   ```
 
 ## What this does right now
@@ -273,6 +287,7 @@ physics_agent/
   curriculum_cli.py     Generates + solves practice problems, or reports on past rounds (Stage 8)
   problem_set_cli.py     Batch harness: runs a whole JSON problem set through cli.run(), prints summary
   inspect_trace_cli.py    Dumps full detail (checks, revision history, rationale) for one trace
+  generate_problem_set_cli.py  Bulk-generates new problems across domain tags, no weak-area data needed
 data/
   semantic_seed.json         Seed knowledge base (~13 core physics formulas across domains)
   knowledge_graph_edges.json  Seed edges over those 13 formulas (derives_from/special_case_of/
@@ -308,6 +323,7 @@ tests/
   test_curriculum_benchmark.py                    Improved/regressed/unchanged classification
   test_problem_set_cli.py                          Batch loading, crash isolation, limit handling
   test_inspect_trace_cli.py                          Search/lookup logic, full-detail printing
+  test_generate_problem_set_cli.py                     Domain coverage, unique ids, avoid-list growth
 memory/
   episodic.jsonl      Created at runtime — one JSON line per problem run
   procedural.json      Created at runtime — strategy success-rate table
@@ -321,7 +337,7 @@ memory/
 pytest tests/ -v
 ```
 
-All 209 tests run offline (no LM Studio required) using `MockLLMClient`.
+All 221 tests run offline (no LM Studio required) using `MockLLMClient`.
 The physics tools themselves (SymPy solving, SciPy integration), the Math
 Check's re-substitution verification, and the knowledge graph's validity
 queries are exercised with real computation, not mocked — only the LLM
@@ -676,6 +692,50 @@ model on a real problem set to see which of the deliberately conservative
 choices throughout (confidence-only threshold raises, minimum sample sizes
 before any policy acts, narrow assumption-validity checks) turn out to be
 well-calibrated in practice versus too cautious or not cautious enough.
+
+## Getting more problems to run against
+
+Three ways to scale up beyond the 24-problem starter set, roughly in
+order of effort:
+
+1. **Bulk-generate with `generate_problem_set_cli.py`** (built for exactly
+   this). Reuses the same `ProblemGenerator` Stage 8 already has, at a
+   higher temperature than solving (diversity matters more here than
+   accuracy), feeding each domain's own prior outputs back in as an
+   "avoid duplicating" list so a run of N calls doesn't just restate the
+   same block-on-an-incline scenario with different numbers:
+   ```bash
+   python -m physics_agent.generate_problem_set_cli --n-per-domain 5 --out data/problem_sets/expanded_set.json
+   python -m physics_agent.problem_set_cli data/problem_sets/expanded_set.json
+   ```
+   This doesn't require any accumulated weak-area data first (unlike
+   `curriculum_cli.py`, which targets a *specific, measured* weakness) —
+   it works against a completely empty `memory/`. Generation and solving
+   are two separate steps on purpose: generate once, keep the JSON file,
+   re-run `problem_set_cli.py` against it as many times as you want
+   without regenerating.
+
+2. **Parametrize the existing 24 by hand.** Every problem in
+   `intro_physics_set.json` has explicit numeric values — copy one, change
+   the numbers, give it a new `id`. Zero LLM calls, zero risk of a
+   malformed or physically nonsensical generated problem, but it only
+   exercises the same 24 *scenarios* repeatedly, not new ones — useful
+   for building up Stage 7's per-domain sample counts quickly, less useful
+   for finding new failure modes the way the electron problem did.
+
+3. **Adapt problems from an existing textbook or problem bank** (e.g. an
+   OpenStax physics text, or a published problem set) as inspiration,
+   rewritten in your own words rather than copied — the same "ground it,
+   don't reproduce it" stance this system already takes with
+   `literature_search`. This is the slowest option but gives you problems
+   whose difficulty and correctness someone else has already vetted,
+   which neither of the other two options guarantees (a generated or
+   hand-parametrized problem's correctness rests entirely on your read of
+   it, or the LLM's).
+
+Whichever way you add problems, keep the same `{"id", "domain_hint",
+"problem_text"}` shape so `problem_set_cli.py` and `inspect_trace_cli.py`
+both work with them unchanged.
 
 ## Fixes from real-world testing against LM Studio
 

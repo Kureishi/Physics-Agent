@@ -93,7 +93,7 @@ class MockLLMClient:
     _LOGIC_CHECK_MARKER = "logic-check component"
     _PHYSICS_CHECK_MARKER = "physics-check component"
     _CONFIDENCE_CHECK_MARKER = "confidence-check component"
-    _CURRICULUM_MARKER = "curriculum generator"
+    _CURRICULUM_MARKER = "problem generator"
 
     def __init__(self, canned_responses: Optional[Dict[str, str]] = None):
         # canned_responses: maps a substring -> the response to return when

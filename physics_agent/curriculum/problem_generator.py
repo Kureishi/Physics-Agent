@@ -1,9 +1,11 @@
 """
-Problem Generator (Stage 8).
+Problem Generator (Stage 8, also used for general problem-set expansion).
 
-Given a weak-area signal (one entry from Stage 7's
-meta_learning.curriculum_signals.weak_areas), asks the LLM to write ONE
-new, self-contained physics practice problem targeting it.
+Given a "signal" describing what to generate for -- either a real weak-area
+signal from Stage 7's meta_learning.curriculum_signals.weak_areas, or a
+generic domain-tag + reason pair when you just want more problems in a
+domain with no weakness data yet -- asks the LLM to write ONE new,
+self-contained physics practice problem.
 
 Optionally grounded in a real literature_search result for the signal's
 domain -- "read literature" here means the generator sees a title and a
@@ -12,6 +14,12 @@ subject matter, not that it comprehends or reproduces the paper itself.
 Copying source text verbatim is explicitly forbidden in the prompt,
 consistent with this system's broader stance on not reproducing source
 material (see LiteratureSearchTool's own docstring on the same point).
+
+`generate()` also accepts an optional `avoid` list of previously generated
+problem texts (or short summaries of them) for the same domain, so calling
+it repeatedly in a loop -- as generate_problem_set_cli.py does -- doesn't
+just produce N near-identical variations of the first idea a local model
+reaches for.
 """
 from __future__ import annotations
 
@@ -21,12 +29,13 @@ from typing import Any, Dict, List, Optional
 from ..json_utils import extract_json
 from ..tools.literature import LiteratureSearchTool
 
-_SYSTEM_PROMPT = """You are the curriculum generator for a physics self-improvement agent.
+_SYSTEM_PROMPT = """You are the problem generator for a physics self-improvement agent.
 
-Given domain tags and a description of a weakness the agent has shown (a
-recurring error type, a pattern of unresolved problems, or a
-low-confidence concept cluster), write ONE new, well-posed, self-contained
-physics practice problem that would exercise this weak area.
+Given domain tags and a reason for the request -- which may be a specific
+weakness the agent has shown (a recurring error type, a pattern of
+unresolved problems, a low-confidence concept cluster) or simply a request
+for more general practice material in a domain -- write ONE new,
+well-posed, self-contained physics practice problem.
 
 Requirements:
 - State all needed numeric values in the problem itself (no missing data).
@@ -35,9 +44,12 @@ Requirements:
 - If literature context is provided, you may draw inspiration from its
   general subject matter, but you MUST write an original problem in your
   own words -- never copy phrases or sentences from the provided text.
+- If a list of problems to avoid duplicating is provided, write something
+  meaningfully different from all of them -- a different physical setup,
+  not just different numbers plugged into the same scenario.
 
 Respond with ONLY valid JSON, no commentary, no markdown fences:
-{"problem_text": "...", "target_concepts": ["concept1", "concept2"], "rationale": "one sentence on how this exercises the weak area"}
+{"problem_text": "...", "target_concepts": ["concept1", "concept2"], "rationale": "one sentence on what this exercises"}
 """
 
 
@@ -66,10 +78,17 @@ class ProblemGenerator:
         top = results[0]
         return f"{top['title']}: {top['excerpt']}"
 
-    def generate(self, signal: Dict[str, Any]) -> Dict[str, Any]:
+    def generate(
+        self, signal: Dict[str, Any], avoid: Optional[List[str]] = None
+    ) -> Dict[str, Any]:
         """
-        `signal` is one entry from weak_areas():
-            {"source", "domain_tags", "reason", "weight", ...}
+        `signal`: {"source", "domain_tags", "reason", "weight", ...} --
+        either a real entry from weak_areas(), or a synthetic one built for
+        general expansion (see generate_problem_set_cli.py).
+
+        `avoid`: previously generated problem texts for this same domain,
+        so repeated calls don't just restate the same scenario with
+        different numbers.
 
         Returns:
             {"problem_text", "target_concepts", "rationale", "literature_context"}
@@ -86,6 +105,11 @@ class ProblemGenerator:
         }
         if literature_context:
             user_payload["literature_context"] = literature_context
+        if avoid:
+            # Truncate each to keep the prompt from growing unbounded over
+            # a long generation run -- a short prefix is enough for the
+            # model to recognize "don't repeat this scenario."
+            user_payload["avoid_duplicating"] = [text[:200] for text in avoid]
 
         messages = [
             {"role": "system", "content": _SYSTEM_PROMPT},

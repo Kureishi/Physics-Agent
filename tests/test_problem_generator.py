@@ -108,3 +108,36 @@ def test_generate_raises_when_problem_text_missing():
     signal["reason"] = "missing text signal"
     with pytest.raises(ValueError):
         generator.generate(signal)
+
+
+def test_generate_includes_avoid_list_in_prompt_when_given():
+    llm = MockLLMClient()
+    generator = ProblemGenerator(llm)
+
+    generator.generate(_signal(), avoid=["A ball is dropped from a height.", "A car accelerates."])
+
+    user_content = llm.calls[0][1]["content"]
+    assert "avoid_duplicating" in user_content
+    assert "A ball is dropped" in user_content
+
+
+def test_generate_omits_avoid_key_when_not_given():
+    llm = MockLLMClient()
+    generator = ProblemGenerator(llm)
+
+    generator.generate(_signal())
+
+    user_content = llm.calls[0][1]["content"]
+    assert "avoid_duplicating" not in user_content
+
+
+def test_generate_truncates_long_avoid_entries():
+    llm = MockLLMClient()
+    generator = ProblemGenerator(llm)
+
+    long_text = "A" * 500
+    generator.generate(_signal(), avoid=[long_text])
+
+    user_content = llm.calls[0][1]["content"]
+    assert "A" * 500 not in user_content  # full text shouldn't appear
+    assert "A" * 200 in user_content  # truncated prefix should
