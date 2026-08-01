@@ -43,6 +43,51 @@ def test_symbolic_math_no_solution_raises():
         tool.run({"expression": "Eq(1, 2)", "solve_for": "x"})
 
 
+def test_symbolic_math_evaluates_bare_expression_when_solve_for_absent():
+    # Reproduces a real failure observed running against an actual local
+    # model: it computed relativistic KE by plugging every value directly
+    # into the expression, then labeled the target quantity 'solve_for'
+    # even though it no longer appears anywhere as a free symbol. This
+    # used to raise "SymPy found no solutions for KE"; it should now just
+    # evaluate the arithmetic.
+    tool = SymbolicMathTool()
+    result = tool.run(
+        {
+            "expression": "(1/sqrt(1 - (0.8)**2) - 1) * 9.11e-31 * (3e8)**2",
+            "solve_for": "KE",
+            "substitutions": {},
+        }
+    )
+    assert "note" in result
+    assert result["solutions_numeric"][0] is not None
+    assert math.isclose(result["solutions_numeric"][0], 5.466e-14, rel_tol=1e-3)
+
+
+def test_symbolic_math_evaluates_bare_expression_with_substitutions_dict():
+    # Same fallback, but going through the intended substitutions path
+    # rather than a fully pre-substituted expression.
+    tool = SymbolicMathTool()
+    result = tool.run(
+        {
+            "expression": "0.5 * m * v**2",
+            "solve_for": "KE",  # never appears in the expression at all
+            "substitutions": {"m": 2, "v": 3},
+        }
+    )
+    assert "note" in result
+    assert math.isclose(result["solutions_numeric"][0], 9.0, rel_tol=1e-9)
+
+
+def test_symbolic_math_equation_with_no_matching_free_symbol_still_raises():
+    # An actual Eq(...) where solve_for doesn't appear is NOT given the
+    # bare-expression fallback -- ambiguous enough that erroring is still
+    # correct (unlike a plain arithmetic expression, an equation implies a
+    # genuine solve was intended).
+    tool = SymbolicMathTool()
+    with pytest.raises(ValueError):
+        tool.run({"expression": "Eq(m*g*h, 0.5*m*v**2)", "solve_for": "KE", "substitutions": {"m": 2, "g": 9.8, "h": 5}})
+
+
 # -- SimulationTool -----------------------------------------------------------
 
 

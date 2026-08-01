@@ -321,7 +321,7 @@ memory/
 pytest tests/ -v
 ```
 
-All 204 tests run offline (no LM Studio required) using `MockLLMClient`.
+All 209 tests run offline (no LM Studio required) using `MockLLMClient`.
 The physics tools themselves (SymPy solving, SciPy integration), the Math
 Check's re-substitution verification, and the knowledge graph's validity
 queries are exercised with real computation, not mocked — only the LLM
@@ -676,5 +676,59 @@ model on a real problem set to see which of the deliberately conservative
 choices throughout (confidence-only threshold raises, minimum sample sizes
 before any policy acts, narrow assumption-validity checks) turn out to be
 well-calibrated in practice versus too cautious or not cautious enough.
-Let me know if you'd like to do that, revisit anything in Stages 1-8, or
-take the project somewhere the original roadmap didn't anticipate.
+
+## Fixes from real-world testing against LM Studio
+
+That testing happened, and it surfaced two real bugs worth documenting —
+both found via `inspect_trace_cli.py` on an actual unresolved trace, not
+in any unit test fixture.
+
+**The problem that exposed them:** "An electron (rest mass 9.11e-31 kg)
+moves at 0.8c. Find its relativistic kinetic energy." ended
+`unresolved_max_revisions` after all 3 revision attempts — despite the
+model correctly deriving `KE = (γ-1)mc² = 5.466×10⁻¹⁴ J` in every single
+round.
+
+**Bug 1 — the Physics Check's knowledge-graph sub-check couldn't tell
+"retrieved" from "used."** `retrieved_knowledge` returns the top-k
+keyword matches for a query, which pulled in both the correct
+relativistic formula (`rel-001`) *and* the classical one (`eng-001`,
+`requires_assumption: non_relativistic`) — the model correctly used only
+the former, but the check flagged the latter's presence as a violation
+regardless, and no revision could ever fix a failure that wasn't actually
+in the solution. **Fix:** `PhysicsCheck`'s knowledge-graph sub-check
+(`self_eval/physics_check.py`) now checks whether a valid,
+graph-connected alternative was *also* retrieved (via
+`KnowledgeGraph.neighbors`) before flagging a violation — `rel-001` being
+a `special_case_of` `eng-001` and itself passing validity is enough to
+suppress the flag. A violation with no valid alternative present is still
+flagged exactly as before (verified directly: retrieving `eng-001` alone
+still fails the check; retrieving it alongside `rel-001` now passes, with
+a transparent note explaining why).
+
+**Bug 2 — `symbolic_math` couldn't handle a model that plugs in numbers
+directly.** The tool call itself failed
+(`"SymPy found no solutions for KE..."`) because the model gave a fully
+numeric expression with `solve_for: "KE"`, even though `KE` never appears
+as a free symbol anywhere in it — there was nothing to *solve*, only
+something to *evaluate*, and the tool wasn't built for that case. The
+model's synthesis step then did the arithmetic by hand in prose instead,
+meaning the actual computation happened completely outside any tool,
+invisible to `MathCheck`. **Fix:** `SymbolicMathTool`
+(`tools/symbolic_math.py`) now detects when `solve_for` isn't a free
+symbol and the expression has no free symbols left at all, and evaluates
+it directly rather than erroring — confirmed to reproduce the exact
+value from the real trace (5.466×10⁻¹⁴ J) instead of failing. An actual
+`Eq(...)` with no matching free symbol still raises, on the reasoning
+that an equation implies a genuine solve was intended, unlike bare
+arithmetic — that ambiguity is different enough to keep erroring on.
+
+Both fixes were verified together against the unmodified real seed data
+and knowledge graph (not synthetic fixtures): the exact retrieval,
+formula, and domain tags from the failing trace now produce a passing
+Physics Check on the first attempt. This problem would no longer need
+even one revision, let alone exhaust all 3 and still fail.
+
+Let me know if you'd like to do that further testing round, revisit
+anything in Stages 1-8, or take the project somewhere the original
+roadmap didn't anticipate.

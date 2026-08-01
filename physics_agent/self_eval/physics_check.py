@@ -114,30 +114,65 @@ def _knowledge_graph_validity_check(
     Returns None if no knowledge_graph was provided (check doesn't apply).
     Otherwise checks every retrieved fact's requires_assumption edges
     against the problem's domain_tags and reports any violations.
+
+    A violation is NOT flagged if a valid, graph-connected alternative was
+    ALSO retrieved (e.g. the relativistic KE formula being retrieved
+    alongside the classical formula it's a special_case_of). Retrieval
+    returns the top few matches for a query regardless of which one the
+    solution actually used; a wrong-for-this-regime formula simply being
+    *present in context* isn't itself evidence of misuse; it only
+    becomes a real risk signal when no correct alternative was even
+    available to have been used instead. This was found to be a real
+    false-positive in practice: a model correctly used the relativistic
+    formula every time, but the check still failed every revision round
+    purely because the (unused, but retrieved) classical formula also
+    showed up among the top-3 retrieved facts.
     """
     if knowledge_graph is None:
         return None
 
+    retrieved_ids = {f.get("id") for f in retrieved_knowledge if f.get("id")}
     violations = []
+    suppressed = []
+
     for fact in retrieved_knowledge:
         node_id = fact.get("id")
         if not node_id:
             continue
         result = knowledge_graph.check_validity(node_id, domain_tags)
-        if not result["valid"]:
+        if result["valid"]:
+            continue
+
+        alternative_ids = set(knowledge_graph.neighbors(node_id)) & retrieved_ids
+        valid_alternatives = [
+            alt_id
+            for alt_id in sorted(alternative_ids)
+            if knowledge_graph.check_validity(alt_id, domain_tags)["valid"]
+        ]
+        if valid_alternatives:
+            suppressed.append((node_id, result["violated_assumptions"], valid_alternatives))
+        else:
             violations.append((node_id, result["violated_assumptions"]))
 
-    if not violations:
+    if not violations and not suppressed:
         return {
             "passed": True,
             "details": "Knowledge graph validity check: no assumption violations detected.",
         }
 
-    detail_strs = [f"{node_id} violates assumption(s) {va}" for node_id, va in violations]
-    return {
-        "passed": False,
-        "details": "Knowledge graph validity check failed: " + "; ".join(detail_strs),
-    }
+    details_parts = []
+    if violations:
+        detail_strs = [f"{node_id} violates assumption(s) {va}" for node_id, va in violations]
+        details_parts.append("Knowledge graph validity check failed: " + "; ".join(detail_strs))
+    if suppressed:
+        detail_strs = [
+            f"{node_id} violates assumption(s) {va} but a valid connected alternative "
+            f"({alts}) was also retrieved, so not flagging"
+            for node_id, va, alts in suppressed
+        ]
+        details_parts.append("Note: " + "; ".join(detail_strs))
+
+    return {"passed": len(violations) == 0, "details": " ".join(details_parts)}
 
 
 class PhysicsCheck:

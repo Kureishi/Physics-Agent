@@ -164,3 +164,86 @@ def test_physics_check_knowledge_graph_violation_fails_even_if_other_subchecks_p
 
     result = check.run(trace)
     assert result["passed"] is False  # kg violation alone is enough to fail
+
+
+def _make_knowledge_graph_with_relativistic_alternative(tmp_path):
+    """
+    Reproduces the real trace this fix targets: eng-001 (classical KE,
+    requires non_relativistic) is special_case_of rel-001 (relativistic
+    KE, no conflicting assumption). Both retrieved together for a
+    special-relativity problem should NOT fail the check, since a valid
+    alternative was available -- unlike eng-001 retrieved alone.
+    """
+    import json as _json
+
+    from physics_agent.knowledge_graph.graph import KnowledgeGraph
+    from physics_agent.retrieval import SemanticStore
+
+    semantic_path = tmp_path / "semantic.json"
+    with semantic_path.open("w") as f:
+        _json.dump(
+            [
+                {
+                    "id": "eng-001",
+                    "statement": "KE = 0.5*m*v^2",
+                    "conditions": "Non-relativistic",
+                    "confidence": 0.99,
+                    "provenance": "seed",
+                    "tags": ["energy"],
+                    "last_validated": 0,
+                },
+                {
+                    "id": "rel-001",
+                    "statement": "Relativistic KE = (gamma-1)*m*c^2",
+                    "conditions": "Special relativity",
+                    "confidence": 0.97,
+                    "provenance": "seed",
+                    "tags": ["special-relativity", "energy"],
+                    "last_validated": 0,
+                },
+            ],
+            f,
+        )
+    store = SemanticStore(semantic_path)
+    graph = KnowledgeGraph(tmp_path / "edges.json", store)
+    graph.add_edge("eng-001", relation="requires_assumption", condition="non_relativistic")
+    graph.add_edge("rel-001", relation="special_case_of", condition="v/c -> 0", target="eng-001")
+    return graph
+
+
+def test_physics_check_suppresses_violation_when_valid_alternative_also_retrieved(tmp_path):
+    graph = _make_knowledge_graph_with_relativistic_alternative(tmp_path)
+    llm = MockLLMClient()  # LLM critique passes by default
+    check = PhysicsCheck(llm, knowledge_graph=graph)
+
+    trace = _make_trace()
+    trace.domain_tags = ["special-relativity", "energy"]
+    trace.retrieved_knowledge = [
+        {"id": "eng-001", "statement": "KE = 0.5*m*v^2", "conditions": "Non-relativistic"},
+        {"id": "rel-001", "statement": "Relativistic KE = (gamma-1)*m*c^2", "conditions": "Special relativity"},
+    ]
+    trace.tool_calls = []
+
+    result = check.run(trace)
+    assert result["passed"] is True  # eng-001's violation suppressed -- rel-001 was also available
+    assert "not flagging" in result["details"]
+
+
+def test_physics_check_still_fails_when_only_violating_fact_retrieved(tmp_path):
+    # Same graph (the valid alternative EXISTS in the graph), but this
+    # time only eng-001 was actually retrieved -- no alternative was
+    # available, so the violation is real and should still be flagged.
+    graph = _make_knowledge_graph_with_relativistic_alternative(tmp_path)
+    llm = MockLLMClient()
+    check = PhysicsCheck(llm, knowledge_graph=graph)
+
+    trace = _make_trace()
+    trace.domain_tags = ["special-relativity", "energy"]
+    trace.retrieved_knowledge = [
+        {"id": "eng-001", "statement": "KE = 0.5*m*v^2", "conditions": "Non-relativistic"},
+    ]
+    trace.tool_calls = []
+
+    result = check.run(trace)
+    assert result["passed"] is False
+    assert "not flagging" not in result["details"]

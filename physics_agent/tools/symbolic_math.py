@@ -4,6 +4,16 @@ architecture diagram.
 
 Wraps SymPy to solve algebraic equations, with optional numeric
 substitution of knowns before solving.
+
+Also handles a real-world pattern observed running this against an actual
+local model (see the "note" field on the returned dict): a model
+sometimes plugs every known value directly into `expression` and still
+labels the target quantity as `solve_for`, even though it no longer
+appears as a free symbol anywhere -- there's nothing left to *solve*, the
+model just wants the arithmetic evaluated. Previously this raised
+"SymPy found no solutions," causing the tool call to fail outright even
+though the requested computation was perfectly well-defined; now it's
+evaluated directly instead.
 """
 from __future__ import annotations
 
@@ -29,6 +39,8 @@ class SymbolicMathTool:
               "expression": "...", "solve_for": "...", "substitutions": {...},
               "solutions": [<str form>, ...],
               "solutions_numeric": [<float or None>, ...],
+              "note": <str, only present when the request was evaluated
+                       directly rather than solved -- see module docstring>
             }
 
         Raises ValueError on malformed input, unparseable expressions, or
@@ -58,6 +70,37 @@ class SymbolicMathTool:
             raise ValueError(f"Could not parse substitutions {substitutions!r}: {e}")
 
         expr_substituted = expr.subs(subs_symbols) if subs_symbols else expr
+
+        # If `solve_for` isn't actually a free symbol in the (substituted)
+        # expression, and the expression is a bare arithmetic expression
+        # (not an Eq(...)) with NO free symbols left at all, there is
+        # nothing to solve -- evaluate it directly instead of erroring.
+        # An Eq(...) with no matching free symbol -- including one that
+        # auto-reduced to a plain True/False, e.g. Eq(1, 2) -> BooleanFalse,
+        # which has no .evalf() -- is left to the normal solve() path below
+        # (ambiguous enough there that erroring is still the right call).
+        if (
+            not isinstance(expr_substituted, sympy.Equality)
+            and hasattr(expr_substituted, "evalf")
+            and symbol not in expr_substituted.free_symbols
+            and not expr_substituted.free_symbols
+        ):
+            value = expr_substituted.evalf()
+            try:
+                numeric_value = float(value)
+            except TypeError:
+                numeric_value = None
+            return {
+                "expression": expr_str,
+                "solve_for": solve_for,
+                "substitutions": substitutions,
+                "solutions": [str(value)],
+                "solutions_numeric": [numeric_value],
+                "note": (
+                    f"'{solve_for}' was not a free variable in the expression after "
+                    "substitution; evaluated it directly instead of solving an equation."
+                ),
+            }
 
         try:
             solutions = sympy.solve(expr_substituted, symbol)
