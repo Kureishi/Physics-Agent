@@ -1,0 +1,342 @@
+[
+  {
+    "id": "gen-kinematics-01",
+    "domain_hint": "kinematics",
+    "problem_text": "A space probe is traveling toward a galaxy triplet with an initial velocity vector of $\\mathbf{v}_0 = (3.0 \\hat{\\mathbf{i}} + 4.0 \\hat{\\mathbf{j}}) \\text{ km/s}$. Due to the gravitational pull of a nearby massive object, the probe undergoes a constant acceleration of $\\mathbf{a} = (-1.0 \\hat{\\mathbf{i}} + 2.0 \\hat{\\mathbf{j}}) \\text{ km/s}^2$. Calculate the magnitude of the probe's velocity after $5.0$ seconds have elapsed."
+  },
+  {
+    "id": "gen-kinematics-02",
+    "domain_hint": "kinematics",
+    "problem_text": "A comet is moving directly toward a star with an initial velocity of $45.0 \\text{ km/s}$. As it enters a region of higher gravitational influence, it undergoes a constant acceleration of $1.20 \\times 10^{-4} \\text{ km/s}^2$ for a duration of $5.00 \\times 10^5 \\text{ s}$. Calculate the comet's final velocity and its total displacement toward the star during this time interval."
+  },
+  {
+    "id": "gen-kinematics-03",
+    "domain_hint": "kinematics",
+    "problem_text": "Galaxy Alpha is traveling along a straight path with an initial velocity of $100\\text{ km/s}$ and undergoes a constant deceleration of $10\\text{ km/s}^2$. At the same moment, Galaxy Beta, which is located $400\\text{ km}$ away from Alpha's starting position, begins moving directly toward Alpha at a constant velocity of $20\\text{ km/s}$. Calculate the time in seconds after the start when the two galaxies first pass each other."
+  },
+  {
+    "id": "gen-kinematics-04",
+    "domain_hint": "kinematics",
+    "problem_text": "An observer is monitoring two stellar clusters, A and B, moving along a straight line. At $t=0$, Cluster A is at the observer's position and is moving away from them at a constant velocity of $100 \text{ km/s}$. At the same moment, Cluster B is located $2,000 \text{ km}$ further from the observer than Cluster A and is moving toward the observer with an initial velocity of $150 \text{ km/s}$. Due to a local gravitational perturbation, Cluster B undergoes a constant acceleration of $10 \text{ km/s}^2$ directed away from the observer. At what time, in seconds, will both clusters be at the same distance from the observer for the first time?"
+  },
+  {
+    "id": "gen-kinematics-05",
+    "domain_hint": "kinematics",
+    "problem_text": "A star in a distant galaxy cluster is observed moving along a straight radial path with an initial velocity of $120 \\text{ km/s}$. For the first $40$ seconds of observation, the star undergoes a constant deceleration of $2.0 \\text{ km/s}^2$. At $t = 40\\text{ s}$, the deceleration ceases and is replaced by a constant acceleration of $5.0 \\text{ km/s}^2$, which acts for an additional $20$ seconds. Calculate the final velocity of the star at the end of the $60$-second period and its total displacement from its starting position."
+  },
+  {
+    "id": "gen-dynamics-01",
+    "domain_hint": "dynamics",
+    "problem_text": "A block of mass 2.0 kg is pushed from rest along a horizontal surface by a constant horizontal force of 15 N. The coefficient of kinetic friction between the block and the surface is 0.3. After the block has traveled a distance of 4.0 meters, the applied force is suddenly removed. Taking $g = 10 \text{ m/s}^2$, calculate the total distance, in meters, that the block travels from its starting position before coming to a complete stop."
+  },
+  {
+    "id": "gen-dynamics-02",
+    "domain_hint": "dynamics",
+    "problem_text": "A 5.0 kg block is attached to a massless string that passes over a frictionless pulley at the top of an incline angled at 25 degrees above the horizontal. The other end of the string is connected to a hanging mass of 3.0 kg. If the coefficient of kinetic friction between the 5.0 kg block and the ramp is 0.15, calculate the magnitude of the acceleration of the masses when the system is released from rest. Assume g = 9.8 m/s^2."
+  },
+  {
+    "id": "gen-dynamics-03",
+    "domain_hint": "dynamics",
+    "problem_text": "A small block of mass 0.50 kg is placed on a horizontal rotating turntable at a distance of 0.25 m from the axis of rotation. The coefficient of static friction between the block and the surface is 0.40. Calculate the maximum constant angular velocity \u03c9, in radians per second, that the turntable can reach before the block begins to slide. (Use g = 9.8 m/s\u00b2)."
+  },
+  {
+    "id": "gen-dynamics-04",
+    "domain_hint": "dynamics",
+    "problem_text": "A solid disk pulley with a mass of 2.0 kg and a radius of 0.15 m is mounted on a frictionless horizontal axle. A light, inextensible string is wrapped around the pulley; one end of the string is attached to a 1.0 kg block resting on a frictionless horizontal surface, and the other end is attached to a 3.0 kg block hanging vertically. If the system is released from rest, determine the magnitude of the linear acceleration of the blocks in m/s\u00b2. (Use g = 9.8 m/s\u00b2)."
+  },
+  {
+    "id": "gen-dynamics-05",
+    "domain_hint": "dynamics",
+    "problem_text": "A 3.0 kg block is pulled across a horizontal floor by a rope under a tension of 25 N. The rope is oriented at an angle of 37.0\u00b0 above the horizontal. Given that the coefficient of kinetic friction between the block and the floor is 0.30, calculate the magnitude of the acceleration of the block in m/s\u00b2 (use g = 9.8 m/s\u00b2)."
+  },
+  {
+    "id": "gen-energy-01",
+    "domain_hint": "energy",
+    "problem_text": "A block of mass 0.50 kg is released from rest at a vertical height of 1.5 m above a horizontal, frictionless track. At the end of this track, the block encounters a spring with a spring constant of k = 400 N/m. Determine the maximum compression of the spring in meters when the block comes to a momentary stop. (Use g = 9.8 m/s^2)"
+  },
+  {
+    "id": "gen-energy-02",
+    "domain_hint": "energy",
+    "problem_text": "A 2.0 kg object is launched vertically upward from the ground with an initial velocity of 10 m/s. During its ascent, the object experiences a constant resistive force of 0.4 N due to air resistance. Using g = 9.8 m/s\u00b2, determine the maximum height, in meters, that the object reaches above the ground."
+  },
+  {
+    "id": "gen-energy-03",
+    "domain_hint": "energy",
+    "problem_text": "A 2.0 kg block is released from rest at the top of a frictionless incline that has a vertical height of 3.0 m. At the base of the incline, the block transitions onto a horizontal surface where the coefficient of kinetic friction is $\\mu_k = 0.15$. Calculate the speed of the block after it has traveled 2.0 meters along this horizontal surface."
+  },
+  {
+    "id": "gen-energy-04",
+    "domain_hint": "energy",
+    "problem_text": "A small puck with a mass of 0.50 kg is sliding across a horizontal frictionless surface at a speed of 8.0 m/s. The puck then enters a rough strip that is 2.0 m long, where the coefficient of kinetic friction is 0.30. After exiting the rough strip, the puck moves onto a smooth (frictionless) upward ramp. What is the speed of the puck when it reaches a vertical height of 2.0 m above the horizontal surface?"
+  },
+  {
+    "id": "gen-energy-05",
+    "domain_hint": "energy",
+    "problem_text": "A bead with a mass of 0.40 kg slides without friction along a wire shaped like a vertical loop with a radius of 1.2 m. The bead is released from rest at a height H, where H is the vertical distance from the bottom of the loop to the starting point. Calculate the minimum value of H required for the bead to complete the loop without losing contact with the wire."
+  },
+  {
+    "id": "gen-momentum-01",
+    "domain_hint": "momentum",
+    "problem_text": "A small mass of $m = 1.0\\text{ kg}$ is moving with a velocity of $v = 2.0\\text{ m/s}$ perpendicular to a thin, uniform rod. The rod has a mass $M = 3.0\\text{ kg}$ and a length $L = 1.0\\text{ m}$, and it is attached to a frictionless pivot at one of its ends. If the mass strikes the rod at a distance $d = 0.5\\text{ m}$ from the pivot point and sticks to the rod upon impact, calculate the angular velocity $\\omega$ (in rad/s) of the rod-mass system immediately after the collision."
+  },
+  {
+    "id": "gen-momentum-02",
+    "domain_hint": "momentum",
+    "problem_text": "A small, smooth sphere of mass $m = 0.10\\text{ kg}$ moves along the x-axis with an initial velocity of $v_i = 6.0\\text{ m/s}$. The sphere undergoes a collision with a stationary, thin ring of mass $M = 0.50\\text{ kg}$ and radius $R = 0.20\\text{ m}$. The collision is such that the sphere's path is offset from the center of the ring by an impact parameter of $d = 0.15\\text{ m}$, and after the collision, the sphere continues along the x-axis with a velocity of $v_f = 3.0\\text{ m/s}$. Assuming no other external torques act on the system, calculate the final angular velocity $\\omega$ of the ring in rad/s."
+  },
+  {
+    "id": "gen-momentum-03",
+    "domain_hint": "momentum",
+    "problem_text": "A block of mass $m_1 = 2.0\\text{ kg}$ is sliding on a horizontal surface with an initial velocity of $v_i = 5.0\\text{ m/s}$. It undergoes a perfectly inelastic collision with a stationary block of mass $m_2 = 3.0\\text{ kg}$. After the collision, the two blocks move together as a single unit across the same surface, which has a coefficient of kinetic friction $\\mu_k = 0.25$. Calculate the total distance, in meters, that the combined blocks slide before coming to a complete stop. (Use $g = 9.8\\text{ m/s}^2$)"
+  },
+  {
+    "id": "gen-momentum-04",
+    "domain_hint": "momentum",
+    "problem_text": "A particle of mass $M = 2.0\\text{ kg}$ is traveling in the $xy$-plane with a velocity $\\vec{v} = (6.0\\hat{i} - 2.0\\hat{j})\\text{ m/s}$. The particle suddenly undergoes an explosion, splitting into two fragments with masses $m_1 = 0.5\\text{ kg}$ and $m_2 = 1.5\\text{ kg}$. If the first fragment moves with a velocity $\\vec{v}_1 = (8.0\\hat{i} + 4.0\\hat{j})\\text{ m/s}$, determine the magnitude of the velocity of the second fragment."
+  },
+  {
+    "id": "gen-momentum-05",
+    "domain_hint": "momentum",
+    "problem_text": "A system consisting of two particles, $m_1 = 2.0\\text{ kg}$ and $m_2 = 4.0\\text{ kg}$, is initially moving together as a single unit with a velocity $\\vec{v}_i = 5.0\\hat{i}\\text{ m/s}$. The particles undergo an internal interaction that causes them to separate. After the separation, particle $m_1$ is observed to move at a speed of $6.0\\text{ m/s}$ at an angle of $30.0^\\circ$ above the positive x-axis. Determine the final velocity vector $\\vec{v}_2$ of particle $m_2$, expressing your answer in component form $(\\hat{i}, \\hat{j})$ with units of $\\text{m/s}$."
+  },
+  {
+    "id": "gen-rotational-dynamics-01",
+    "domain_hint": "rotational-dynamics",
+    "problem_text": "A uniform solid disk has a mass of 3.0 kg and a radius of 0.2 m. The disk is rotating about its central axis with an initial angular velocity of 15 rad/s. A constant frictional torque of 0.6 N\u00b7m is applied to the disk, opposing the direction of rotation. Calculate the time in seconds required for the disk to come to a complete stop."
+  },
+  {
+    "id": "gen-rotational-dynamics-02",
+    "domain_hint": "rotational-dynamics",
+    "problem_text": "A uniform rod of mass $M = 2.0\\text{ kg}$ and length $L = 1.5\\text{ m}$ is pivoted at one end and allowed to rotate freely in a vertical plane. A small point mass $m = 0.5\\text{ kg}$ is attached to the free end of the rod. If the system is released from rest when the rod is positioned horizontally, calculate the magnitude of the angular acceleration $\\alpha$ of the rod at the instant of release. (Use $g = 9.8\\text{ m/s}^2$.)"
+  },
+  {
+    "id": "gen-rotational-dynamics-03",
+    "domain_hint": "rotational-dynamics",
+    "problem_text": "A solid uniform sphere has a mass of 5.0 kg and a radius of 0.10 m. The sphere is placed on a horizontal plane where the coefficient of static friction is 0.5. A constant horizontal force of 7.0 N is applied directly to the center of mass of the sphere. Calculate the angular acceleration of the sphere, assuming that it rolls without slipping."
+  },
+  {
+    "id": "gen-rotational-dynamics-04",
+    "domain_hint": "rotational-dynamics",
+    "problem_text": "A uniform solid cylinder of mass $M = 4.0$ kg and radius $R = 0.20$ m is mounted on a fixed, frictionless horizontal axle. A light, inextensible string is wrapped around the circumference of the cylinder, passes over a massless, frictionless pulley, and is attached to a hanging block of mass $m = 2.0$ kg. Neglecting the mass of the string and the pulley, calculate the angular acceleration $\\alpha$ of the cylinder in rad/s\u00b2 when the system is released from rest. (Use $g = 9.8$ m/s\u00b2)."
+  },
+  {
+    "id": "gen-rotational-dynamics-05",
+    "domain_hint": "rotational-dynamics",
+    "problem_text": "A uniform thin rod of mass $M = 0.80\\text{ kg}$ and length $L = 0.50\\text{ m}$ lies on a frictionless horizontal surface. A small particle of mass $m = 0.20\\text{ kg}$ is moving with a velocity of $v = 3.0\\text{ m/s}$ in a direction perpendicular to the rod's longitudinal axis. The particle strikes one end of the rod and sticks to it upon impact. Calculate the final angular velocity of the rod-particle system about its new center of mass."
+  },
+  {
+    "id": "gen-gravitation-01",
+    "domain_hint": "gravitation",
+    "problem_text": "A binary system consists of two black holes, each having a mass of $30 M_{\\odot}$, where $M_{\\odot} = 1.989 \\times 10^{30}$ kg. The two black holes are in a circular orbit with an orbital separation of $r = 1.0 \\times 10^6$ m. Calculate the orbital period of the system in seconds. (Use $G = 6.674 \\times 10^{-11} \\text{ m}^3\\text{kg}^{-1}\\text{s}^{-2}$)"
+  },
+  {
+    "id": "gen-gravitation-02",
+    "domain_hint": "gravitation",
+    "problem_text": "A newly discovered exoplanet has a mass of $4.5 \times 10^{24}$ kg and a radius of $6200$ km. A research probe is placed into a circular orbit such that its altitude above the planet's surface is exactly twice the planet's radius. Calculate the orbital period of the probe in hours. (Use $G = 6.674 \times 10^{-11} \text{ m}^3\text{kg}^{-1}\text{s}^{-2}$)"
+  },
+  {
+    "id": "gen-gravitation-03",
+    "domain_hint": "gravitation",
+    "problem_text": "An asteroid has a mass of $5.0 \\times 10^{18}$ kg and a radius of $2.0 \\times 10^4$ m. A small piece of debris is resting on the surface of the asteroid. Calculate the escape velocity, in m/s, required for this debris to escape the asteroid's gravitational pull. Use $G = 6.67 \\times 10^{-11} \\text{m}^3\\text{kg}^{-1}\\text{s}^{-2}$."
+  },
+  {
+    "id": "gen-gravitation-04",
+    "domain_hint": "gravitation",
+    "problem_text": "A spacecraft is in a stable circular orbit around an exoplanet. An onboard sensor measures the spacecraft's orbital velocity to be $5.20 \times 10^3$ m/s. The altitude of the spacecraft above the planet's surface is $1.50 \times 10^7$ m, and the planet's radius is measured to be $6.40 \times 10^6$ m. Calculate the mass of the exoplanet in kilograms."
+  },
+  {
+    "id": "gen-oscillations-waves-01",
+    "domain_hint": "oscillations-waves",
+    "problem_text": "A longitudinal magnetoacoustic wave propagates through a solar coronal loop. In the lower region of the loop, the wave travels at a velocity of 600 km/s with a wavelength of 120 km. As the wave moves into an upper region where the plasma density is significantly lower, the wave speed increases to 1500 km/s. Assuming the frequency of the wave remains constant as it passes through the interface between these two regions, calculate the wavelength of the wave in the upper region in kilometers."
+  },
+  {
+    "id": "gen-oscillations-waves-02",
+    "domain_hint": "oscillations-waves",
+    "problem_text": "A transverse wave propagates along a thin plasma filament, which can be modeled as a string under constant tension $T = 160\\text{ N}$. In the first region of the filament, the linear mass density is $\\mu_1 = 0.40\\text{ kg/m}$, and the wave has a frequency of $50\\text{ Hz}$. The wave then enters a second region where the linear mass density increases to $\\mu_2 = 1.60\\text{ kg/m}$. Calculate the wavelength of the wave in this second region."
+  },
+  {
+    "id": "gen-oscillations-waves-03",
+    "domain_hint": "oscillations-waves",
+    "problem_text": "Two waves are traveling in the same direction through a magnetized plasma filament. The first wave has a frequency of $f_1 = 50.0\\text{ Hz}$ and a wavelength of $\\lambda_1 = 2.0\\text{ m}$. The second wave has a frequency of $f_2 = 52.5\\text{ Hz}$. Assuming both waves propagate at the same speed through the medium, calculate the distance between two consecutive points of maximum amplitude in the resulting interference pattern."
+  },
+  {
+    "id": "gen-oscillations-waves-04",
+    "domain_hint": "oscillations-waves",
+    "problem_text": "A longitudinal pressure wave is trapped within a plasma-filled cylindrical tube that is open at both ends, creating standing waves. The fundamental frequency of this system is $f_1 = 250\\text{ Hz}$, and the speed of sound in the plasma medium is $v = 750\\text{ m/s}$. Calculate the wavelength $\\lambda_3$ (in meters) of the third harmonic resonance."
+  },
+  {
+    "id": "gen-oscillations-waves-05",
+    "domain_hint": "oscillations-waves",
+    "problem_text": "An electromagnetic wave with a frequency of $5.0 \\times 10^{14}\\text{ Hz}$ travels from a vacuum into a transparent medium. In this medium, the speed of the wave is measured to be $2.0 \\times 10^8\\text{ m/s}$. Calculate the refractive index $n$ of the medium and the wavelength $\\lambda$ of the wave while it is traveling inside this medium. (Use $c = 3.0 \\times 10^8\\text{ m/s}$ for the speed of light in a vacuum)."
+  },
+  {
+    "id": "gen-thermodynamics-02",
+    "domain_hint": "thermodynamics",
+    "problem_text": "A gas in a piston-cylinder device undergoes an isobaric process at a constant pressure of $P = 2.0 \\times 10^5\\text{ Pa}$ from an initial volume of $V_i = 1.0 \\times 10^{-3}\\text{ m}^3$ to a final volume of $V_f = 3.0 \\times 10^{-3}\\text{ m}^3$. During this expansion, $800\\text{ J}$ of heat energy is transferred into the gas from its surroundings. Calculate the change in the internal energy $\\Delta U$ of the gas in Joules."
+  },
+  {
+    "id": "gen-thermodynamics-03",
+    "domain_hint": "thermodynamics",
+    "problem_text": "A quantity of an ideal gas is initially at a pressure of $P_1 = 3.0 \\times 10^5\\text{ Pa}$ and a volume of $V_1 = 2.0 \\times 10^{-3}\\text{ m}^3$. The gas undergoes a reversible isothermal expansion to a final volume of $V_2 = 8.0 \\times 10^{-3}\\text{ m}^3$ while maintained at a constant temperature of $T = 400\\text{ K}$. Calculate the work done by the gas during this process in Joules and the change in entropy $\\Delta S$ for the gas in J/K. (Use $\\ln(4) \\approx 1.386$)"
+  },
+  {
+    "id": "gen-thermodynamics-04",
+    "domain_hint": "thermodynamics",
+    "problem_text": "A monatomic ideal gas is initially held in an insulated container with a volume of $V_1 = 4.0 \\times 10^{-3}\\text{ m}^3$ at a pressure of $P_1 = 1.0 \\times 10^5\\text{ Pa}$. The gas undergoes an adiabatic compression until the volume reaches $V_2 = 1.0 \\times 10^{-3}\\text{ m}^3$. After this compression, heat is transferred into the gas at a constant volume until the final pressure reaches $P_3 = 2.0 \\times 10^6\\text{ Pa}$. Determine the total heat added to the gas during this two-step process."
+  },
+  {
+    "id": "gen-thermodynamics-05",
+    "domain_hint": "thermodynamics",
+    "problem_text": "A diatomic ideal gas, with molar heat capacity at constant volume $C_v = \\frac{5}{2}R$, is initially held in a cylinder at a pressure of $P_1 = 2.0 \\times 10^5\\text{ Pa}$ and a volume of $V_1 = 1.0 \\times 10^{-3}\\text{ m}^3$. The gas undergoes an expansion to a final volume of $V_2 = 3.0 \\times 10^{-3}\\text{ m}^3$ following a path where the pressure and volume are related by the equation $PV^2 = C$, where $C$ is a constant. Calculate the total heat $Q$ transferred to the gas during this expansion (express your answer in Joules)."
+  },
+  {
+    "id": "gen-electromagnetism-01",
+    "domain_hint": "electromagnetism",
+    "problem_text": "A long, straight cylindrical conductor of radius $R = 2.0\\text{ cm}$ carries a uniform current $I = 15\\text{ A}$ along its axis. Calculate the magnitude of the magnetic field $B$ at a distance $r = 1.0\\text{ cm}$ from the center of the conductor. (Use $\\mu_0 = 4\\pi \\times 10^{-7}\\text{ T}\\cdot\\text{m/A}$)"
+  },
+  {
+    "id": "gen-electromagnetism-02",
+    "domain_hint": "electromagnetism",
+    "problem_text": "A rectangular loop of wire has dimensions $20.0\\text{ cm}$ by $10.0\\text{ cm}$ and is positioned in a uniform magnetic field that changes with time according to the equation $B(t) = 0.50 \\sin(5.0t)\\text{ T}$, where $t$ is in seconds. The plane of the loop is always perpendicular to the direction of the magnetic field. Calculate the maximum magnitude of the induced electromotive force (EMF) in the loop."
+  },
+  {
+    "id": "gen-electromagnetism-03",
+    "domain_hint": "electromagnetism",
+    "problem_text": "A proton, with a mass of $m = 1.67 \\times 10^{-27}\\text{ kg}$ and an elementary charge of $q = 1.60 \\times 10^{-19}\\text{ C}$, enters a region of uniform magnetic field $\\vec{B}$ with a magnitude of $0.40\\text{ T}$. The proton's initial velocity is $\\vec{v} = 1.60 \\times 10^6\\text{ m/s} \\hat{i}$, which is perpendicular to the magnetic field lines oriented in the $\\hat{k}$ direction. Calculate the radius of the circular path described by the proton as it moves through the magnetic field."
+  },
+  {
+    "id": "gen-electromagnetism-04",
+    "domain_hint": "electromagnetism",
+    "problem_text": "A non-conducting solid sphere of radius $R = 5.0\\text{ cm}$ has a volume charge density that varies with the distance $r$ from its center according to the function $\\rho(r) = \\rho_0 \\frac{r}{R}$, where $\\rho_0 = 5.0 \\times 10^{-4}\\text{ C/m}^3$. Calculate the magnitude of the electric field at a point located $r = 3.0\\text{ cm}$ from the center of the sphere."
+  },
+  {
+    "id": "gen-electromagnetism-05",
+    "domain_hint": "electromagnetism",
+    "problem_text": "Two infinitely long, straight, parallel wires are separated by a distance of $5.0\\text{ cm}$. Wire 1 carries a current of $I_1 = 12.0\\text{ A}$ directed in the $+z$ direction, and Wire 2 carries a current of $I_2 = 6.0\\text{ A}$ directed in the $-z$ direction. Calculate the magnitude of the magnetic force per unit length (in Newtons per meter) exerted on Wire 1 by Wire 2."
+  },
+  {
+    "id": "gen-optics-01",
+    "domain_hint": "optics",
+    "problem_text": "A ray of light is incident on the first surface of a triangular glass prism at an angle of 45.0\u00b0 with respect to the normal. The prism has an apex angle of 60.0\u00b0 and a refractive index of 1.55. Assuming the surrounding medium is air with a refractive index of 1.00, calculate the total angle of deviation, in degrees, that the light ray undergoes as it exits the second surface of the prism."
+  },
+  {
+    "id": "gen-optics-02",
+    "domain_hint": "optics",
+    "problem_text": "A thin film of oil with a refractive index of n_oil = 1.50 is floating on the surface of a pool of water with a refractive index of n_water = 1.33. An observer looking vertically at normal incidence observes a bright fringe (constructive interference) for light with a vacuum wavelength of 600 nm. Determine the thickness, in nanometers, of the thinnest possible oil film that would produce this observation."
+  },
+  {
+    "id": "gen-optics-03",
+    "domain_hint": "optics",
+    "problem_text": "An object is placed 15.0 cm in front of a converging lens with a focal length of 10.0 cm. A second diverging lens with a focal length of -10.0 cm is positioned along the same optical axis, exactly 45.0 cm behind the first lens. Determine the final distance of the image from the second lens in centimeters (use a positive value if the final image is real and a negative value if the final image is virtual)."
+  },
+  {
+    "id": "gen-optics-04",
+    "domain_hint": "optics",
+    "problem_text": "A diffraction grating with 500 lines per millimeter is illuminated by monochromatic light with a wavelength of 600 nm. The light forms an interference pattern on a screen placed 1.20 m away from the grating. Calculate the distance, in meters, from the central maximum to the second-order (m = 2) diffraction maximum."
+  },
+  {
+    "id": "gen-optics-05",
+    "domain_hint": "optics",
+    "problem_text": "A rectangular glass slab with a thickness of 5.00 cm and a refractive index of n = 1.50 is placed on a horizontal surface. A ray of light is incident on the top surface of the slab at an angle of 30.0\u00b0 relative to the normal. Calculate the lateral displacement (the perpendicular distance between the path of the original incident ray and the path of the emergent ray) as the light exits the bottom surface of the slab."
+  },
+  {
+    "id": "gen-fluid-mechanics-02",
+    "domain_hint": "fluid-mechanics",
+    "problem_text": "A cylindrical tank with a radius of $0.5$ m is filled with water (density $\\rho = 1000\\text{ kg/m}^3$) to a height of $2.0$ m. A small circular hole with a radius of $0.01$ m is punctured at the bottom of the tank. Neglecting friction and assuming quasi-steady flow, calculate the initial volumetric flow rate $Q$ (in $\\text{m}^3/\\text{s}$) exiting through the hole."
+  },
+  {
+    "id": "gen-fluid-mechanics-03",
+    "domain_hint": "fluid-mechanics",
+    "problem_text": "A horizontal water pipe ($\rho = 1000\text{ kg/m}^3$) has an internal diameter of $10.0\text{ cm}$ in one section and narrows to $5.0\text{ cm}$ at a constriction. If the pressure difference between the wide section and the narrow section is measured to be $1875\text{ Pa}$, calculate the velocity of the water flow in the narrow section of the pipe."
+  },
+  {
+    "id": "gen-fluid-mechanics-04",
+    "domain_hint": "fluid-mechanics",
+    "problem_text": "A microfluidic capillary tube has a length of $5.0\\text{ cm}$ and a radius of $2.0 \\times 10^{-4}\\text{ m}$. A viscous biological fluid with a dynamic viscosity of $\\eta = 0.004\\text{ Pa}\\cdot\\text{s}$ flows through this tube at a constant volumetric flow rate of $2.0 \\times 10^{-7}\\text{ m}^3\\text{/s}$. Determine the pressure difference, $\\Delta P$, in Pascals, required to maintain this steady laminar flow."
+  },
+  {
+    "id": "gen-fluid-mechanics-05",
+    "domain_hint": "fluid-mechanics",
+    "problem_text": "A rectangular vertical gate, $2.0\\text{ m}$ wide and $1.5\\text{ m}$ high, is positioned at the bottom of a reservoir filled with water ($\\rho = 1000\\text{ kg/m}^3$). The top edge of the gate is $4.0\\text{ m}$ below the water surface. Calculate the magnitude of the total hydrostatic force exerted by the water on the gate in Newtons. (Use $g = 9.8\\text{ m/s}^2$)"
+  },
+  {
+    "id": "gen-special-relativity-01",
+    "domain_hint": "special-relativity",
+    "problem_text": "In a reference frame $S'$, a photon is traveling in a direction that makes an angle of $\\theta' = 45.0^\\circ$ with the positive $x'$-axis. The frame $S'$ moves with a constant velocity of $v = 0.60c$ along the positive $x$-axis of a laboratory frame $S$. Determine the angle $\\theta$ that the photon's path makes with the $x$-axis as measured by an observer in the laboratory frame $S$."
+  },
+  {
+    "id": "gen-special-relativity-02",
+    "domain_hint": "special-relativity",
+    "problem_text": "A rod has a proper length of $L_0 = 4.0\\text{ m}$ and is moving with a constant velocity of $v = 0.60c$ along the positive x-axis relative to a stationary laboratory observer. At the instant $t=0$ in the laboratory frame, a light pulse is emitted from the front end of the rod and travels toward the rear end of the rod. Taking the speed of light to be $c = 3.0 \\times 10^8\\text{ m/s}$, calculate the time interval $\\Delta t$, in nanoseconds, between the emission of the pulse and the moment it reaches the rear end of the rod as measured by the laboratory observer."
+  },
+  {
+    "id": "gen-special-relativity-03",
+    "domain_hint": "special-relativity",
+    "problem_text": "In a stationary reference frame $S$, two events are observed to occur: Event A at $(x_A, t_A) = (0, 0)$ and Event B at $(x_B, t_B) = (10.0\\text{ light-years}, 10.0\\text{ years})$. An observer in a different reference frame $S'$ moves with a constant velocity of $v = 0.60c$ in the positive $x$-direction relative to frame $S$. Calculate the time interval $\\Delta t' = t'_B - t'_A$ between these two events as measured by the observer in frame $S'$."
+  },
+  {
+    "id": "gen-special-relativity-04",
+    "domain_hint": "special-relativity",
+    "problem_text": "A light source is moving directly toward a stationary observer at a constant velocity of $v = 0.80c$. The source emits monochromatic light with a proper frequency of $f_0 = 2.0 \times 10^{14} \\text{ Hz}$. Calculate the wavelength of the light, in nanometers (nm), as measured by the stationary observer. (Use $c = 3.00 \\times 10^8 \\text{ m/s}$)"
+  },
+  {
+    "id": "gen-special-relativity-05",
+    "domain_hint": "special-relativity",
+    "problem_text": "A muon is traveling in a laboratory reference frame $S$ with velocity components $u_x = 0.90c$ and $u_y = 0.40c$, where $c$ is the speed of light. An experimental detector moves relative to the laboratory frame along the positive x-axis with a constant velocity of $v = 0.50c$. Determine the angle $\\theta'$ that the muon's velocity vector makes with the positive x'-axis as measured in the detector's reference frame $S'$."
+  },
+  {
+    "id": "gen-quantum-mechanics-01",
+    "domain_hint": "quantum-mechanics",
+    "problem_text": "An electron is confined to a one-dimensional infinite square well with boundaries at $x = 0$ and $x = L$, where $L = 1.0$ nm. If the electron is in the first excited state ($n=2$), what is the probability of finding the electron in the region between $x = 0$ and $x = L/4$?"
+  },
+  {
+    "id": "gen-quantum-mechanics-03",
+    "domain_hint": "quantum-mechanics",
+    "problem_text": "A particle is in the first excited state ($n=1$) of a one-dimensional quantum harmonic oscillator with an angular frequency of $\\omega = 2.0 \\times 10^{15}$ rad/s. Calculate the expectation value of the total energy of the particle in electronvolts (eV), using the reduced Planck constant $\\hbar = 6.582 \\times 10^{-16}$ eV$\\cdot$s."
+  },
+  {
+    "id": "gen-statistical-mechanics-01",
+    "domain_hint": "statistical-mechanics",
+    "problem_text": "A system consists of two particles with spins $\\sigma_1$ and $\\sigma_2$, where each spin can take a value of either $+1$ or $-1$. The energy of the system is defined by the Hamiltonian $H = -J\\sigma_1\\sigma_2 - h(\\sigma_1 + \\sigma_2)$. Given that the coupling constant $J = 1.0$, the external magnetic field strength $h = 0.5$, and the inverse temperature $\\beta = (k_B T)^{-1} = 1.0$, calculate the expected value of the total magnetization $M = \\sigma_1 + \\sigma_2$. Express your answer as a single fraction in terms of $e$."
+  },
+  {
+    "id": "gen-statistical-mechanics-02",
+    "domain_hint": "statistical-mechanics",
+    "problem_text": "A system consists of $N$ non-interacting, distinguishable particles. The energy levels for each particle are given by $E_n = n\\epsilon$ for $n = 0, 1, 2, \\dots$, where $\\epsilon > 0$. Calculate the partition function $Z$ for the entire system in terms of $N$ and $\\beta = (k_B T)^{-1}$, and then derive an expression for the average internal energy $U$ of the system."
+  },
+  {
+    "id": "gen-statistical-mechanics-03",
+    "domain_hint": "statistical-mechanics",
+    "problem_text": "A single particle of mass $m$ moves in a two-dimensional harmonic potential given by $V(x, y) = \\frac{1}{2} m \\omega^2 (x^2 + y^2)$. In the classical limit, where energy levels can be treated as continuous, calculate the single-particle partition function $Z$ at temperature $T$. Assume the phase space volume element is $d\\Gamma = \\frac{dx \\, dy \\, dp_x \\, dp_y}{h^2}$, where $h$ is Planck's constant. Express your final answer in terms of $\\hbar$, $\\omega$, and $T$."
+  },
+  {
+    "id": "gen-statistical-mechanics-04",
+    "domain_hint": "statistical-mechanics",
+    "problem_text": "A system consists of $N = 10^{23}$ non-interacting magnetic moments, each with a magnetic moment magnitude of $\\mu = 2.0 \\times 10^{-23}$ J/T. The system is placed in a uniform external magnetic field of $B = 1.5$ T and is maintained at a constant temperature of $T = 1.0$ K. Assuming that each magnetic moment can only be oriented either parallel or anti-parallel to the direction of the magnetic field, calculate the total magnetization $M$ of the system in Joules per Tesla (J/T). (Use Boltzmann's constant $k_B = 1.38 \\times 10^{-23}$ J/K)."
+  },
+  {
+    "id": "gen-nuclear-physics-01",
+    "domain_hint": "nuclear-physics",
+    "problem_text": "In the Liquid Drop Model of the nucleus, the binding energy is estimated using the Semi-Empirical Mass Formula. A key component is the symmetry energy term, which represents the energy penalty associated with an imbalance between the number of neutrons ($N$) and protons ($Z$). This term is expressed as $E_{sym} = -a_{sym} \frac{(N-Z)^2}{A}$, where $A$ is the mass number. For a nucleus with $A = 120$, calculate the magnitude of the energy reduction (in MeV) due to this symmetry term if the nucleus has an excess of 24 neutrons over protons ($N - Z = 24$). Assume the symmetry energy coefficient $a_{sym}$ is $23.5$ MeV."
+  },
+  {
+    "id": "gen-nuclear-physics-02",
+    "domain_hint": "nuclear-physics",
+    "problem_text": "In the liquid drop model of the nucleus, the symmetry energy component of the binding energy is given by $E_{sym} = a_{sym} \\frac{(N-Z)^2}{A}$, where $a_{sym}$ is the symmetry energy coefficient, $A$ is the mass number, and $N$ and $Z$ represent the neutron and proton numbers, respectively. Consider an isobaric transition within a nucleus of mass number $A=100$. If the nucleus transitions from an initial state with $Z = 46$ to a final state with $Z = 40$, calculate the increase in the symmetry energy component (in MeV) caused by this change. Assume $a_{sym} = 23.0 \\text{ MeV}$."
+  },
+  {
+    "id": "gen-nuclear-physics-03",
+    "domain_hint": "nuclear-physics",
+    "problem_text": "An atom of Iron-56 ($^{56}_{26}\text{Fe}$) consists of 26 protons and 30 neutrons. Given the following mass values: the mass of a proton $m_p = 1.00728 \text{ u}$, the mass of a neutron $m_n = 1.00866 \text{ u}$, and the atomic mass of $^{56}\text{Fe}$ as $M = 55.93494 \text{ u}$. Using the conversion factor $1 \text{ u} = 931.5 \text{ MeV}/c^2$, calculate the binding energy per nucleon for this nucleus in $\text{MeV}$. Round your final answer to two decimal places."
+  },
+  {
+    "id": "gen-nuclear-physics-04",
+    "domain_hint": "nuclear-physics",
+    "problem_text": "A radium-226 nucleus ($^{226}_{88}\text{Ra}$) undergoes alpha decay to produce a radon-222 nucleus ($^{222}_{86}\text{Rn}$) and an alpha particle ($^{4}_{2}\text{He}$). The nuclear masses for the isotopes involved are provided as follows: $M(^{226}\text{Ra}) = 226.02791 \text{ u}$, $M(^{222}\text{Rn}) = 222.01758 \text{ u}$, and $M(^4\text{He}) = 4.00260 \text{ u}$. Using the conversion factor $1 \text{ u} = 931.5 \text{ MeV}/c^2$, calculate the kinetic energy of the emitted alpha particle in MeV, assuming the parent radium nucleus was initially at rest and neglecting the effects of the electron cloud."
+  },
+  {
+    "id": "gen-nuclear-physics-05",
+    "domain_hint": "nuclear-physics",
+    "problem_text": "In a beta-minus ($\\beta^-$) decay process, the isotope $^{137}_{55}\\text{Cs}$ decays into $^{137}_{56}\\text{Ba}$ by emitting an electron and an antineutrino. The atomic mass of $^{137}_{55}\\text{Cs}$ is $136.90708 \\text{ u}$ and the atomic mass of $^{137}_{56}\\text{Ba}$ is $136.90566 \\text{ u}$. Calculate the maximum kinetic energy, in MeV, that can be carried by the emitted electron at the moment of decay. Assume the recoil energy of the Barium nucleus is negligible and use the conversion factor $1 \\text{ u} = 931.5 \\text{ MeV}/c^2$."
+  }
+]
