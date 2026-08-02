@@ -236,7 +236,8 @@ originally committed values first.
 physics_agent/
   config.py         LM Studio connection settings + file paths (env-overridable)
   llm_client.py      LLMClient (real, OpenAI-compatible) + MockLLMClient (offline/tests)
-  json_utils.py      Shared defensive JSON extraction, used across planner/orchestrator/checks
+  json_utils.py      Shared defensive JSON extraction + backslash/LaTeX sanitization, used across
+                     planner/orchestrator/self-eval checks/problem generator
   planner.py         TaskPlanner: domain classification + subtask decomposition        (Stage 1)
   retrieval.py        SemanticStore: keyword-scored retrieval over seeded physics facts  (Stage 1)
   orchestrator.py     ToolOrchestrator: tool selection, execution, solution synthesis   (Stage 2)
@@ -324,6 +325,7 @@ tests/
   test_problem_set_cli.py                          Batch loading, crash isolation, limit handling
   test_inspect_trace_cli.py                          Search/lookup logic, full-detail printing
   test_generate_problem_set_cli.py                     Domain coverage, unique ids, avoid-list growth
+  test_json_utils.py                                     Backslash/LaTeX sanitization, incl. exact real crash
 memory/
   episodic.jsonl      Created at runtime — one JSON line per problem run
   procedural.json      Created at runtime — strategy success-rate table
@@ -337,7 +339,7 @@ memory/
 pytest tests/ -v
 ```
 
-All 221 tests run offline (no LM Studio required) using `MockLLMClient`.
+All 235 tests run offline (no LM Studio required) using `MockLLMClient`.
 The physics tools themselves (SymPy solving, SciPy integration), the Math
 Check's re-substitution verification, and the knowledge graph's validity
 queries are exercised with real computation, not mocked — only the LLM
@@ -851,6 +853,63 @@ and knowledge graph (not synthetic fixtures): the exact retrieval,
 formula, and domain tags from the failing trace now produce a passing
 Physics Check on the first attempt. This problem would no longer need
 even one revision, let alone exhaust all 3 and still fail.
+
+**Bug 3 — the shared JSON parser choked on LaTeX.** Bulk-generating
+practice problems with `generate_problem_set_cli.py` crashed with
+`Invalid \escape: line 1 column 240` on an electromagnetism problem the
+model wrote using LaTeX math notation (`$R = 5.0\text{ mm}$`,
+`$r \le R$`, `$\mu_0$`) directly inside a JSON string, with the
+backslashes left unescaped. Some of these (`\l`, `\m`, `\p`, `\c`) aren't
+valid JSON escapes at all, so `json.loads` raised outright; others are
+worse — `\t` *is* a valid JSON escape (tab), so `\text{mm}` would have
+"succeeded" silently as a tab character followed by garbled literal text
+`ext{mm}`, with no error at all. **Fix:** `json_utils.extract_json` (the
+one function every JSON-producing component in this system already
+shares — planner, orchestrator, all three LLM-based self-eval checks,
+and the problem generator) now sanitizes any backslash that isn't
+unambiguously a real JSON escape (`\"`, `\\`, `\/`, `\u...`) before
+parsing, converting stray ones into literal, parseable text instead of
+crashing or silently corrupting content. `ProblemGenerator`'s system
+prompt was also strengthened to ask for plain-ASCII math notation instead
+of LaTeX in the first place — prevention alongside the parsing fix, not
+instead of it, since prompt compliance alone isn't reliable. Verified
+against the exact real failing string (reproduced in
+`tests/test_json_utils.py`), plus adversarial cases the fix specifically
+had to get right without introducing a new bug: Greek-letter LaTeX
+commands that start with a letter that's *also* a valid JSON escape code
+(`\rho`, `\tau`, `\nabla`, `\beta`, `\frac` — none of these may be
+misread as `\r`/`\t`/`\n`/`\b`/`\f` followed by garbled text), and
+genuine legitimate escapes (`\n`, `\t`, `\"`, `\\`, `\uXXXX`) continuing
+to parse correctly when a model actually means them. One known, accepted
+limitation: because LaTeX commands and genuine deliberate control
+characters can start identically (both are backslash + letter,
+indistinguishable from the character alone), a model deliberately writing
+`\n` inside a short JSON string field would now survive as a literal
+2-character sequence rather than an actual newline — a reasonable trade
+given this system's fields are short, single-paragraph prose where that's
+rare, versus the alternative of continuing to crash or corrupt on the far
+more common case of physics LaTeX.
+
+**Bug 4 — one bad LLM call crashed the entire generation batch.** The 5th
+quantum-mechanics problem in the same run hit `openai.BadRequestError`
+("the model produced output that does not match the expected...
+format") — a raw server-side failure from the local inference engine
+itself, not something in this codebase's control. The real bug was that
+nothing caught it: `ProblemGenerator.generate()`'s retry loop only caught
+`(ValueError, json.JSONDecodeError)` around the *parsing* step, so an
+exception from the LLM call itself propagated straight through, uncaught,
+and killed the whole multi-problem, multi-domain batch script over a
+single flaky call. **Fix:** the underlying `self.llm.chat(...)` call is
+now wrapped in its own try/except inside the retry loop — a raised
+exception is treated the same as an unparseable response (worth a retry
+with the identical request), and if it keeps failing, surfaces as the
+same plain `ValueError` a JSON-parsing failure already would, which
+`generate_for_domains()` already knew how to catch and skip past.
+Verified with a reproduction of the exact scenario (an LLM client that
+raises on its first call and succeeds on retry, and separately, one that
+never succeeds) confirming the batch continues past the failure instead
+of crashing, and that the original exception type never propagates out of
+`generate()`.
 
 Let me know if you'd like to do that further testing round, revisit
 anything in Stages 1-8, or take the project somewhere the original

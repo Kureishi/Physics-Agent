@@ -77,6 +77,29 @@ def test_generate_for_domains_skips_failed_generation_without_crashing(config, m
     assert len(problems) == 2  # one of the three failed and was skipped
 
 
+def test_generate_for_domains_survives_a_non_valueerror_exception(config, monkeypatch):
+    # Defense-in-depth: even if something other than ProblemGenerator's own
+    # (always-ValueError) failure mode somehow leaked through, the batch
+    # should still survive it rather than crashing entirely -- this is what
+    # actually happened in practice with an uncaught openai.BadRequestError
+    # before generate()'s retry loop was hardened to catch it internally.
+    from physics_agent.curriculum.problem_generator import ProblemGenerator
+
+    call_count = {"n": 0}
+    original_generate = ProblemGenerator.generate
+
+    def flaky_generate(self, signal, avoid=None):
+        call_count["n"] += 1
+        if call_count["n"] == 2:
+            raise RuntimeError("simulated raw API-level failure")
+        return original_generate(self, signal, avoid=avoid)
+
+    monkeypatch.setattr(ProblemGenerator, "generate", flaky_generate)
+
+    problems = generate_for_domains(["energy"], n_per_domain=3, dry_run=True, config=config)
+    assert len(problems) == 2
+
+
 def test_load_existing_returns_empty_list_for_missing_file(tmp_path):
     result = load_existing(str(tmp_path / "does_not_exist.json"))
     assert result == []

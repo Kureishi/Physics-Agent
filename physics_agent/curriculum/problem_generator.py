@@ -20,6 +20,17 @@ problem texts (or short summaries of them) for the same domain, so calling
 it repeatedly in a loop -- as generate_problem_set_cli.py does -- doesn't
 just produce N near-identical variations of the first idea a local model
 reaches for.
+
+Retry handling covers two distinct failure modes, both hit in practice
+running this against a real local model: the response coming back as
+unparseable/wrongly-shaped JSON (handled since Stage 8's original
+implementation), and the underlying LLM call itself failing outright --
+e.g. a local inference engine returning a raw server error on a
+particular generation. The latter used to propagate straight out of
+generate() uncaught, crashing an entire multi-problem batch run over one
+bad call; it's now retried the same as a parsing failure and, if it keeps
+happening, surfaced as the same kind of ValueError a caller like
+generate_for_domains() already knows how to catch and skip past.
 """
 from __future__ import annotations
 
@@ -41,6 +52,11 @@ Requirements:
 - State all needed numeric values in the problem itself (no missing data).
 - The problem must have a clear, well-defined final numeric or symbolic answer.
 - Match difficulty typical of an introductory-to-intermediate physics course.
+- Write all math in plain text, NOT LaTeX and NOT unicode math symbols --
+  no backslash commands (\\text, \\mu, \\pi, \\times, \\cdot, \\le), no
+  special unicode characters (rho, mu, <=, x). Use plain ASCII instead:
+  "mu_0", "pi", "<=", "x", "rho", spelled-out units like "mm" or "m/s".
+  This keeps your response reliably parseable as JSON.
 - If literature context is provided, you may draw inspiration from its
   general subject matter, but you MUST write an original problem in your
   own words -- never copy phrases or sentences from the provided text.
@@ -92,8 +108,9 @@ class ProblemGenerator:
 
         Returns:
             {"problem_text", "target_concepts", "rationale", "literature_context"}
-        Raises ValueError if the model can't produce valid, usable JSON
-        after `max_retries` corrective follow-ups.
+        Raises ValueError if the model can't produce valid, usable JSON --
+        or the underlying LLM call itself keeps failing -- after
+        `max_retries` additional attempts.
         """
         domain_tags = signal.get("domain_tags", [])
         literature_context = self._literature_context(domain_tags)
@@ -119,7 +136,18 @@ class ProblemGenerator:
         raw = ""
         last_err: Exception = ValueError("problem generator never ran")
         for _ in range(self.max_retries + 1):
-            raw = self.llm.chat(messages)
+            try:
+                raw = self.llm.chat(messages)
+            except Exception as e:
+                # The LLM call itself failed (network error, a local
+                # inference engine returning a raw server error on this
+                # particular generation, etc.) -- treat it the same as an
+                # unparseable response: worth a retry with the identical
+                # request, and if it keeps happening, surfaced as the same
+                # ValueError a parsing failure would raise below.
+                last_err = e
+                continue
+
             try:
                 parsed = extract_json(raw)
                 problem_text = parsed.get("problem_text")

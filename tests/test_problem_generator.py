@@ -141,3 +141,79 @@ def test_generate_truncates_long_avoid_entries():
     user_content = llm.calls[0][1]["content"]
     assert "A" * 500 not in user_content  # full text shouldn't appear
     assert "A" * 200 in user_content  # truncated prefix should
+
+
+# -- resilience to the LLM call itself failing (not just bad JSON) ----------
+
+
+class _FlakyLLM:
+    """Simulates a real API-level failure (e.g. openai.BadRequestError from
+    a local inference engine returning a raw server error), succeeding on
+    a later attempt -- reproducing a real crash seen running
+    generate_problem_set_cli.py against LM Studio."""
+
+    def __init__(self, fail_times: int, good_response: str):
+        self.fail_times = fail_times
+        self.good_response = good_response
+        self.calls = 0
+
+    def chat(self, messages, temperature=None):
+        self.calls += 1
+        if self.calls <= self.fail_times:
+            raise RuntimeError(
+                "Error code: 400 - {'error': {'message': 'The model produced "
+                "output that does not match the expected format'}}"
+            )
+        return self.good_response
+
+
+def test_generate_retries_past_a_raw_llm_call_exception():
+    llm = _FlakyLLM(
+        fail_times=1,
+        good_response='{"problem_text": "A ball falls.", "target_concepts": ["kinematics"], "rationale": "x"}',
+    )
+    generator = ProblemGenerator(llm, max_retries=1)
+
+    result = generator.generate(_signal())
+
+    assert result["problem_text"] == "A ball falls."
+    assert llm.calls == 2  # first call raised, second succeeded
+
+
+def test_generate_raises_clean_valueerror_after_exhausting_retries_on_call_failures():
+    llm = _FlakyLLM(fail_times=99, good_response="irrelevant")  # always fails
+    generator = ProblemGenerator(llm, max_retries=1)
+
+    # Should raise a plain ValueError (catchable by generate_for_domains'
+    # existing `except ValueError`), never the original RuntimeError/API
+    # exception -- that's what lets a batch script skip this one signal
+    # and keep going instead of crashing entirely.
+    with pytest.raises(ValueError) as exc_info:
+        generator.generate(_signal())
+    assert not isinstance(exc_info.value, RuntimeError)
+    assert llm.calls == 2  # initial attempt + 1 retry, then gave up
+
+
+def test_generate_mixed_failure_then_bad_json_then_success():
+    # A more realistic sequence: the call fails outright once, then
+    # succeeds but with bad JSON, then succeeds properly -- exercises both
+    # failure-handling branches within a single generate() call.
+    class MixedLLM:
+        def __init__(self):
+            self.calls = 0
+
+        def chat(self, messages, temperature=None):
+            self.calls += 1
+            if self.calls == 1:
+                raise RuntimeError("transient server error")
+            if self.calls == 2:
+                return "not valid json"
+            return '{"problem_text": "A ball falls.", "target_concepts": [], "rationale": "x"}'
+
+    llm = MixedLLM()
+    generator = ProblemGenerator(llm, max_retries=2)
+
+    result = generator.generate(_signal())
+
+    assert result["problem_text"] == "A ball falls."
+    assert llm.calls == 3

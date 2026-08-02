@@ -75,7 +75,15 @@ def generate_for_domains(
         for i in range(n_per_domain):
             try:
                 result = generator.generate(signal, avoid=generated_texts)
-            except ValueError as e:
+            except Exception as e:
+                # generator.generate() already converts both bad-JSON and
+                # raw LLM-call failures into a plain ValueError internally,
+                # so this should always be a ValueError in practice -- this
+                # broader catch is defense-in-depth, consistent with the
+                # rest of this codebase's stance that one bad sub-step
+                # (here: one signal's generation) should never crash an
+                # entire batch run, whatever specific exception it happens
+                # to raise.
                 print(f"  [{domain} #{i + 1}] generation failed, skipping: {e}")
                 continue
             problems.append(
