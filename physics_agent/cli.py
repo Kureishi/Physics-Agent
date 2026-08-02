@@ -57,6 +57,8 @@ def run(
             base_url=config.lm_studio_base_url,
             api_key=config.lm_studio_api_key,
             model=config.lm_studio_model,
+            timeout=config.lm_studio_timeout_seconds,
+            max_tokens=config.lm_studio_max_tokens,
         )
     )
 

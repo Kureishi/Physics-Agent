@@ -7,12 +7,44 @@ we use the official `openai` python package pointed at that base_url rather
 than hand-rolling HTTP calls — this also means swapping to a different
 OpenAI-compatible backend later (vLLM, an actual OpenAI key, etc.) is a
 one-line config change, not a rewrite.
+
+`timeout` and `max_tokens` exist specifically because of a real failure
+mode found running this against different local models: one model
+(a "thinking"/reasoning-tuned variant) appeared to hang indefinitely with
+no output at all. Chat completions here are non-streaming -- nothing is
+returned until the ENTIRE response, including any hidden chain-of-thought,
+is complete -- so a model that reasons at length before emitting anything,
+or one that simply never emits a stop token in a given quantization, looks
+identical to "stuck forever" with no way to recover, since nothing in the
+system could time out or cut it off. Both parameters are mitigations for
+that, not a guaranteed fix for any specific model's behavior:
+  - `timeout` bounds the wait on the client side. Whatever the model is
+    doing, a request that runs longer than this raises a clear, catchable
+    exception instead of hanging the whole process -- which, combined
+    with the retry/skip handling already in TaskPlanner, ToolOrchestrator,
+    the self-eval checks, and ProblemGenerator, turns "hangs forever" into
+    "fails cleanly and gets skipped."
+  - `max_tokens` bounds the response length on the server side, so a model
+    stuck in a repetition loop (or one whose reasoning trace would
+    otherwise run past any reasonable wait) gets cut off rather than
+    running until it exhausts its context window. Note this is a genuine
+    trade-off, not free: a model that legitimately needs a long reasoning
+    trace before it can produce its actual answer may get truncated
+    mid-thought and never produce a parseable response at all -- which
+    still fails cleanly (the existing JSON-parsing retry path handles a
+    truncated/incomplete response the same as any other unparseable one),
+    but if you're using a model like that, raising `max_tokens` (and
+    likely `timeout` alongside it) is the right knob to turn, at the cost
+    of longer waits.
 """
 from __future__ import annotations
 
 from typing import Dict, List, Optional
 
 from openai import OpenAI
+
+DEFAULT_TIMEOUT_SECONDS = 120.0
+DEFAULT_MAX_TOKENS = 2048
 
 
 class LLMClient:
@@ -24,17 +56,30 @@ class LLMClient:
         api_key: str = "lm-studio",
         model: str = "local-model",
         temperature: float = 0.2,
+        timeout: float = DEFAULT_TIMEOUT_SECONDS,
+        max_tokens: Optional[int] = DEFAULT_MAX_TOKENS,
     ):
-        self._client = OpenAI(base_url=base_url, api_key=api_key)
+        self._client = OpenAI(base_url=base_url, api_key=api_key, timeout=timeout)
         self.model = model
         self.temperature = temperature
+        self.max_tokens = max_tokens
 
-    def chat(self, messages: List[Dict[str, str]], temperature: Optional[float] = None) -> str:
-        response = self._client.chat.completions.create(
-            model=self.model,
-            messages=messages,
-            temperature=temperature if temperature is not None else self.temperature,
-        )
+    def chat(
+        self,
+        messages: List[Dict[str, str]],
+        temperature: Optional[float] = None,
+        max_tokens: Optional[int] = None,
+    ) -> str:
+        kwargs = {
+            "model": self.model,
+            "messages": messages,
+            "temperature": temperature if temperature is not None else self.temperature,
+        }
+        effective_max_tokens = max_tokens if max_tokens is not None else self.max_tokens
+        if effective_max_tokens is not None:
+            kwargs["max_tokens"] = effective_max_tokens
+
+        response = self._client.chat.completions.create(**kwargs)
         return response.choices[0].message.content
 
 

@@ -144,6 +144,21 @@ export LM_STUDIO_MODEL="your-model-name"
 python -m physics_agent.cli "..."
 ```
 
+Two more worth knowing about if you're trying a model you haven't used
+with this before, especially a "thinking"/reasoning-tuned one:
+
+```bash
+export LM_STUDIO_TIMEOUT_SECONDS="120"   # default; raise if a model needs longer per call
+export LM_STUDIO_MAX_TOKENS="2048"        # default; raise if a model needs a longer response/reasoning trace
+```
+
+Chat completions here are non-streaming, so nothing returns until the
+whole response is done — a model that reasons at length before answering,
+or one that never emits a stop token in a particular quantization, can
+look exactly like a hang with no way to tell the two apart from outside.
+Both settings exist specifically so that turns into a clean, bounded
+failure instead (see "Bug 5" near the end of this document for the full story).
+
 ### Running without LM Studio (offline / dry run)
 
 ```bash
@@ -325,6 +340,7 @@ tests/
   test_problem_set_cli.py                          Batch loading, crash isolation, limit handling
   test_inspect_trace_cli.py                          Search/lookup logic, full-detail printing
   test_generate_problem_set_cli.py                     Domain coverage, unique ids, avoid-list growth
+  test_llm_client.py                                     Timeout/max_tokens threading, per-call overrides
   test_json_utils.py                                     Backslash/LaTeX sanitization, incl. exact real crash
 memory/
   episodic.jsonl      Created at runtime — one JSON line per problem run
@@ -339,7 +355,7 @@ memory/
 pytest tests/ -v
 ```
 
-All 235 tests run offline (no LM Studio required) using `MockLLMClient`.
+All 243 tests run offline (no LM Studio required) using `MockLLMClient`.
 The physics tools themselves (SymPy solving, SciPy integration), the Math
 Check's re-substitution verification, and the knowledge graph's validity
 queries are exercised with real computation, not mocked — only the LLM
@@ -910,6 +926,31 @@ raises on its first call and succeeds on retry, and separately, one that
 never succeeds) confirming the batch continues past the failure instead
 of crashing, and that the original exception type never propagates out of
 `generate()`.
+
+**Bug 5 — a different local model (Qwen 3.6 35B A3B) appeared to hang
+indefinitely with no output at all.** Unlike Bugs 3-4, this one couldn't
+be conclusively root-caused remotely — the most likely explanation is a
+"thinking"/reasoning-tuned model producing a long chain-of-thought before
+any visible output, or a model that simply never emits a stop token in
+that specific quantization. Either way, the same underlying gap in this
+codebase made it worse: `LLMClient` set no request timeout and no
+`max_tokens` cap on any call. Chat completions here are non-streaming, so
+nothing returns until the entire response — including any hidden
+reasoning — finishes; with nothing to cut a stuck or slow generation off,
+that's indistinguishable from hanging forever, whatever the actual cause.
+**Fix:** `LLMClient` now sets both by default (120s timeout, 2048 max
+tokens, both configurable via `Config`/env vars:
+`LM_STUDIO_TIMEOUT_SECONDS`, `LM_STUDIO_MAX_TOKENS`). This doesn't fix
+whatever the model itself was doing — it can't, from here — but it
+converts "hangs forever with zero recovery" into "fails after a bounded
+wait with a clear, catchable exception," which the retry/skip handling
+already built for Bug 4 then takes over from there. Genuinely worth
+knowing before relying on this: if you're using a model that legitimately
+needs a long reasoning trace before it can answer, raising both values is
+the right move, not evidence the fix is wrong — the trade-off is longer
+waits, and a `max_tokens` cut set too low will make that specific model's
+calls fail cleanly every time rather than hang, which is strictly better
+but still means "increase the cap" is the actual fix needed for that model.
 
 Let me know if you'd like to do that further testing round, revisit
 anything in Stages 1-8, or take the project somewhere the original

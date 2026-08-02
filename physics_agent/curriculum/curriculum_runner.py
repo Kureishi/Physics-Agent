@@ -140,6 +140,8 @@ class CurriculumRunner:
                 base_url=self.config.lm_studio_base_url,
                 api_key=self.config.lm_studio_api_key,
                 model=self.config.lm_studio_model,
+                timeout=self.config.lm_studio_timeout_seconds,
+                max_tokens=self.config.lm_studio_max_tokens,
             )
         )
         # Real literature search only in real runs -- dry runs shouldn't

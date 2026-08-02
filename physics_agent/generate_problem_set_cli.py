@@ -48,6 +48,8 @@ def _build_generator(dry_run: bool, config: Config) -> ProblemGenerator:
             api_key=config.lm_studio_api_key,
             model=config.lm_studio_model,
             temperature=DEFAULT_GENERATION_TEMPERATURE,
+            timeout=config.lm_studio_timeout_seconds,
+            max_tokens=config.lm_studio_max_tokens,
         )
     literature_tool = None if dry_run else LiteratureSearchTool()
     return ProblemGenerator(llm, literature_tool=literature_tool)

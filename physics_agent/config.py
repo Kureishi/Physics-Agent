@@ -26,6 +26,17 @@ class Config:
     # loaded.
     lm_studio_model: str = os.environ.get("LM_STUDIO_MODEL", "local-model")
 
+    # Both exist because of a real failure mode: a "thinking"/reasoning
+    # model (or one that simply never emits a stop token in a given
+    # quantization) can appear to hang forever with a non-streaming client,
+    # since nothing returns until the whole response is done. See
+    # llm_client.LLMClient's docstring for the full reasoning. If you're
+    # using a model that legitimately needs long chain-of-thought before it
+    # answers, raise both of these -- the trade-off is longer waits, not
+    # reliability.
+    lm_studio_timeout_seconds: float = float(os.environ.get("LM_STUDIO_TIMEOUT_SECONDS", "120"))
+    lm_studio_max_tokens: int = int(os.environ.get("LM_STUDIO_MAX_TOKENS", "2048"))
+
     episodic_memory_path: str = os.environ.get("EPISODIC_MEMORY_PATH", "memory/episodic.jsonl")
     semantic_store_path: str = os.environ.get("SEMANTIC_STORE_PATH", "data/semantic_seed.json")
     procedural_memory_path: str = os.environ.get("PROCEDURAL_MEMORY_PATH", "memory/procedural.json")
