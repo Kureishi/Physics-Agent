@@ -123,5 +123,485 @@
     "id": "nuc-01",
     "domain_hint": "nuclear-physics",
     "problem_text": "A radioactive isotope has a half-life of 8 days. Find its decay constant (lambda), then find what fraction of the original sample remains after 24 days."
+  },
+  {
+    "id": "gen-kinematics-02",
+    "domain_hint": "kinematics",
+    "problem_text": "A small research probe is launched vertically upward from the surface of a planet. The probe's engines provide a constant upward acceleration of 15 m/s^2 for the first 30 seconds of flight. After 30 seconds, the engines shut off, and the probe continues to move under the influence of the planet's gravity alone, which provides a downward acceleration of 9.8 m/s^2. Calculate the maximum altitude reached by the probe above the launch site in meters. Round your answer to the nearest whole meter."
+  },
+  {
+    "id": "gen-kinematics-05",
+    "domain_hint": "kinematics",
+    "problem_text": "A projectile is launched horizontally from the top of a cliff that is 45 meters high with an initial velocity of 20 m/s. Taking the acceleration due to gravity as g = 9.8 m/s^2 and neglecting air resistance, calculate the horizontal distance from the base of the cliff to where the projectile lands in meters."
+  },
+  {
+    "id": "gen-dynamics-01",
+    "domain_hint": "dynamics",
+    "problem_text": "A block of mass 5 kg is placed on a frictionless ramp inclined at an angle of 30 degrees above the horizontal. As the block slides down the ramp, it experiences a constant resistive force of 10 N acting parallel to the surface of the ramp in the direction opposite to its motion. Taking the acceleration due to gravity as g = 9.8 m/s^2, calculate the magnitude of the acceleration of the block as it moves down the incline."
+  },
+  {
+    "id": "gen-dynamics-02",
+    "domain_hint": "dynamics",
+    "problem_text": "A particle of mass 2 kg moves along a straight line. At time t = 0 s, the particle has an initial velocity of 5 m/s. The particle is subject to a force F(t) = (12 - 6t) N, where t is the time in seconds. Find the velocity of the particle at t = 2 s."
+  },
+  {
+    "id": "gen-dynamics-03",
+    "domain_hint": "dynamics",
+    "problem_text": "Two blocks are connected by a light, inextensible string that passes over a frictionless, massless pulley. Block A, with a mass of 3 kg, rests on a horizontal surface where the coefficient of kinetic friction is 0.25. Block B, with a mass of 2 kg, hangs vertically from the other end of the string. Taking the acceleration due to gravity as g = 9.8 m/s^2, calculate the magnitude of the acceleration of the blocks once the system is in motion."
+  },
+  {
+    "id": "gen-dynamics-04",
+    "domain_hint": "dynamics",
+    "problem_text": "A crate with a mass of 12 kg is being pulled across a horizontal floor by a rope. The rope exerts a tension of 60 N at an angle of 25 degrees above the horizontal. The coefficient of kinetic friction between the crate and the floor is 0.30. Calculate the magnitude of the acceleration of the crate in m/s^2. Use g = 9.8 m/s^2 for the acceleration due to gravity."
+  },
+  {
+    "id": "gen-dynamics-05",
+    "domain_hint": "dynamics",
+    "problem_text": "A small object with a mass of 0.4 kg is attached to the end of a light, inextensible string that is 0.8 m long. The object moves in a vertical circle. At the lowest point of its path, the speed of the object is 4 m/s. Taking the acceleration due to gravity as g = 9.8 m/s^2, calculate the tension in the string at this lowest point in Newtons."
+  },
+  {
+    "id": "gen-energy-01",
+    "domain_hint": "energy",
+    "problem_text": "A 1.0 kg block is released from rest at the top of a frictionless track that is 5.0 meters high. At the bottom of the track, the block encounters a spring with a spring constant k = 200 N/m. Calculate the maximum compression of the spring in meters."
+  },
+  {
+    "id": "gen-energy-02",
+    "domain_hint": "energy",
+    "problem_text": "A crate with a mass of 5 kg is sliding across a horizontal floor with an initial velocity of 10 m/s. The coefficient of kinetic friction between the crate and the floor is 0.3. Calculate the distance, in meters, that the crate slides before coming to a complete stop. Assume the acceleration due to gravity is 9.8 m/s^2."
+  },
+  {
+    "id": "gen-energy-03",
+    "domain_hint": "energy",
+    "problem_text": "A space probe is currently orbiting a planet at an altitude of 2.0 * 10^6 meters above the surface. The planet has a mass of 6.0 * 10^24 kg and a radius of 6.4 * 10^6 meters. Given the gravitational constant G = 6.67 * 10^-11 N*m^2/kg^2, determine the minimum speed (escape velocity) the probe must achieve to leave the planet's gravitational field from its current altitude."
+  },
+  {
+    "id": "gen-energy-04",
+    "domain_hint": "energy",
+    "problem_text": "A ball with a mass of 0.5 kg is thrown vertically upward from the ground with an initial speed of 15 m/s. As it rises, it experiences a constant resistive force of 2.0 N due to air resistance acting in the opposite direction of motion. Taking the acceleration due to gravity as 9.8 m/s^2, calculate the maximum height reached by the ball in meters."
+  },
+  {
+    "id": "gen-momentum-01",
+    "domain_hint": "momentum",
+    "problem_text": "A stationary object with a total mass of 5.0 kg suddenly explodes into two fragments. One fragment, which has a mass of 2.0 kg, moves with a velocity of 12 m/s to the right. Calculate the magnitude of the velocity of the second fragment in m/s."
+  },
+  {
+    "id": "gen-momentum-02",
+    "domain_hint": "momentum",
+    "problem_text": "A block with a mass of 3.0 kg is sliding on a frictionless horizontal surface at a speed of 5.0 m/s. It undergoes a perfectly inelastic collision with a second block of mass 7.0 kg that is initially at rest. Calculate the final velocity of the two blocks moving together after the collision in m/s."
+  },
+  {
+    "id": "gen-momentum-04",
+    "domain_hint": "momentum",
+    "problem_text": "A small projectile with a mass of 0.2 kg is traveling in a horizontal plane with an initial velocity of 4 m/s in the x-direction and 3 m/s in the y-direction. It undergoes a perfectly inelastic collision with a stationary target of mass 0.8 kg. Determine the magnitude of the final velocity (in m/s) of the combined object after the collision."
+  },
+  {
+    "id": "gen-momentum-05",
+    "domain_hint": "momentum",
+    "problem_text": "A tennis ball with a mass of 0.06 kg is moving toward a wall at a speed of 30 m/s. Upon striking the wall, the ball rebounds in the opposite direction with a speed of 25 m/s. If the contact between the ball and the wall lasts for 0.01 seconds, calculate the magnitude of the average force exerted by the wall on the ball."
+  },
+  {
+    "id": "gen-rotational-dynamics-02",
+    "domain_hint": "rotational-dynamics",
+    "problem_text": "A solid uniform cylinder has a mass of 2 kg and a radius of 0.1 m. The cylinder is rotating about its central longitudinal axis. A constant external torque of 5 N m is applied to the cylinder. Simultaneously, a resistive torque is present due to friction, which is proportional to the angular velocity such that the magnitude of the friction torque is 0.5 times the angular velocity (measured in rad/s). Determine the final steady-state angular velocity of the cylinder in rad/s."
+  },
+  {
+    "id": "gen-rotational-dynamics-03",
+    "domain_hint": "rotational-dynamics",
+    "problem_text": "A solid uniform disk with a mass of 0.5 kg and a radius of 0.1 m is placed at the top of an incline that has an angle of 30 degrees relative to the horizontal. The disk starts from rest and rolls down the incline without slipping. Determine the magnitude of the linear acceleration of the center of mass of the disk in m/s^2. Assume the acceleration due to gravity is 9.8 m/s^2."
+  },
+  {
+    "id": "gen-rotational-dynamics-04",
+    "domain_hint": "rotational-dynamics",
+    "problem_text": "A uniform thin rod of mass 1.5 kg and length 0.8 m is pivoted at one end so that it can rotate freely in a vertical plane. A small point mass of 0.5 kg is attached to the free end of the rod. The system is released from rest when the rod is oriented horizontally. Calculate the angular velocity, in rad/s, of the rod at the moment it reaches the vertical position. Assume g = 9.8 m/s^2."
+  },
+  {
+    "id": "gen-gravitation-01",
+    "domain_hint": "gravitation",
+    "problem_text": "A satellite orbits a planet of mass 5.97e24 kg at an altitude of 400 km above the surface. The radius of the planet is 6371 km. Use G = 6.67e-11 m^3/(kg*s^2) and assume a circular orbit. Calculate the orbital period of the satellite in minutes. Round your answer to the nearest whole number."
+  },
+  {
+    "id": "gen-gravitation-03",
+    "domain_hint": "gravitation",
+    "problem_text": "A spherical moon has a mass of 4.8e22 kg and a radius of 1500 km. Calculate the escape velocity from the surface of this moon in meters per second. Use G = 6.67e-11 m^3/(kg*s^2)."
+  },
+  {
+    "id": "gen-gravitation-05",
+    "domain_hint": "gravitation",
+    "problem_text": "A binary star system consists of two stars with masses of 2.0e30 kg and 1.5e30 kg. The centers of the two stars are separated by a distance of 1.0e9 m. Assuming the stars orbit their common center of mass in circular orbits, calculate the orbital period of the system in seconds. Use G = 6.67e-11 m^3/(kg*s^2)."
+  },
+  {
+    "id": "gen-oscillations-waves-01",
+    "domain_hint": "oscillations-waves",
+    "problem_text": "A particle of mass 0.2 kg is attached to a spring with a spring constant of 10 N/m. The particle moves through a fluid that exerts a damping force proportional to the velocity, characterized by a damping coefficient of 0.4 kg/s. Determine the angular frequency (in radians per second) of the damped oscillations for this system."
+  },
+  {
+    "id": "gen-oscillations-waves-02",
+    "domain_hint": "oscillations-waves",
+    "problem_text": "A string has a linear mass density of 0.05 kg/m and is under a tension of 20 N. A transverse wave propagates along the string with a frequency of 10 Hz and an amplitude of 0.02 m. Determine the wavelength of the wave in meters and the maximum vertical velocity of a point on the string in m/s. Use pi = 3.14."
+  },
+  {
+    "id": "gen-oscillations-waves-03",
+    "domain_hint": "oscillations-waves",
+    "problem_text": "A hollow cylindrical tube, open at both ends, has a length of 0.5 m. The speed of sound in the air inside the tube is 340 m/s. Determine the frequency, in Hz, of the second harmonic standing wave produced in this tube."
+  },
+  {
+    "id": "gen-oscillations-waves-05",
+    "domain_hint": "oscillations-waves",
+    "problem_text": "Two tuning forks are struck at the same time. The first fork has a frequency of 440 Hz, and the second fork has a frequency of 445 Hz. Calculate the beat frequency in Hz and determine the time interval, in seconds, between two consecutive moments when the sound is at its maximum volume."
+  },
+  {
+    "id": "gen-thermodynamics-01",
+    "domain_hint": "thermodynamics",
+    "problem_text": "An ideal monatomic gas, with a heat capacity ratio gamma = 5/3, is initially at a temperature of 400 K and occupies a volume of 8.0 L. The gas undergoes an adiabatic compression until its volume is reduced to 1.0 L. Calculate the final temperature of the gas in Kelvin."
+  },
+  {
+    "id": "gen-thermodynamics-03",
+    "domain_hint": "thermodynamics",
+    "problem_text": "A cylinder contains 2.0 moles of an ideal monatomic gas at an initial temperature of 300 K and an initial volume of 1.0 m^3. The gas undergoes an isothermal expansion until its volume reaches 3.0 m^3. Subsequently, the gas is heated at a constant volume until the temperature reaches 600 K. Calculate the total heat added to the gas in Joules. (Use R = 8.31 J/(mol*K))"
+  },
+  {
+    "id": "gen-thermodynamics-05",
+    "domain_hint": "thermodynamics",
+    "problem_text": "A sample of 0.5 moles of an ideal monatomic gas is initially at a temperature of 300 K and a pressure of 100,000 Pa. The gas first undergoes an isobaric heating process until its temperature reaches 600 K. Immediately following this, the gas undergoes an isochoric cooling process until its temperature drops to 400 K. Calculate the total net heat transferred to the gas during these two processes in Joules. Use the ideal gas constant R = 8.314 J/(mol*K)."
+  },
+  {
+    "id": "gen-electromagnetism-01",
+    "domain_hint": "electromagnetism",
+    "problem_text": "A solid non-conducting sphere of radius R = 0.1 m has a volume charge density rho(r) that varies with the radial distance r from the center as rho(r) = (rho_0 * r) / R, where rho_0 = 5e-6 C/m^3. Calculate the magnitude of the electric field at a distance of r = 0.05 m from the center of the sphere. Use epsilon_0 = 8.85e-12 C^2/(N m^2)."
+  },
+  {
+    "id": "gen-electromagnetism-02",
+    "domain_hint": "electromagnetism",
+    "problem_text": "A long, straight, cylindrical wire of radius R = 2 mm carries a steady current of I = 10 A along its axis. Given that the permeability of free space is mu_0 = 4 * pi * 10^-7 T*m/A, calculate the magnitude of the magnetic field B (in Tesla) at a point located 5 mm from the center of the wire."
+  },
+  {
+    "id": "gen-electromagnetism-03",
+    "domain_hint": "electromagnetism",
+    "problem_text": "A point charge of q = 2e-6 C is located at a distance d = 0.1 m from an infinite grounded conducting plane. Calculate the magnitude of the electrostatic force acting on this charge due to the induced charge in the plane. Use the Coulomb constant k = 8.99e9 N*m^2/C^2."
+  },
+  {
+    "id": "gen-optics-01",
+    "domain_hint": "optics",
+    "problem_text": "A light ray travels from a glass block with a refractive index of 1.50 into an air medium with a refractive index of 1.00. The ray strikes the interface at an angle of incidence of 30 degrees. Calculate the angle of refraction in degrees, rounded to two decimal places."
+  },
+  {
+    "id": "gen-optics-02",
+    "domain_hint": "optics",
+    "problem_text": "A thin converging lens has a focal length of 12 cm. An object that is 5 cm tall is placed 30 cm in front of the lens. Calculate the distance of the image from the lens and the height of the resulting image. Additionally, state whether the image is real or virtual and whether it is upright or inverted."
+  },
+  {
+    "id": "gen-optics-03",
+    "domain_hint": "optics",
+    "problem_text": "A light ray enters a triangular prism made of glass with a refractive index of 1.50 from air (refractive index 1.00). The apex angle of the prism is 60 degrees. If the ray strikes the first surface at an angle of incidence of 45 degrees, calculate the total angle of deviation of the light ray as it exits the second surface of the prism. Express your answer in degrees."
+  },
+  {
+    "id": "gen-optics-04",
+    "domain_hint": "optics",
+    "problem_text": "In a double-slit interference experiment, light with a wavelength of 600 nm is directed at two slits separated by 0.2 mm. A viewing screen is positioned 1.5 m away from the slits. Determine the distance, in millimeters, between the central bright fringe and the second-order bright fringe on the screen."
+  },
+  {
+    "id": "gen-optics-05",
+    "domain_hint": "optics",
+    "problem_text": "A diffraction grating has 500 lines per mm. A beam of monochromatic light with a wavelength of 532 nm is incident normally on the grating. Determine the angle, in degrees, relative to the central maximum where the second-order diffraction peak (m = 2) is located."
+  },
+  {
+    "id": "gen-fluid-mechanics-01",
+    "domain_hint": "fluid-mechanics",
+    "problem_text": "A large cylindrical tank with a radius of 0.1 m is filled with water to an initial height of 1.5 m. At the bottom of the tank, there is a small circular puncture with a radius of 0.005 m. Neglecting viscosity and assuming the water exits according to Torricelli's law, calculate the time in seconds it takes for the water level to drop from 1.5 m to 0.5 m. Use g = 9.8 m/s^2."
+  },
+  {
+    "id": "gen-fluid-mechanics-02",
+    "domain_hint": "fluid-mechanics",
+    "problem_text": "A horizontal pipe carries water with a density of 1000 kg/m^3. The pipe starts with an internal radius of 0.05 m and tapers down to an internal radius of 0.02 m. At the wider section, the water is flowing at a velocity of 2.0 m/s with a pressure of 200,000 Pa. Assuming the flow is steady and frictionless, calculate the pressure of the water at the narrower section in Pascals (Pa)."
+  },
+  {
+    "id": "gen-fluid-mechanics-04",
+    "domain_hint": "fluid-mechanics",
+    "problem_text": "A small spherical bead with a radius of 0.005 m and a density of 2700 kg/m^3 is dropped into a vertical tube filled with a viscous oil. The oil has a density of 1000 kg/m^3 and a dynamic viscosity of 0.5 Pa*s. Assuming the bead reaches terminal velocity and neglecting any wall effects from the tube, calculate the terminal velocity of the bead in m/s. Use g = 9.8 m/s^2."
+  },
+  {
+    "id": "gen-fluid-mechanics-05",
+    "domain_hint": "fluid-mechanics",
+    "problem_text": "A solid cube with a side length of 0.1 m and a density of 900 kg/m^3 is placed in a container containing two immiscible liquids. The bottom layer consists of water with a density of 1000 kg/m^3, and the top layer consists of an oil with a density of 800 kg/m^3. Assuming the cube is floating at the interface between the two liquids, calculate the depth (in meters) to which the bottom of the cube is submerged in the water layer."
+  },
+  {
+    "id": "gen-special-relativity-01",
+    "domain_hint": "special-relativity",
+    "problem_text": "An observer on Earth measures the distance to a nearby star to be 10 light-years. A probe is sent toward this star traveling at a constant velocity of 0.8c relative to Earth. How many years pass according to a clock located on board the probe during the trip from Earth to the star?"
+  },
+  {
+    "id": "gen-special-relativity-02",
+    "domain_hint": "special-relativity",
+    "problem_text": "A spacecraft travels directly away from Earth at a constant velocity of 0.6c. Onboard the spacecraft, a laser emits light with a wavelength of 500 nm as measured in the spacecraft's rest frame. What is the wavelength, in nanometers (nm), of the light as measured by an observer on Earth?"
+  },
+  {
+    "id": "gen-special-relativity-03",
+    "domain_hint": "special-relativity",
+    "problem_text": "A pion travels at a velocity of 0.95c relative to a laboratory observer. In the rest frame of the pion, its mean lifetime is 2.6e-8 seconds. Taking the speed of light c to be 3.0e8 m/s, calculate the distance in meters that the pion travels in the laboratory frame before it decays."
+  },
+  {
+    "id": "gen-quantum-mechanics-01",
+    "domain_hint": "quantum-mechanics",
+    "problem_text": "A qubit is prepared in a mixed state described by a density matrix rho. In the computational basis {|0>, |1>}, the elements of the matrix are given as: rho_00 = 0.7, rho_01 = 0.1, rho_10 = 0.1, and rho_11 = 0.3. Calculate the expectation value of the Pauli-X operator (sigma_x) for this qubit."
+  },
+  {
+    "id": "gen-quantum-mechanics-02",
+    "domain_hint": "quantum-mechanics",
+    "problem_text": "A spin-1/2 particle is prepared in the quantum state psi = (1/sqrt(3)) * |0> + (sqrt(2)/sqrt(3)) * |1>, where |0> and |1> are the eigenstates of the Pauli Z operator corresponding to eigenvalues +1 and -1, respectively. Calculate the expectation value of the Pauli X operator, sigma_x, for this particle."
+  },
+  {
+    "id": "gen-statistical-mechanics-02",
+    "domain_hint": "statistical-mechanics",
+    "problem_text": "A system consists of N = 100 non-interacting magnetic spins placed in a uniform external magnetic field of magnitude B = 0.5 Tesla. Each spin has a magnetic moment magnitude of mu_B = 9.27e-23 J/T and can be oriented either parallel or anti-parallel to the direction of the magnetic field. If the system is at a temperature of T = 10 K, calculate the total magnetization M of the system in Joules per Tesla (J/T). Use Boltzmann's constant k_B = 1.38e-23 J/K."
+  },
+  {
+    "id": "gen-statistical-mechanics-03",
+    "domain_hint": "statistical-mechanics",
+    "problem_text": "A system consists of two distinguishable, non-interacting particles. Each particle can occupy one of three possible energy levels: 0 J, 4 J, or 8 J. If the total energy of the combined system is fixed at U = 8 J, calculate the number of microstates (the thermodynamic probability) available to this macrostate."
+  },
+  {
+    "id": "gen-statistical-mechanics-04",
+    "domain_hint": "statistical-mechanics",
+    "problem_text": "A system of N = 4 distinguishable, non-interacting particles is in thermal equilibrium with a heat reservoir at temperature T. Each particle can occupy one of two possible energy states: E_0 = 0 J or E_1 = 1.0 J. If the product of the Boltzmann constant and the temperature is k_B * T = 1.0 J, what is the probability that the total energy of the four-particle system is exactly 2.0 J?"
+  },
+  {
+    "id": "gen-nuclear-physics-02",
+    "domain_hint": "nuclear-physics",
+    "problem_text": "A Nitrogen-14 nucleus contains 7 protons and 7 neutrons. Given the mass of a single proton is 1.007825 u, the mass of a single neutron is 1.008665 u, and the measured mass of the Nitrogen-14 nucleus is 14.003074 u, calculate the binding energy per nucleon in MeV. Use the conversion factor 1 u = 931.5 MeV."
+  },
+  {
+    "id": "gen-nuclear-physics-03",
+    "domain_hint": "nuclear-physics",
+    "problem_text": "A Uranium-238 nucleus undergoes alpha decay to produce a Thorium-234 nucleus and an alpha particle (Helium-4 nucleus). Given that the mass of the Uranium-238 nucleus is 238.05079 u, the mass of the Thorium-234 nucleus is 234.04360 u, and the mass of the Helium-4 nucleus is 4.00260 u, calculate the energy released in this decay process (the Q-value) in MeV. Use the conversion factor 1 u = 931.5 MeV."
+  },
+  {
+    "id": "gen-nuclear-physics-04",
+    "domain_hint": "nuclear-physics",
+    "problem_text": "Calculate the binding energy per nucleon for an Oxygen-16 nucleus. Assume the mass of a single proton is 1.007276 u, the mass of a single neutron is 1.008665 u, and the total mass of the Oxygen-16 nucleus is 15.994915 u. Use the conversion factor 1 u = 931.5 MeV/c^2. Provide your answer in MeV per nucleon."
+  },
+  {
+    "id": "gen-nuclear-physics-05",
+    "domain_hint": "nuclear-physics",
+    "problem_text": "In a stellar fusion process, two deuterium nuclei (isotopes of hydrogen with mass 2.014102 u each) react to form one helium-3 nucleus and one proton. The mass of the helium-3 nucleus is 3.016029 u and the mass of the proton is 1.007825 u. Calculate the energy released in this reaction in megaelectronvolts (MeV). Use the conversion factor 1 u = 931.5 MeV."
+  },
+  {
+    "id": "gen-kinematics-01",
+    "domain_hint": "kinematics",
+    "problem_text": "A spacecraft is traveling through deep space with an initial velocity of 500 m/s. The engines are fired, providing a constant acceleration of 2.0 m/s^2 for a duration of 10 minutes. Calculate the total distance, in kilometers, that the spacecraft travels during this 10-minute period."
+  },
+  {
+    "id": "gen-kinematics-02-1",
+    "domain_hint": "kinematics",
+    "problem_text": "A projectile is launched from ground level with an initial velocity of 40 m/s at an angle of 60 degrees above the horizontal. Neglecting air resistance and using g = 9.8 m/s^2, calculate the maximum height reached by the projectile in meters."
+  },
+  {
+    "id": "gen-kinematics-04",
+    "domain_hint": "kinematics",
+    "problem_text": "A car travels at a constant velocity of 25 m/s. At the same moment, a second car located 100 m behind it begins to accelerate from rest at a constant rate of 3.0 m/s^2. How many seconds will elapse before the second car catches up to the first car?"
+  },
+  {
+    "id": "gen-kinematics-05-1",
+    "domain_hint": "kinematics",
+    "problem_text": "An elevator starts from rest at the ground floor of a building and accelerates upward at a constant rate of 2.0 m/s^2 for 3.0 seconds. It then continues to move upward at this new constant velocity for another 5.0 seconds. Finally, the elevator begins to decelerate at a constant rate of 1.5 m/s^2 until it comes to a complete stop. Calculate the total height, in meters, from the ground floor to which the elevator has risen."
+  },
+  {
+    "id": "gen-dynamics-01-1",
+    "domain_hint": "dynamics",
+    "problem_text": "A block with a mass of 5 kg is pushed across a horizontal floor by a constant horizontal force of 40 N. The coefficient of kinetic friction between the block and the floor is 0.2. This pushing force is applied for exactly 4 seconds, starting from rest. After 4 seconds, the pushing force is removed, but the block continues to slide until it comes to a stop. Taking the acceleration due to gravity as 10 m/s^2, calculate the total distance traveled by the block from its initial state until it reaches rest."
+  },
+  {
+    "id": "gen-dynamics-02-1",
+    "domain_hint": "dynamics",
+    "problem_text": "A block of mass 3 kg is placed on a ramp inclined at an angle of 30 degrees to the horizontal. The block is connected by a light, inextensible string passing over a frictionless pulley at the top of the ramp to a second mass of 5 kg that hangs vertically. The coefficient of kinetic friction between the 3 kg block and the ramp is 0.15. Calculate the magnitude of the acceleration of the system in m/s^2. Use g = 9.8 m/s^2."
+  },
+  {
+    "id": "gen-dynamics-03-1",
+    "domain_hint": "dynamics",
+    "problem_text": "A solid cylinder with a mass of 2 kg and a radius of 0.1 m is released from rest and rolls without slipping down a ramp inclined at an angle of 20 degrees to the horizontal. Taking the acceleration due to gravity as g = 9.8 m/s^2, calculate the linear acceleration of the cylinder's center of mass in m/s^2."
+  },
+  {
+    "id": "gen-dynamics-04-1",
+    "domain_hint": "dynamics",
+    "problem_text": "A 5 kg block is placed on a horizontal table and is connected by a light, inextensible string to a 2 kg mass hanging vertically from a frictionless pulley at the edge of the table. The coefficient of kinetic friction between the block and the table is 0.3. Determine the acceleration of the masses in m/s^2 when the system is released from rest. Use g = 9.8 m/s^2."
+  },
+  {
+    "id": "gen-energy-02-1",
+    "domain_hint": "energy",
+    "problem_text": "A 2 kg block slides along a horizontal surface with an initial velocity of 5 m/s. The coefficient of kinetic friction between the block and the surface is 0.3. How many meters will the block travel before it comes to a stop? (Use g = 9.8 m/s^2)"
+  },
+  {
+    "id": "gen-energy-03-1",
+    "domain_hint": "energy",
+    "problem_text": "A 0.5 kg mass is dropped from a height of 0.3 m above an uncompressed vertical spring. The spring has a spring constant of 200 N/m. Calculate the maximum compression of the spring in meters, neglecting air resistance and using g = 9.8 m/s^2."
+  },
+  {
+    "id": "gen-energy-05",
+    "domain_hint": "energy",
+    "problem_text": "A 5 kg crate is released from rest at the top of an inclined plane that is 10 m long and tilted at an angle of 30 degrees above the horizontal. The coefficient of kinetic friction between the crate and the surface is 0.2. Calculate the speed of the crate in m/s when it reaches the bottom of the incline. Use g = 9.8 m/s^2."
+  },
+  {
+    "id": "gen-momentum-01-1",
+    "domain_hint": "momentum",
+    "problem_text": "A 0.5 kg object travels at 10 m/s in the positive x-direction and collides with a 1.5 kg object traveling at 2 m/s in the negative x-direction. If the two objects stick together upon impact, calculate the magnitude of the final velocity of the combined object in m/s."
+  },
+  {
+    "id": "gen-rotational-dynamics-01",
+    "domain_hint": "rotational-dynamics",
+    "problem_text": "A uniform thin rod has a mass of 2 kg and a length of 0.5 m. The rod is attached to a frictionless pivot at one of its ends and is initially held in a horizontal position. If the rod is released from rest, calculate its angular acceleration (in rad/s^2) at the instant it is released. Assume the acceleration due to gravity is 9.8 m/s^2."
+  },
+  {
+    "id": "gen-rotational-dynamics-02-1",
+    "domain_hint": "rotational-dynamics",
+    "problem_text": "A uniform solid cylinder has a mass of 4 kg and a radius of 0.1 m. The cylinder is rotating about its central axis. An external torque of 0.4 N*m is applied to the cylinder, while a constant frictional torque of 0.1 N*m opposes the rotation. If the cylinder starts from rest, calculate its angular acceleration in rad/s^2."
+  },
+  {
+    "id": "gen-rotational-dynamics-03-1",
+    "domain_hint": "rotational-dynamics",
+    "problem_text": "A uniform solid disk has a mass of 5 kg and a radius of 0.2 m, mounted on a frictionless horizontal axis. A light string is wrapped around the perimeter of the disk and attached to a hanging mass of 1 kg. The system is released from rest. Calculate the angular acceleration of the disk in rad/s^2. Assume the acceleration due to gravity is 9.8 m/s^2."
+  },
+  {
+    "id": "gen-rotational-dynamics-04-1",
+    "domain_hint": "rotational-dynamics",
+    "problem_text": "A solid sphere with a mass of 3 kg and a radius of 0.15 m starts from rest on an incline that makes an angle of 30 degrees with the horizontal. The sphere rolls down the incline without slipping. Determine the linear acceleration of the center of mass of the sphere in m/s^2. (Use g = 9.8 m/s^2)"
+  },
+  {
+    "id": "gen-rotational-dynamics-05",
+    "domain_hint": "rotational-dynamics",
+    "problem_text": "A uniform solid sphere has a mass of 3 kg and a radius of 0.1 m. The sphere is rotating about a fixed vertical axis that passes through a point on its outer surface. If the angular velocity of the sphere increases from 2 rad/s to 5 rad/s over a period of 4 seconds, what is the magnitude of the constant torque applied to the sphere? Express your answer in N*m."
+  },
+  {
+    "id": "gen-gravitation-01-1",
+    "domain_hint": "gravitation",
+    "problem_text": "A satellite with a mass of 500 kg orbits a planet with a mass of 5.97e24 kg in a circular orbit. The radius of the planet is 6370 km and the altitude of the satellite above the surface is 1000 km. Using G = 6.67e-11 N m^2/kg^2, calculate the orbital speed of the satellite in m/s and its gravitational potential energy in Joules."
+  },
+  {
+    "id": "gen-oscillations-waves-01-1",
+    "domain_hint": "oscillations-waves",
+    "problem_text": "A wave pulse is traveling along a thin plasma filament in the solar corona. The vertical displacement of the filament is described by the superposition of two waves: y1(x, t) = 0.02 * sin(5 * pi * x - 100 * pi * t) and y2(x, t) = 0.02 * sin(5 * pi * x + 100 * pi * t), where x is the position in meters and t is the time in seconds. Calculate the distance, in meters, between two adjacent nodes of the resulting standing wave."
+  },
+  {
+    "id": "gen-oscillations-waves-03-1",
+    "domain_hint": "oscillations-waves",
+    "problem_text": "A magnetic flux tube in the solar corona is modeled as a rigid filament with a length of 200,000 km. An Alfven wave travels through this tube at a constant speed of 1,000 km/s. If both ends of the flux tube are fixed at the solar photosphere, forming a standing wave, what is the frequency of the fundamental oscillation mode in millihertz (mHz)?"
+  },
+  {
+    "id": "gen-oscillations-waves-04",
+    "domain_hint": "oscillations-waves",
+    "problem_text": "A plasma filament of length 10 m is under a tension of 400 N and has a linear mass density of 0.01 kg/m. Find the frequency, in Hertz, of the third harmonic of the standing wave formed on this filament."
+  },
+  {
+    "id": "gen-oscillations-waves-05-1",
+    "domain_hint": "oscillations-waves",
+    "problem_text": "A wave travels along a plasma filament with a linear mass density of 0.02 kg/m. The tension in the filament is 200 N. If the frequency of the wave is 50 Hz, calculate the wavelength in meters."
+  },
+  {
+    "id": "gen-thermodynamics-01-1",
+    "domain_hint": "thermodynamics",
+    "problem_text": "An ideal monatomic gas is contained within a cylinder equipped with a frictionless piston. Initially, the gas is at a pressure of 200000 Pa and a temperature of 300 K. The gas undergoes a reversible adiabatic expansion until the final pressure reaches 100000 Pa. Calculate the final temperature of the gas in Kelvin. (Assume the ratio of specific heats, gamma, is 5/3)."
+  },
+  {
+    "id": "gen-thermodynamics-02",
+    "domain_hint": "thermodynamics",
+    "problem_text": "An ideal monatomic gas consisting of 10.0 moles is contained in an insulated, rigid container with an initial volume of 0.05 m^3 at a temperature of 400 K. The gas is allowed to expand adiabatically against a constant external pressure of 50,000 Pa until the volume reaches 0.10 m^3. Calculate the final temperature of the gas in Kelvin. (Assume R = 8.314 J/(mol*K))"
+  },
+  {
+    "id": "gen-electromagnetism-01-1",
+    "domain_hint": "electromagnetism",
+    "problem_text": "A solid insulating sphere with a radius of 0.5 m is uniformly charged with a volume charge density of rho = 4.0e-6 C/m^3. Calculate the magnitude of the electric field at a point located 0.2 m from the center of the sphere. (Use epsilon_0 = 8.85e-12 C^2/(N*m^2))"
+  },
+  {
+    "id": "gen-electromagnetism-02-1",
+    "domain_hint": "electromagnetism",
+    "problem_text": "A long, straight wire carries a constant current of 12 A. Determine the magnitude of the magnetic field at a distance of 30 mm from the wire. Assume the permeability of free space is mu_0 = 4 * pi * 10^-7 T*m/A."
+  },
+  {
+    "id": "gen-electromagnetism-03-1",
+    "domain_hint": "electromagnetism",
+    "problem_text": "A rectangular loop of wire has dimensions 10 cm by 20 cm. The loop is placed in a uniform magnetic field that is perpendicular to the plane of the loop. Initially, the magnitude of the magnetic field is 0.8 T and it decreases linearly to 0.2 T over a time interval of 0.5 seconds. Calculate the magnitude of the average induced electromotive force (EMF) in volts."
+  },
+  {
+    "id": "gen-electromagnetism-05",
+    "domain_hint": "electromagnetism",
+    "problem_text": "A proton with a charge of 1.6e-19 C and a mass of 1.67e-27 kg enters a uniform magnetic field of magnitude 0.5 T. The velocity of the proton is 3.0e6 m/s and is directed perpendicular to the magnetic field lines. Calculate the radius of the circular path followed by the proton in meters."
+  },
+  {
+    "id": "gen-optics-01-1",
+    "domain_hint": "optics",
+    "problem_text": "A ray of light travels from air (refractive index n1 = 1.00) into a rectangular glass block with a refractive index of n2 = 1.50. The thickness of the glass block is 5.0 cm. If the angle of incidence on the first surface is 30 degrees, calculate the lateral displacement of the light ray (in mm) as it exits the second surface and returns to the air."
+  },
+  {
+    "id": "gen-optics-02-1",
+    "domain_hint": "optics",
+    "problem_text": "In a double-slit interference experiment, light from a monochromatic source with a wavelength of 600 nm passes through two slits that are separated by a distance of 0.1 mm. A screen is placed at a distance of 1.5 m from the slits. Calculate the distance in millimeters between the central bright fringe and the first-order bright fringe (m = 1)."
+  },
+  {
+    "id": "gen-optics-03-1",
+    "domain_hint": "optics",
+    "problem_text": "A thin converging lens has a focal length of 15.0 cm. An object with a height of 4.0 cm is placed at a distance of 25.0 cm from the lens. Calculate the distance of the image from the lens and its final height."
+  },
+  {
+    "id": "gen-optics-05-1",
+    "domain_hint": "optics",
+    "problem_text": "An object with a height of 5.0 cm is placed 12.0 cm in front of a diverging mirror that has a focal length of -8.0 cm. Calculate the magnification produced by the mirror and find the distance of the image from the mirror in centimeters."
+  },
+  {
+    "id": "gen-fluid-mechanics-02-1",
+    "domain_hint": "fluid-mechanics",
+    "problem_text": "A spherical vesicle, used as a model for a biological cell membrane, has a surface tension of 0.03 N/m. If the radius of the vesicle is 5e-6 m, calculate the pressure difference (in Pascals) between the interior and the exterior of the vesicle."
+  },
+  {
+    "id": "gen-fluid-mechanics-03",
+    "domain_hint": "fluid-mechanics",
+    "problem_text": "A cylindrical microfluidic channel, used to model a small biological capillary, has a radius of 1e-4 m and a length of 0.05 m. A fluid with a dynamic viscosity of 0.005 Pa*s flows through this channel at a constant volumetric flow rate of 2e-9 m^3/s. Calculate the pressure difference (in Pascals) between the two ends of the channel. Use 3.14 for pi."
+  },
+  {
+    "id": "gen-fluid-mechanics-04-1",
+    "domain_hint": "fluid-mechanics",
+    "problem_text": "A large, open-top cylindrical reservoir is filled with water to a height of 3.0 meters. At the bottom of the reservoir, there is a small circular hole with a diameter of 2.0 cm. Assuming the water acts as an ideal, incompressible fluid and neglecting any frictional losses, calculate the mass flow rate (in kg/s) of the water exiting the hole. Use g = 9.8 m/s^2 and the density of water as 1000 kg/m^3."
+  },
+  {
+    "id": "gen-fluid-mechanics-05-1",
+    "domain_hint": "fluid-mechanics",
+    "problem_text": "A horizontal water pipe has an internal diameter of 0.05 m at its inlet and narrows to a diameter of 0.02 m at a constriction point further downstream. The velocity of the water at the inlet is measured to be 2.0 m/s. Taking the density of water to be 1000 kg/m^3, calculate the pressure difference (in Pascals) between the inlet and the constriction point."
+  },
+  {
+    "id": "gen-special-relativity-01-1",
+    "domain_hint": "special-relativity",
+    "problem_text": "In a stationary laboratory frame S, two sensors are placed on the x-axis: Sensor A at x = 0 m and Sensor B at x = 12.0 m. At time t = 0 s, a light pulse is emitted from Sensor A and travels toward Sensor B. A spacecraft moves in the positive x-direction with a constant velocity of v = 0.8c, where c = 3.00e8 m/s. Calculate the time t' (in seconds) and the position x' (in meters) of the event when the light pulse reaches Sensor B, as measured in the spacecraft's reference frame S'."
+  },
+  {
+    "id": "gen-special-relativity-02-1",
+    "domain_hint": "special-relativity",
+    "problem_text": "A spacecraft moves at a constant velocity v relative to Earth. The proper length of the spacecraft, as measured by an astronaut onboard, is 100 m. An observer on Earth measures the length of the same spacecraft to be 60 m. Calculate the speed of the spacecraft expressed as a fraction of the speed of light c."
+  },
+  {
+    "id": "gen-special-relativity-03-1",
+    "domain_hint": "special-relativity",
+    "problem_text": "A particle moves along the x-axis with a constant velocity of v = 0.8c relative to a laboratory frame. In the rest frame of the particle, its mean lifetime is exactly 1.5 microseconds. If the particle is emitted from the origin (x = 0 m) at time t = 0 s in the laboratory frame, what is the distance x (in meters) that the particle travels in the laboratory frame before it decays?"
+  },
+  {
+    "id": "gen-special-relativity-04",
+    "domain_hint": "special-relativity",
+    "problem_text": "A star is moving directly away from an observer on Earth with a constant velocity of v = 0.8c. If the frequency of light emitted by the star is 600 THz in its own rest frame, determine the frequency of this light as measured by the observer on Earth in THz."
+  },
+  {
+    "id": "gen-quantum-mechanics-04",
+    "domain_hint": "quantum-mechanics",
+    "problem_text": "A quantum particle with spin s = 1/2 is prepared in a state psi = (1/sqrt(5))|up> + (2/sqrt(5))|down>, where |up> and |down> are eigenstates of the Sz operator. If the particle's spin is measured along the x-axis, find the probability that the result obtained is +hbar/2."
+  },
+  {
+    "id": "gen-nuclear-physics-01",
+    "domain_hint": "nuclear-physics",
+    "problem_text": "An isotope of Iron has 26 protons and 30 neutrons. Using the semi-empirical mass formula term for symmetry energy, E_sym = a_sym * ((N - Z)^2 / A), where N is the number of neutrons, Z is the number of protons, and A is the total mass number, calculate the energy contribution (in MeV) from this term. Use a value of 23 MeV for the asymmetry coefficient a_sym."
+  },
+  {
+    "id": "gen-nuclear-physics-02-1",
+    "domain_hint": "nuclear-physics",
+    "problem_text": "In an alpha decay process, a Uranium-238 nucleus decays into a Thorium-234 nucleus and a Helium-4 nucleus (an alpha particle). The mass of the Uranium-238 atom is 238.0508 u, the mass of the Thorium-234 atom is 234.0436 u, and the mass of the Helium-4 atom is 4.0026 u. Calculate the energy released during this decay (the Q-value) in MeV. Use the conversion factor 1 u = 931.5 MeV."
+  },
+  {
+    "id": "gen-nuclear-physics-03-1",
+    "domain_hint": "nuclear-physics",
+    "problem_text": "A nucleus with mass number A = 197 is modeled as a sphere with a radius R defined by the formula R = r0 * (A^(1/3)), where r0 = 1.2 * 10^-15 m. Given that the average mass of a single nucleon is 1.67 * 10^-27 kg, calculate the density of this nucleus in kg/m^3. Use pi = 3.14."
   }
 ]
