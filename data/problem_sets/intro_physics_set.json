@@ -778,5 +778,255 @@
     "id": "gen-nuclear-physics-03-3",
     "domain_hint": "nuclear-physics",
     "problem_text": "A Uranium-238 nucleus undergoes alpha decay to produce a Thorium-234 nucleus and an alpha particle (a Helium-4 nucleus). The mass of the Uranium-238 nucleus is 238.050788 u, the mass of the Thorium-234 nucleus is 234.043601 u, and the mass of the Helium-4 nucleus is 4.002603 u. Given that 1 u is equivalent to 931.5 MeV/c^2, calculate the energy released (Q-value) in this decay process in MeV. Round your answer to two decimal places."
+  },
+  {
+    "id": "gen-gravitation-01-4",
+    "domain_hint": "gravitation",
+    "problem_text": "A satellite orbits a planet with a mass of 5.97e24 kg and a radius of 6371 km. The satellite maintains a circular orbit at an altitude of 400 km above the planet's surface. Taking the gravitational constant G to be 6.674e-11 N m^2/kg^2, calculate the orbital period of the satellite in minutes. Use pi = 3.14159."
+  },
+  {
+    "id": "gen-gravitation-03-1",
+    "domain_hint": "gravitation",
+    "problem_text": "A small moon has a mass of 2.0e22 kg and a radius of 1500 km. Calculate the escape velocity, in m/s, required for a spacecraft to leave the surface of this moon. Use G = 6.67e-11 N m^2 / kg^2."
+  },
+  {
+    "id": "gen-special-relativity-01-3",
+    "domain_hint": "special-relativity",
+    "problem_text": "A spaceship is traveling at a velocity of v = 0.8c relative to an observer on Earth. The astronaut on the ship measures a duration of 12 minutes for a specific experiment to take place. Calculate the duration of this same experiment as measured by the observer on Earth. Furthermore, if the spaceship has a proper length of 50 meters in its own rest frame, what is its measured length according to the Earth observer?"
+  },
+  {
+    "id": "gen-special-relativity-02-3",
+    "domain_hint": "special-relativity",
+    "problem_text": "A thin rod is moving along the x-axis with a velocity of v = 0.6c relative to a laboratory observer. The laboratory observer measures the length of the rod to be 12 meters. Determine the rest length (proper length) of the rod in meters."
+  },
+  {
+    "id": "gen-special-relativity-03-3",
+    "domain_hint": "special-relativity",
+    "problem_text": "A light source emits radiation at a frequency of 500 THz. The source is moving directly toward a stationary observer with a velocity of 0.6c. Determine the frequency of the light, in THz, as measured by the stationary observer."
+  },
+  {
+    "id": "gen-quantum-mechanics-02-3",
+    "domain_hint": "quantum-mechanics",
+    "problem_text": "An electron (spin-1/2 particle) is placed in a uniform magnetic field with a magnitude of 2.5 Tesla oriented along the z-axis. Given that the Bohr magneton is 9.274 x 10^-24 J/T and the g-factor for an electron is approximately 2, calculate the energy difference between the spin-up and spin-down states in units of electronvolts (eV). Use the conversion 1 eV = 1.602 x 10^-19 Joules."
+  },
+  {
+    "id": "gen-nuclear-physics-01-2",
+    "domain_hint": "nuclear-physics",
+    "problem_text": "A nucleus contains 26 protons and 30 neutrons. The mass of a single proton is 1.00728 u and the mass of a single neutron is 1.00866 u. The actual measured mass of this specific nucleus is 55.9349 u. Calculate the binding energy per nucleon for this nucleus in MeV, using the conversion factor 1 u = 931.5 MeV."
+  },
+  {
+    "id": "gen-nuclear-physics-02-2",
+    "domain_hint": "nuclear-physics",
+    "problem_text": "A radioactive sample contains Radium-226, which undergoes alpha decay to produce Radon-222 and an alpha particle (He-4 nucleus). The mass of the Radium-226 atom is 226.0254 u, the mass of the Radon-222 atom is 222.0175 u, and the mass of the alpha particle is 4.0026 u. Using the conversion factor 1 u = 931.5 MeV, calculate the energy released (Q-value) in this decay process in MeV."
+  },
+  {
+    "id": "gen-nuclear-physics-03-4",
+    "domain_hint": "nuclear-physics",
+    "problem_text": "In a beta-minus decay process, a Carbon-14 nucleus transforms into a Nitrogen-14 nucleus while emitting an electron and an antineutrino. Given that the atomic mass of Carbon-14 is 14.003242 u and the atomic mass of Nitrogen-14 is 14.003074 u, calculate the Q-value (energy released) of this decay in MeV. Use the conversion factor 1 u = 931.5 MeV."
+  },
+  {
+    "id": "gen-quantum-mechanics-02-4",
+    "domain_hint": "quantum-mechanics",
+    "problem_text": "A qubit is prepared in a state psi = (1/sqrt(3))|0> + (sqrt(2)/sqrt(3))|1>, where |0> and |1> are the eigenstates of the Pauli-Z operator. Calculate the expectation value of the Pauli-X operator, sigma_x, for this qubit. Provide the result in simplified radical form."
+  },
+  {
+    "id": "gen-quantum-mechanics-03-1",
+    "domain_hint": "quantum-mechanics",
+    "problem_text": "A qubit is prepared in the state psi = (1/sqrt(2))(|0> + |1>). A measurement of the Pauli-Y operator is performed on this qubit. Calculate the probability that the result of the measurement corresponds to the eigenvalue -1."
+  },
+  {
+    "id": "gen-kinematics-01-2",
+    "domain_hint": "kinematics",
+    "problem_text": "A space probe is approaching a planet with an initial velocity of 5000 m/s. Upon entering the upper atmosphere, the probe encounters drag that causes a constant deceleration of 20 m/s^2. Calculate the total distance, in meters, the probe travels from the moment it enters the atmosphere until its velocity decreases to 1000 m/s."
+  },
+  {
+    "id": "gen-kinematics-02-3",
+    "domain_hint": "kinematics",
+    "problem_text": "A particle moves along a straight line such that its position at any time t (in seconds) is described by the equation x(t) = 2 * t^3 - 9 * t^2 + 12 * t + 5, where x is measured in meters. Find the two specific times, in seconds, when the particle's instantaneous velocity is zero."
+  },
+  {
+    "id": "gen-kinematics-03-2",
+    "domain_hint": "kinematics",
+    "problem_text": "A small robot starts from rest at a point on a straight track and moves with a constant acceleration of 2.5 m/s^2. At the same moment, a second robot passes the first one, traveling at a constant velocity of 10 m/s in the same direction. Determine the time in seconds after the start when the first robot overtakes the second robot, and determine the velocity of the first robot at that specific moment."
+  },
+  {
+    "id": "gen-dynamics-01-2",
+    "domain_hint": "dynamics",
+    "problem_text": "A block with a mass of 5 kg is being pushed up a ramp inclined at an angle of 30 degrees relative to the horizontal. The coefficient of kinetic friction between the block and the ramp surface is 0.2. A constant force of 40 N is applied parallel to the incline, directed upwards along the slope. Calculate the magnitude of the acceleration of the block in m/s^2. (Use g = 9.8 m/s^2)"
+  },
+  {
+    "id": "gen-dynamics-02-2",
+    "domain_hint": "dynamics",
+    "problem_text": "A 4 kg block sits on a horizontal table with a coefficient of kinetic friction of 0.3 between the block and the table. The block is connected by a light, inextensible string to a 6 kg mass that hangs vertically from a pulley located at the edge of the table. Assuming the string and the pulley are massless and there is no friction in the pulley, calculate the magnitude of the acceleration of the system in m/s^2. Use g = 9.8 m/s^2."
+  },
+  {
+    "id": "gen-dynamics-03-2",
+    "domain_hint": "dynamics",
+    "problem_text": "A small block with a mass of 2 kg is placed on a flat, rotating turntable. The coefficient of static friction between the block and the surface of the turntable is 0.4. If the turntable rotates at a constant angular velocity of 5 rad/s, what is the maximum distance in meters from the center of rotation that the block can be placed without sliding outward? (Use g = 9.8 m/s^2)"
+  },
+  {
+    "id": "gen-energy-01-2",
+    "domain_hint": "energy",
+    "problem_text": "A block with mass 5 kg is compressed against a spring with a spring constant k = 2000 N/m by an amount x = 0.3 m. The block is released and slides across a horizontal floor with a coefficient of kinetic friction mu_k = 0.1 for a distance of d = 1.0 m before entering a frictionless vertical loop with a radius R = 0.5 m. Find the speed of the block at the very top of the loop. Assume g = 9.8 m/s^2."
+  },
+  {
+    "id": "gen-energy-02-2",
+    "domain_hint": "energy",
+    "problem_text": "A small puck with a mass of 0.5 kg is launched up a ramp inclined at 30 degrees above the horizontal with an initial speed of 8.0 m/s. The coefficient of kinetic friction between the puck and the ramp is 0.20. Neglecting air resistance, calculate the distance, in meters, that the puck travels along the surface of the ramp before it comes to a momentary stop. Use g = 9.8 m/s^2."
+  },
+  {
+    "id": "gen-momentum-02-2",
+    "domain_hint": "momentum",
+    "problem_text": "A 2.0 kg block is sliding on a frictionless horizontal surface with an initial velocity of 5.0 m/s toward a stationary 3.0 kg block. If the two blocks collide and stick together, what is the final velocity of the combined mass in m/s?"
+  },
+  {
+    "id": "gen-momentum-03-1",
+    "domain_hint": "momentum",
+    "problem_text": "A stationary object with a mass of 5.0 kg suddenly explodes into two fragments. The first fragment has a mass of 2.0 kg and moves at a speed of 4.0 m/s at an angle of 30 degrees above the positive x-axis. Determine the magnitude of the velocity of the second fragment and find its direction in degrees relative to the positive x-axis."
+  },
+  {
+    "id": "gen-rotational-dynamics-01-1",
+    "domain_hint": "rotational-dynamics",
+    "problem_text": "A solid cylinder of mass 2 kg and radius 0.1 m is mounted on a fixed horizontal axle. A constant tangential force of 5 N is applied to the outer edge of the cylinder for a duration of 3 seconds. Starting from rest, what is the final angular velocity of the cylinder in rad/s? (Ignore all friction and air resistance.)"
+  },
+  {
+    "id": "gen-rotational-dynamics-03-2",
+    "domain_hint": "rotational-dynamics",
+    "problem_text": "A thin, uniform rod of mass 0.5 kg and length 1.2 m is attached to a frictionless pivot at one end, allowing it to rotate in a vertical plane. The rod is released from rest from a horizontal position. Calculate the magnitude of the angular velocity of the rod (in rad/s) when the rod reaches its lowest vertical position. Assume the acceleration due to gravity g is 9.8 m/s^2."
+  },
+  {
+    "id": "gen-gravitation-02-1",
+    "domain_hint": "gravitation",
+    "problem_text": "A moon orbits a gas giant planet in a circular path with a constant radius of 450,000 m. The mass of the gas giant is 1.8e24 kg. Using the gravitational constant G = 6.67e-11 m^3/(kg*s^2), calculate the orbital speed of the moon in m/s. Round your final answer to the nearest integer."
+  },
+  {
+    "id": "gen-gravitation-03-2",
+    "domain_hint": "gravitation",
+    "problem_text": "A satellite orbits Earth in a circular path at an altitude of 1600 km above the surface. Given that the radius of Earth is 6370 km and the mass of Earth is 5.97e24 kg, calculate the orbital period of the satellite in seconds. Use G = 6.67e-11 m^3/(kg*s^2) and pi = 3.14."
+  },
+  {
+    "id": "gen-oscillations-waves-01-2",
+    "domain_hint": "oscillations-waves",
+    "problem_text": "A solar flare triggers an oscillation in a coronal loop. The resulting transverse wave travels at a constant speed of 1200 km/s through the solar plasma. If the observed frequency of this wave is 4 mHz, calculate the wavelength of the wave in kilometers (km)."
+  },
+  {
+    "id": "gen-oscillations-waves-02-1",
+    "domain_hint": "oscillations-waves",
+    "problem_text": "A coronal loop with a length of 50,000 km is modeled as a tube where longitudinal pressure waves form standing waves with nodes at both ends of the loop. If the fundamental frequency of this oscillation is measured to be 2 mHz, what is the speed of the pressure waves in kilometers per second (km/s)?"
+  },
+  {
+    "id": "gen-thermodynamics-01-2",
+    "domain_hint": "thermodynamics",
+    "problem_text": "A monatomic ideal gas is contained in a cylinder with an initial volume of 0.08 m^3 at a temperature of 300 K. The gas undergoes a reversible adiabatic expansion until the final volume reaches 0.01 m^3. Calculate the final temperature of the gas in Kelvin. (Assume the ratio of specific heats, gamma, is 5/3)."
+  },
+  {
+    "id": "gen-optics-02-2",
+    "domain_hint": "optics",
+    "problem_text": "A point object is placed 12 cm in front of a diverging lens that has a focal length of -6 cm. Calculate the distance of the image from the lens (use a negative value for virtual images) and find the magnification produced by the lens."
+  },
+  {
+    "id": "gen-optics-03-2",
+    "domain_hint": "optics",
+    "problem_text": "A ray of light is incident on a rectangular glass slab with an index of refraction of 1.50 at an angle of 45 degrees relative to the normal of the top surface. The slab has a thickness of 5.0 cm. Assuming the light travels from air (index of refraction 1.00) into the glass, calculate the lateral displacement in mm of the ray as it emerges from the opposite side of the slab parallel to its original path."
+  },
+  {
+    "id": "gen-fluid-mechanics-01-2",
+    "domain_hint": "fluid-mechanics",
+    "problem_text": "A horizontal pipe carries water with a density of 1000 kg/m^3. At section 1, the diameter of the pipe is 0.1 m and the fluid velocity is 2 m/s. The pipe narrows to a constriction at section 2, where the diameter is 0.05 m. Calculate the pressure difference (P1 - P2) between section 1 and section 2 in Pascals (Pa)."
+  },
+  {
+    "id": "gen-fluid-mechanics-02-2",
+    "domain_hint": "fluid-mechanics",
+    "problem_text": "A large cylindrical tank is filled with water to a depth of 3.0 meters. A small circular hole with a diameter of 0.02 meters is opened at the bottom of the tank. Neglecting viscosity and assuming the tank's surface area is much larger than the hole, calculate the initial velocity in m/s of the water exiting the hole. Use g = 9.8 m/s^2."
+  },
+  {
+    "id": "gen-fluid-mechanics-03-2",
+    "domain_hint": "fluid-mechanics",
+    "problem_text": "A rectangular gate, 2 meters wide and 3 meters high, is positioned vertically against the side of a reservoir containing oil with a density of 850 kg/m^3. The top edge of the gate is located at a depth of 1 meter below the free surface of the oil. Assuming the atmospheric pressure acts on both sides of the gate so that only the gauge pressure is considered, calculate the total hydrostatic force exerted by the oil on the gate in Newtons. Use g = 9.8 m/s^2."
+  },
+  {
+    "id": "gen-special-relativity-01-4",
+    "domain_hint": "special-relativity",
+    "problem_text": "A spaceship is traveling at a velocity of 0.8c along the x-axis relative to Earth. An experimenter on the ship observes a light pulse traveling from the back of the ship towards a sensor located 10 meters ahead in the direction of motion. How many seconds, as measured by an observer on Earth, pass between the moment the light is emitted and the moment it hits the sensor? (Use c = 3.00e8 m/s)."
+  },
+  {
+    "id": "gen-special-relativity-02-4",
+    "domain_hint": "special-relativity",
+    "problem_text": "A muon is traveling at a speed of 0.98c relative to a laboratory detector. The mean lifetime of a muon in its own rest frame is 2.2 microseconds (2.2e-6 s). Calculate the distance, in meters, that the muon travels in the laboratory frame before decaying. Assume the speed of light c = 3.0e8 m/s."
+  },
+  {
+    "id": "gen-special-relativity-03-4",
+    "domain_hint": "special-relativity",
+    "problem_text": "A light source is moving directly away from a stationary observer at a velocity of 0.6c. If the frequency measured by the stationary observer is 400 THz, what is the frequency of the light in the rest frame of the source? Express your answer in THz."
+  },
+  {
+    "id": "gen-quantum-mechanics-01-2",
+    "domain_hint": "quantum-mechanics",
+    "problem_text": "A particle is confined in a one-dimensional infinite square well of width L = 1 nm. At time t = 0, the particle is prepared in a superposition state described by the wavefunction psi(x, 0) = (1/sqrt(5)) * phi_1(x) + (2/sqrt(5)) * phi_2(x), where phi_1 and phi_2 are the normalized energy eigenfunctions corresponding to the ground state and the first excited state of the well. Given that the ground state energy E_1 is 0.376 eV, calculate the expectation value of the particle's energy."
+  },
+  {
+    "id": "gen-quantum-mechanics-03-2",
+    "domain_hint": "quantum-mechanics",
+    "problem_text": "A particle with mass m = 9.11e-31 kg is in the first excited state (n = 1) of a one-dimensional quantum harmonic oscillator. The angular frequency of the oscillator is omega = 4.0e15 rad/s. Using h_bar = 1.054e-34 J*s, calculate the total energy E of this particle in Joules."
+  },
+  {
+    "id": "gen-statistical-mechanics-02-1",
+    "domain_hint": "statistical-mechanics",
+    "problem_text": "A system consists of N = 100 independent magnetic moments, each with a magnitude of mu = 9.27e-24 J/T. The system is placed in a uniform magnetic field B = 2.0 T and is in thermal equilibrium at a temperature T = 1.0 K. Using the Boltzmann constant k = 1.38e-23 J/K, calculate the total magnetization M of the system in J/T."
+  },
+  {
+    "id": "gen-nuclear-physics-01-3",
+    "domain_hint": "nuclear-physics",
+    "problem_text": "Two deuterium nuclei, each with a mass of 2.014102 u, undergo a fusion reaction to form one helium-3 nucleus with a mass of 3.016029 u and one neutron with a mass of 1.008665 u. Calculate the total energy released in this nuclear reaction in MeV. Use the conversion factor 1 u = 931.5 MeV."
+  },
+  {
+    "id": "gen-nuclear-physics-02-3",
+    "domain_hint": "nuclear-physics",
+    "problem_text": "A radium-226 nucleus undergoes alpha decay to produce polonium-222 and an alpha particle (helium-4 nucleus). Given the mass of radium-226 is 226.0254 u, the mass of polonium-222 is 222.0176 u, and the mass of the alpha particle is 4.0026 u, calculate the energy released in this decay in MeV. Use the conversion factor 1 u = 931.5 MeV/c^2."
+  },
+  {
+    "id": "gen-statistical-mechanics-01",
+    "domain_hint": "statistical-mechanics",
+    "problem_text": "A system consists of N non-interacting, distinguishable particles. Each particle can occupy one of two energy levels: a ground state with energy 0 and an excited state with energy E = 4.0e-21 J. The system is held at a constant temperature T = 200 K. Given Boltzmann's constant k = 1.38e-23 J/K, calculate the average energy per particle in the system. Provide your answer in Joules."
+  },
+  {
+    "id": "gen-statistical-mechanics-01-1",
+    "domain_hint": "statistical-mechanics",
+    "problem_text": "A system consists of N = 100 non-interacting, distinguishable particles. Each particle can occupy one of two energy levels: a ground state with energy E_0 = 0 and an excited state with energy E_1 = 2 * k_B * T_ref, where k_B is the Boltzmann constant and T_ref is a fixed reference temperature. The system is maintained at a temperature T = 2 * T_ref. Calculate the average energy per particle in units of (k_B * T_ref). Use e = 2.718 for your calculation."
+  },
+  {
+    "id": "gen-statistical-mechanics-02-2",
+    "domain_hint": "statistical-mechanics",
+    "problem_text": "A system consists of two non-interacting magnetic spins placed in an external magnetic field. Each spin can either be aligned with the field (energy = -1.0 eV) or anti-aligned with the field (energy = +1.0 eV). If the system is in thermal equilibrium with a reservoir at temperature T, such that kT = 1.5 eV, calculate the probability that both spins are aligned with the magnetic field. Round your answer to three decimal places."
+  },
+  {
+    "id": "gen-statistical-mechanics-01-2",
+    "domain_hint": "statistical-mechanics",
+    "problem_text": "A single magnetic dipole with magnetic moment mu is placed in a uniform magnetic field B. The possible energy levels for this dipole are E1 = -mu * B and E2 = +mu * B. Given that the ratio (mu * B) / (k_B * T) is equal to 0.5, calculate the expected value of the component of the magnetic moment along the direction of the magnetic field. Express your answer as a numerical coefficient multiplied by mu."
+  },
+  {
+    "id": "gen-statistical-mechanics-01-3",
+    "domain_hint": "statistical-mechanics",
+    "problem_text": "Consider a system of N = 100 non-interacting magnetic moments, each with a magnitude of mu = 9.27e-24 J/T. The system is placed in a uniform external magnetic field of strength B = 2.0 T and maintained at a constant temperature of T = 10 K. Using the Boltzmann constant k_B = 1.38e-23 J/K, calculate the total magnetization M of the system in units of J/T."
+  },
+  {
+    "id": "gen-statistical-mechanics-02-3",
+    "domain_hint": "statistical-mechanics",
+    "problem_text": "A single particle in a one-dimensional quantum harmonic oscillator has an angular frequency of omega = 1.0e13 rad/s. The system is in thermal equilibrium with a heat bath at temperature T = 5 K. Using the reduced Planck constant h_bar = 1.05e-34 J*s and the Boltzmann constant k_B = 1.38e-23 J/K, calculate the average energy of the oscillator in Joules."
+  },
+  {
+    "id": "gen-statistical-mechanics-02-4",
+    "domain_hint": "statistical-mechanics",
+    "problem_text": "A system contains N non-interacting magnetic spins, each with a magnetic moment of mu = 9.274e-24 J/T. The spins can only point parallel or anti-parallel to an applied external magnetic field B = 2.0 T. At a temperature of T = 5 K, calculate the ratio of the net magnetization M to the saturation magnetization M_sat (the state where all spins are aligned with the field). Use the Boltzmann constant k = 1.38e-23 J/K."
+  },
+  {
+    "id": "gen-statistical-mechanics-02-5",
+    "domain_hint": "statistical-mechanics",
+    "problem_text": "A system consists of a single particle with two possible energy states, E1 = -mu * B and E2 = +mu * B, where mu is the magnetic moment and B is an external magnetic field. Calculate the partition function Z and the average magnetization M (the expected value of the magnetic moment) as a function of mu, B, and temperature T. Use k_B for the Boltzmann constant."
+  },
+  {
+    "id": "gen-statistical-mechanics-03-1",
+    "domain_hint": "statistical-mechanics",
+    "problem_text": "A system consists of N non-interacting magnetic moments, each with a magnitude mu = 9.27e-24 J/T. Each moment can be oriented either parallel or anti-parallel to an external magnetic field B = 1.5 T. If the temperature of the system is T = 2.0 K, calculate the magnetization per spin (m), defined as the average magnetic moment along the direction of the field. Use k = 1.38e-23 J/K for the Boltzmann constant."
   }
 ]
