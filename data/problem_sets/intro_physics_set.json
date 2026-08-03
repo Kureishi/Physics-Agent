@@ -603,5 +603,180 @@
     "id": "gen-nuclear-physics-03-1",
     "domain_hint": "nuclear-physics",
     "problem_text": "A nucleus with mass number A = 197 is modeled as a sphere with a radius R defined by the formula R = r0 * (A^(1/3)), where r0 = 1.2 * 10^-15 m. Given that the average mass of a single nucleon is 1.67 * 10^-27 kg, calculate the density of this nucleus in kg/m^3. Use pi = 3.14."
+  },
+  {
+    "id": "gen-momentum-01-2",
+    "domain_hint": "momentum",
+    "problem_text": "A 2.0 kg block moving at 5.0 m/s in the positive x-direction undergoes a perfectly inelastic collision with a stationary 3.0 kg block. Determine the final velocity of the two blocks combined, expressed in m/s."
+  },
+  {
+    "id": "gen-momentum-02-1",
+    "domain_hint": "momentum",
+    "problem_text": "A small object with a mass of 0.5 kg is moving in the xy-plane with an initial velocity component of 4.0 m/s in the x-direction and 3.0 m/s in the y-direction. It undergoes a perfectly inelastic collision with a stationary target that has a mass of 1.5 kg. Determine the magnitude of the final velocity of the combined mass after the collision, expressed in m/s."
+  },
+  {
+    "id": "gen-momentum-03",
+    "domain_hint": "momentum",
+    "problem_text": "A puck with a mass of 2.0 kg is initially at rest on a frictionless horizontal surface. A time-dependent force F(t) = (5.0 + 2.0 * t) Newtons is applied to the puck in the positive x-direction, where 't' represents the time in seconds. Calculate the magnitude of the velocity of the puck after 3.0 seconds have elapsed."
+  },
+  {
+    "id": "gen-momentum-04-1",
+    "domain_hint": "momentum",
+    "problem_text": "A stationary object with a mass of 5.0 kg suddenly explodes into two fragments. One fragment, which has a mass of 2.0 kg, moves at a speed of 10.0 m/s at an angle of 30 degrees above the positive x-axis. Determine the magnitude of the velocity and the direction (in degrees, measured counter-clockwise from the positive x-axis) of the second fragment."
+  },
+  {
+    "id": "gen-momentum-05-1",
+    "domain_hint": "momentum",
+    "problem_text": "A scientist with a mass of 80 kg is standing on a frictionless laboratory cart that has a mass of 10 kg. Both the scientist and the cart are initially at rest relative to the floor. The scientist walks from one end of the cart to the other, such that their final velocity relative to the laboratory floor is 0.5 m/s in the positive x-direction. Determine the magnitude of the final velocity of the cart relative to the laboratory floor in m/s."
+  },
+  {
+    "id": "gen-gravitation-01-2",
+    "domain_hint": "gravitation",
+    "problem_text": "A satellite orbits a planet of mass 6.0e24 kg in a circular path. The planet has a radius of 6400 km, and the satellite's altitude above the surface is 1600 km. Calculate the orbital period of the satellite in seconds. Use G = 6.67e-11 m^3/(kg*s^2) and pi = 3.14."
+  },
+  {
+    "id": "gen-thermodynamics-02-1",
+    "domain_hint": "thermodynamics",
+    "problem_text": "An ideal monatomic gas (gamma = 5/3) is contained in a cylinder with a frictionless piston. Initially, the gas has a pressure of 2.0e5 Pa and a volume of 1.0e-3 m^3. The gas undergoes an adiabatic expansion until its volume reaches 8.0e-3 m^3. Calculate the final pressure of the gas in Pascals."
+  },
+  {
+    "id": "gen-thermodynamics-04",
+    "domain_hint": "thermodynamics",
+    "problem_text": "A system contains 0.5 moles of an ideal diatomic gas (with a heat capacity ratio gamma = 1.4) initially at a temperature of 300 K. The gas is first heated at a constant volume of 0.002 m^3 until its temperature reaches 600 K. Following this heating, the gas undergoes an isothermal expansion from the volume of 0.002 m^3 to a final volume of 0.010 m^3. Calculate the total amount of heat added to the gas during these two processes in Joules. (Use R = 8.314 J/(mol*K))"
+  },
+  {
+    "id": "gen-quantum-mechanics-02-1",
+    "domain_hint": "quantum-mechanics",
+    "problem_text": "A particle of mass m is trapped in a one-dimensional infinite square well of width L, with the potential being zero inside the well (0 < x < L) and infinite everywhere else. At time t = 0, the particle is prepared in a superposition state psi(x) = (1/sqrt(2)) * [psi_1(x) + psi_2(x)], where psi_1(x) and psi_2(x) are the normalized energy eigenfunctions for the ground state (n=1) and the first excited state (n=2). Calculate the expectation value of the particle's energy, E, expressed as a multiple of the ground state energy E_1."
+  },
+  {
+    "id": "gen-quantum-mechanics-04-1",
+    "domain_hint": "quantum-mechanics",
+    "problem_text": "An electron, with a mass of 9.11e-31 kg, encounters a rectangular potential barrier that is 0.2 nm wide and has a height of 5.0 eV. If the energy of the electron is 3.0 eV, determine the approximate transmission probability T through the barrier using the approximation T = exp(-2 * kappa * L). In this formula, L is the width of the barrier, and kappa is defined as the square root of (2 * m * (V0 - E)) / hbar. Use the following constants: hbar = 1.054e-34 J*s and 1 eV = 1.602e-19 J."
+  },
+  {
+    "id": "gen-gravitation-01-3",
+    "domain_hint": "gravitation",
+    "problem_text": "A satellite orbits a planet of mass 5.0e24 kg in a circular path. The planet has a radius of 6000 km, and the satellite is at an altitude of 2000 km above the surface. If G = 6.67e-11 N*m^2/kg^2, what is the orbital speed of the satellite in m/s? Round your answer to the nearest integer."
+  },
+  {
+    "id": "gen-gravitation-02",
+    "domain_hint": "gravitation",
+    "problem_text": "Two stars, Star A with a mass of 4.0e30 kg and Star B with a mass of 2.0e30 kg, orbit their common center of mass in circular paths. The distance between the centers of the two stars is constant at 6.0e8 m. Using G = 6.67e-11 N*m^2/kg^2 and pi = 3.14, calculate the orbital period of this binary system in seconds."
+  },
+  {
+    "id": "gen-gravitation-04",
+    "domain_hint": "gravitation",
+    "problem_text": "A probe is launched vertically upward from the surface of a planet with a mass of 6.0e24 kg and a radius of 5.0e6 m. The initial launch velocity is 10000 m/s. Using G = 6.67e-11 N*m^2/kg^2, determine the maximum altitude in meters that the probe reaches above the planet's surface."
+  },
+  {
+    "id": "gen-quantum-mechanics-02-2",
+    "domain_hint": "quantum-mechanics",
+    "problem_text": "A particle is trapped in a one-dimensional infinite square well of width L. The energy of the ground state, E1, is 5.0 eV. At time t = 0, the particle is prepared in a quantum superposition state described by the wavefunction psi(x) = sqrt(1/5)*psi_1(x) + sqrt(4/5)*psi_2(x), where psi_1(x) and psi_2(x) are the normalized ground state and first excited state wavefunctions, respectively. Calculate the expectation value of the energy, <E>, for this particle in eV."
+  },
+  {
+    "id": "gen-quantum-mechanics-03",
+    "domain_hint": "quantum-mechanics",
+    "problem_text": "A quantum harmonic oscillator consists of a particle with mass m = 2.0e-26 kg and an angular frequency omega = 1.0e13 rad/s. Calculate the energy of the second excited state (n = 2) in electronvolts (eV). Use h_bar = 1.054e-34 J*s and 1 eV = 1.602e-19 J."
+  },
+  {
+    "id": "gen-quantum-mechanics-05",
+    "domain_hint": "quantum-mechanics",
+    "problem_text": "A particle is in the first excited state (n = 2) of a one-dimensional infinite square well of width L = 1.0 nm. Calculate the probability of finding the particle in the region between x = 0 and x = 0.25 * L. Provide your answer as a decimal."
+  },
+  {
+    "id": "gen-kinematics-03",
+    "domain_hint": "kinematics",
+    "problem_text": "A particle moves along a straight line. At time t = 0, its position is x = 10 m and its velocity is v = 5 m/s. The particle undergoes a constant acceleration of a = -2 m/s^2. Determine the time, in seconds, at which the particle reaches the position x = 3 m."
+  },
+  {
+    "id": "gen-nuclear-physics-03-2",
+    "domain_hint": "nuclear-physics",
+    "problem_text": "A radioactive nucleus undergoes alpha decay. The mass of the parent nucleus is 222.0174 u. After the decay, a daughter nucleus with a mass of 218.0122 u and an alpha particle (Helium-4 nucleus) with a mass of 4.0026 u are produced. Calculate the energy released during this decay process in MeV. Use the conversion factor 1 u = 931.5 MeV."
+  },
+  {
+    "id": "gen-kinematics-01-1",
+    "domain_hint": "kinematics",
+    "problem_text": "A particle starts from rest at position x = 0 m and moves along a straight line with constant acceleration. After 2.0 seconds, the particle has reached a velocity of 15 m/s. Determine the displacement of the particle from its starting position at time t = 5.0 s."
+  },
+  {
+    "id": "gen-kinematics-02-2",
+    "domain_hint": "kinematics",
+    "problem_text": "A projectile is launched from the edge of a cliff that is 45 meters high with an initial velocity of 25 m/s at an angle of 30 degrees above the horizontal. Taking the acceleration due to gravity to be 9.8 m/s^2 and neglecting air resistance, calculate the total horizontal distance from the base of the cliff to the point where the projectile hits the ground."
+  },
+  {
+    "id": "gen-kinematics-03-1",
+    "domain_hint": "kinematics",
+    "problem_text": "A police car is stationary at a stoplight. A motorist passes the police car traveling at a constant velocity of 40 m/s. The police officer immediately begins to pursue the motorist, accelerating from rest at a constant rate of 5 m/s^2. Determine how many seconds it takes for the police car to catch up to the motorist and the total distance in meters traveled by the police car at the moment it overtakes the motorist."
+  },
+  {
+    "id": "gen-energy-01-1",
+    "domain_hint": "energy",
+    "problem_text": "A 2.0 kg block slides down a frictionless ramp from an initial vertical height of 5.0 m. At the bottom of the ramp, the block hits a horizontal spring with a spring constant of 500 N/m. Calculate the maximum compression of the spring in meters. (Use g = 9.8 m/s^2)"
+  },
+  {
+    "id": "gen-energy-03-2",
+    "domain_hint": "energy",
+    "problem_text": "A crate with a mass of 5.0 kg is sliding across a horizontal floor with an initial velocity of 10 m/s. The coefficient of kinetic friction between the crate and the floor is 0.3. Taking the acceleration due to gravity as g = 9.8 m/s^2, calculate the distance in meters that the crate travels before it comes to a complete stop."
+  },
+  {
+    "id": "gen-thermodynamics-02-2",
+    "domain_hint": "thermodynamics",
+    "problem_text": "A monatomic ideal gas occupies a volume of 1.0 L at a pressure of 2.0 atm. The gas undergoes a reversible adiabatic expansion until the volume reaches 8.0 L. Calculate the final pressure of the gas in atm. Assume the heat capacity ratio gamma is 5/3."
+  },
+  {
+    "id": "gen-thermodynamics-03-1",
+    "domain_hint": "thermodynamics",
+    "problem_text": "A cylinder contains 2.0 moles of an ideal diatomic gas with a molar heat capacity at constant pressure (Cp) of 29.1 J/(mol*K). The gas is heated at a constant pressure from an initial temperature of 300 K to a final temperature of 500 K. Calculate the total amount of heat added to the gas in Joules and the work done by the gas during this process in Joules. (Use R = 8.314 J/(mol*K))"
+  },
+  {
+    "id": "gen-electromagnetism-01-2",
+    "domain_hint": "electromagnetism",
+    "problem_text": "An infinitely long solid cylinder of radius R = 0.1 m has a volume charge density rho(r) = rho_0 * (r / R), where r is the radial distance from the central axis and rho_0 = 5e-6 C/m^3. Calculate the magnitude of the electric field at a point located r = 0.05 m from the cylinder's axis. Use epsilon_0 = 8.85e-12 C^2/(N*m^2)."
+  },
+  {
+    "id": "gen-electromagnetism-02-2",
+    "domain_hint": "electromagnetism",
+    "problem_text": "A non-conducting solid sphere of radius R = 0.1 m has a volume charge density given by rho(r) = rho_0 * (1 - r/R), where r is the radial distance from the center and rho_0 = 4e-6 C/m^3. Calculate the magnitude of the electric field in N/C at a distance of r = 0.05 m from the center. Use epsilon_0 = 8.85e-12 C^2/(N*m^2)."
+  },
+  {
+    "id": "gen-fluid-mechanics-01-1",
+    "domain_hint": "fluid-mechanics",
+    "problem_text": "A vertical cylindrical tank with a radius of 5 cm is filled with water to a height of 20 cm. A small circular hole with a radius of 2 mm is poked in the bottom of the tank. Neglecting viscosity and assuming the water is an ideal fluid, calculate the initial speed (in m/s) at which the water exits the hole. Use g = 9.8 m/s^2."
+  },
+  {
+    "id": "gen-fluid-mechanics-03-1",
+    "domain_hint": "fluid-mechanics",
+    "problem_text": "A horizontal pipe carries water with a density of 1000 kg/m^3. At one point, the pipe has a diameter of 10 cm and the water velocity is 2 m/s. Further downstream, the pipe narrows to a diameter of 5 cm. Assuming the flow is steady, incompressible, and frictionless, calculate the pressure difference (p_initial - p_final) between these two points in Pascals (Pa)."
+  },
+  {
+    "id": "gen-special-relativity-01-2",
+    "domain_hint": "special-relativity",
+    "problem_text": "A spacecraft moves at a velocity of 0.8c relative to Earth, where c represents the speed of light. An astronaut on the spacecraft measures the length of a scientific instrument to be 5.0 meters along the direction of travel. Determine the length of this same instrument, in meters, as measured by an observer stationary on Earth."
+  },
+  {
+    "id": "gen-special-relativity-02-2",
+    "domain_hint": "special-relativity",
+    "problem_text": "A muon travels through the atmosphere at a velocity of 0.98c relative to an observer on Earth. If the proper lifetime of the muon is 2.2 microseconds, how much time (in microseconds) passes in the Earth's frame of reference before the muon decays? Provide the answer rounded to two decimal places."
+  },
+  {
+    "id": "gen-special-relativity-03-2",
+    "domain_hint": "special-relativity",
+    "problem_text": "An electron is accelerated from rest to a speed of 0.95c, where c represents the speed of light. Given that the rest mass energy of an electron is 0.511 MeV, calculate the kinetic energy of the electron in MeV. Round your final answer to two decimal places."
+  },
+  {
+    "id": "gen-quantum-mechanics-01-1",
+    "domain_hint": "quantum-mechanics",
+    "problem_text": "An electron of mass m = 9.11e-31 kg is trapped in a one-dimensional infinite square well with width L = 0.5 nm. Calculate the energy difference, in electron volts (eV), between the first excited state (n=2) and the ground state (n=1). Use h = 6.626e-34 J*s and the conversion factor 1 eV = 1.602e-19 J."
+  },
+  {
+    "id": "gen-nuclear-physics-01-1",
+    "domain_hint": "nuclear-physics",
+    "problem_text": "A nucleus of Calcium-48 contains 20 protons and 28 neutrons. Given that the mass of a proton is 1.007276 u, the mass of a neutron is 1.008665 u, and the mass of the Calcium-48 nucleus is 47.9480 u, calculate the binding energy per nucleon in MeV. Use the conversion factor 1 u = 931.5 MeV."
+  },
+  {
+    "id": "gen-nuclear-physics-03-3",
+    "domain_hint": "nuclear-physics",
+    "problem_text": "A Uranium-238 nucleus undergoes alpha decay to produce a Thorium-234 nucleus and an alpha particle (a Helium-4 nucleus). The mass of the Uranium-238 nucleus is 238.050788 u, the mass of the Thorium-234 nucleus is 234.043601 u, and the mass of the Helium-4 nucleus is 4.002603 u. Given that 1 u is equivalent to 931.5 MeV/c^2, calculate the energy released (Q-value) in this decay process in MeV. Round your answer to two decimal places."
   }
 ]
