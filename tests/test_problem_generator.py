@@ -217,3 +217,108 @@ def test_generate_mixed_failure_then_bad_json_then_success():
 
     assert result["problem_text"] == "A ball falls."
     assert llm.calls == 3
+
+
+# -- empty/degenerate response handling (thinking-model-style failure) -------
+
+
+class _TemperatureRecordingLLM:
+    """Records the (messages, temperature) of every call, so tests can
+    verify the retry-with-lower-temperature strategy actually threads
+    through correctly."""
+
+    def __init__(self, responses):
+        self.responses = list(responses)
+        self.calls = []  # list of (messages, temperature)
+
+    def chat(self, messages, temperature=None):
+        self.calls.append((messages, temperature))
+        response = self.responses[len(self.calls) - 1]
+        if isinstance(response, Exception):
+            raise response
+        return response
+
+
+def test_generate_recovers_from_empty_response_via_retry():
+    llm = _TemperatureRecordingLLM(
+        ["", '{"problem_text": "A ball falls.", "target_concepts": [], "rationale": "x"}']
+    )
+    generator = ProblemGenerator(llm, max_retries=1)
+
+    result = generator.generate(_signal())
+
+    assert result["problem_text"] == "A ball falls."
+    assert len(llm.calls) == 2
+
+
+def test_generate_recovers_from_whitespace_only_response():
+    # Some backends return whitespace/newlines rather than a truly empty
+    # string for a degenerate completion -- should be treated the same way.
+    llm = _TemperatureRecordingLLM(
+        ["   \n\n  ", '{"problem_text": "A ball falls.", "target_concepts": [], "rationale": "x"}']
+    )
+    generator = ProblemGenerator(llm, max_retries=1)
+
+    result = generator.generate(_signal())
+    assert result["problem_text"] == "A ball falls."
+
+
+def test_generate_raises_with_clear_message_when_always_empty():
+    llm = _TemperatureRecordingLLM(["", ""])
+    generator = ProblemGenerator(llm, max_retries=1)
+
+    with pytest.raises(ValueError, match="empty response"):
+        generator.generate(_signal())
+
+
+def test_first_attempt_uses_client_default_temperature():
+    llm = _TemperatureRecordingLLM(
+        ['{"problem_text": "A ball falls.", "target_concepts": [], "rationale": "x"}']
+    )
+    generator = ProblemGenerator(llm)
+
+    generator.generate(_signal())
+
+    _, first_call_temperature = llm.calls[0]
+    assert first_call_temperature is None  # no override -- defers to the client's own default
+
+
+def test_retry_after_empty_response_uses_lower_retry_temperature():
+    llm = _TemperatureRecordingLLM(
+        ["", '{"problem_text": "A ball falls.", "target_concepts": [], "rationale": "x"}']
+    )
+    generator = ProblemGenerator(llm, max_retries=1, retry_temperature=0.25)
+
+    generator.generate(_signal())
+
+    _, first_call_temperature = llm.calls[0]
+    _, second_call_temperature = llm.calls[1]
+    assert first_call_temperature is None
+    assert second_call_temperature == 0.25
+
+
+def test_retry_after_bad_json_also_uses_lower_retry_temperature():
+    # The temperature-decay strategy applies to ANY retry, not just the
+    # empty-response case -- a malformed-JSON retry should also back off
+    # to the more conservative temperature.
+    llm = _TemperatureRecordingLLM(
+        ["not valid json", '{"problem_text": "A ball falls.", "target_concepts": [], "rationale": "x"}']
+    )
+    generator = ProblemGenerator(llm, max_retries=1, retry_temperature=0.25)
+
+    generator.generate(_signal())
+
+    _, second_call_temperature = llm.calls[1]
+    assert second_call_temperature == 0.25
+
+
+def test_custom_retry_temperature_is_respected():
+    llm = _TemperatureRecordingLLM(
+        ["", '{"problem_text": "x", "target_concepts": [], "rationale": "x"}']
+    )
+    generator = ProblemGenerator(llm, max_retries=1, retry_temperature=0.05)
+
+    generator.generate(_signal())
+
+    _, second_call_temperature = llm.calls[1]
+    assert second_call_temperature == 0.05

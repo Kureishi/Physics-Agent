@@ -21,16 +21,32 @@ it repeatedly in a loop -- as generate_problem_set_cli.py does -- doesn't
 just produce N near-identical variations of the first idea a local model
 reaches for.
 
-Retry handling covers two distinct failure modes, both hit in practice
-running this against a real local model: the response coming back as
+Retry handling covers three distinct failure modes, all hit in practice
+running this against real local models: the response coming back as
 unparseable/wrongly-shaped JSON (handled since Stage 8's original
-implementation), and the underlying LLM call itself failing outright --
-e.g. a local inference engine returning a raw server error on a
-particular generation. The latter used to propagate straight out of
-generate() uncaught, crashing an entire multi-problem batch run over one
-bad call; it's now retried the same as a parsing failure and, if it keeps
-happening, surfaced as the same kind of ValueError a caller like
-generate_for_domains() already knows how to catch and skip past.
+implementation); the underlying LLM call itself failing outright, e.g. a
+local inference engine returning a raw server error (handled once Bug 4
+was found); and -- found generating problems in bulk across many domains
+in one run -- the model returning an EMPTY or truncated-mid-sentence
+response with no error at all. That last one showed a telling pattern:
+raising max_tokens from 2048 to 8192 didn't reduce how often it happened
+(if anything, a run with the higher cap succeeded on fewer problems than
+one with the default), which rules out simple token starvation as the
+cause. The far more likely explanation is a "thinking"-style model
+spending an unbounded, prompt-dependent amount of its budget on an
+internal reasoning phase before ever starting the visible answer --
+giving it a bigger cap doesn't fix that, since the model can just think
+longer, not proportionally leave more room for the answer.
+
+What actually helps a failure like that is different from what helps a
+parsing failure: retrying with a LOWER temperature. High temperature
+(this module defaults to 0.9 for generation diversity, deliberately
+higher than solving's 0.2) is exactly the setting most likely to produce
+a degenerate empty or early-stopped completion; a lower, more
+conservative temperature on retry trades away some of that diversity
+specifically to prioritize actually getting a usable response. Every
+retry attempt after the first uses `retry_temperature` instead of
+whatever the client's own default is.
 """
 from __future__ import annotations
 
@@ -75,10 +91,16 @@ class ProblemGenerator:
         llm_client,
         literature_tool: Optional[LiteratureSearchTool] = None,
         max_retries: int = 1,
+        retry_temperature: float = 0.3,
     ):
         self.llm = llm_client
         self.literature_tool = literature_tool
         self.max_retries = max_retries
+        # Used for every retry attempt after the first (see module
+        # docstring): lower temperature trades diversity for reliability
+        # specifically when the first, higher-temperature attempt
+        # produced an empty, truncated, or otherwise unusable response.
+        self.retry_temperature = retry_temperature
 
     def _literature_context(self, domain_tags: List[str]) -> Optional[str]:
         if self.literature_tool is None or not domain_tags:
@@ -135,17 +157,49 @@ class ProblemGenerator:
 
         raw = ""
         last_err: Exception = ValueError("problem generator never ran")
-        for _ in range(self.max_retries + 1):
+        for attempt in range(self.max_retries + 1):
+            # First attempt uses the client's own configured temperature
+            # (generate_problem_set_cli.py sets this high, for diversity);
+            # every retry after that uses the lower, more conservative
+            # retry_temperature instead, since a degenerate/empty response
+            # is a classic high-temperature sampling failure and blindly
+            # retrying at the same temperature that just failed has no
+            # particular reason to succeed differently.
+            call_temperature = None if attempt == 0 else self.retry_temperature
+
             try:
-                raw = self.llm.chat(messages)
+                raw = self.llm.chat(messages, temperature=call_temperature)
             except Exception as e:
                 # The LLM call itself failed (network error, a local
                 # inference engine returning a raw server error on this
                 # particular generation, etc.) -- treat it the same as an
-                # unparseable response: worth a retry with the identical
-                # request, and if it keeps happening, surfaced as the same
-                # ValueError a parsing failure would raise below.
+                # unparseable response: worth a retry, and if it keeps
+                # happening, surfaced as the same kind of ValueError a
+                # parsing failure would raise below.
                 last_err = e
+                continue
+
+            if not raw or not raw.strip():
+                # Distinguish this explicitly from "the model replied with
+                # something, just not valid JSON" -- an empty response
+                # never even reaches extract_json, and "No JSON object
+                # found in model output: ''" is a much less useful error
+                # message than naming what actually happened.
+                last_err = ValueError(
+                    "Model returned an empty response (no content at all) -- "
+                    "likely spent its entire token budget on an internal "
+                    "reasoning phase before producing any visible answer."
+                )
+                messages.append({"role": "assistant", "content": ""})
+                messages.append(
+                    {
+                        "role": "user",
+                        "content": (
+                            "That response was empty. Reply again with ONLY the "
+                            "JSON object, no other text before or after it."
+                        ),
+                    }
+                )
                 continue
 
             try:

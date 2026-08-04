@@ -59,6 +59,28 @@ def test_generate_for_domains_passes_growing_avoid_list(config, monkeypatch):
     assert seen_avoid_lengths == [0, 1, 2]
 
 
+def test_generate_for_domains_caps_avoid_list_length(config, monkeypatch):
+    from physics_agent.curriculum.problem_generator import ProblemGenerator
+    from physics_agent.generate_problem_set_cli import MAX_AVOID_LIST_ENTRIES
+
+    seen_avoid_lengths = []
+    original_generate = ProblemGenerator.generate
+
+    def spy_generate(self, signal, avoid=None):
+        seen_avoid_lengths.append(len(avoid) if avoid else 0)
+        return original_generate(self, signal, avoid=avoid)
+
+    monkeypatch.setattr(ProblemGenerator, "generate", spy_generate)
+
+    n = MAX_AVOID_LIST_ENTRIES + 3
+    generate_for_domains(["energy"], n_per_domain=n, dry_run=True, config=config)
+
+    # avoid-list length should grow up to the cap, then never exceed it,
+    # even though many more problems than the cap were generated
+    assert max(seen_avoid_lengths) == MAX_AVOID_LIST_ENTRIES
+    assert seen_avoid_lengths[-1] == MAX_AVOID_LIST_ENTRIES
+
+
 def test_generate_for_domains_skips_failed_generation_without_crashing(config, monkeypatch):
     from physics_agent.curriculum.problem_generator import ProblemGenerator
 
@@ -120,3 +142,20 @@ def test_domain_taxonomy_has_no_duplicates_or_empty_entries():
     # to remember to update alongside it.
     assert len(DOMAIN_TAXONOMY) == len(set(DOMAIN_TAXONOMY))  # no duplicates
     assert all(isinstance(tag, str) and tag for tag in DOMAIN_TAXONOMY)  # no empty/non-string entries
+
+
+def test_max_retries_threads_through_to_the_generator(config, monkeypatch):
+    from physics_agent.curriculum.problem_generator import ProblemGenerator
+
+    captured = {}
+    original_init = ProblemGenerator.__init__
+
+    def spy_init(self, *args, **kwargs):
+        captured["max_retries"] = kwargs.get("max_retries")
+        original_init(self, *args, **kwargs)
+
+    monkeypatch.setattr(ProblemGenerator, "__init__", spy_init)
+
+    generate_for_domains(["energy"], n_per_domain=1, dry_run=True, config=config, max_retries=5)
+
+    assert captured["max_retries"] == 5

@@ -43,7 +43,7 @@ for the full schema and a field-by-field note on which stage owns which field.
   set's own hints). Not a new pipeline stage — just the fastest way to
   build up enough real data for Stage 7's policies and Stage 8's
   curriculum to have anything meaningful to act on. See
-  `data/problem_sets/intro_physics_set.json` for a ready-made 25-problem
+  `data/problem_sets/intro_physics_set.json` for a ready-made 206-problem
   set spanning all 15 domain tags.
 - **`python -m physics_agent.inspect_trace_cli`** — dumps the full detail
   of exactly ONE solved problem: what was retrieved, every tool call, each
@@ -62,14 +62,17 @@ for the full schema and a field-by-field note on which stage owns which field.
   reusing Stage 8's `ProblemGenerator` directly but without needing any
   accumulated weak-area data first (unlike `curriculum_cli.py`, this
   doesn't solve what it generates — it's purely for growing the problem
-  set). Runs at a higher temperature than solving on purpose, and feeds
-  each domain's own previously-generated problems back in as an
-  "avoid duplicating" list so N calls in a row don't just restate the same
-  scenario with different numbers.
+  set). Runs at a higher temperature than solving on purpose, feeds each
+  domain's own previously-generated problems back in as a capped "avoid
+  duplicating" list so N calls in a row don't just restate the same
+  scenario with different numbers, and retries any failed attempt (empty
+  response, malformed JSON, or a raw call error) at a lower, more
+  conservative temperature.
   ```bash
   python -m physics_agent.generate_problem_set_cli --n-per-domain 5 --out data/problem_sets/expanded_set.json
   python -m physics_agent.generate_problem_set_cli --domains energy dynamics --n-per-domain 10
   python -m physics_agent.generate_problem_set_cli --n-per-domain 3 --append data/problem_sets/intro_physics_set.json
+  python -m physics_agent.generate_problem_set_cli --n-per-domain 5 --max-retries 4   # if seeing many "generation failed" skips
   ```
 
 ## What this does right now
@@ -177,7 +180,7 @@ data, rather than one-off single problems.
 
 1. Make sure LM Studio's server is running (see above).
 
-2. Run the full problem set (25 problems spanning all 15 domain tags —
+2. Run the full problem set (206 problems spanning all 15 domain tags —
    kinematics, dynamics, energy, momentum, rotational dynamics,
    gravitation, oscillations, thermodynamics, electromagnetism, optics,
    fluid mechanics, special relativity, quantum mechanics, statistical
@@ -219,13 +222,15 @@ data, rather than one-off single problems.
    ```bash
    python -m physics_agent.meta_report
    ```
-   With only 25 problems this likely won't cross the minimum-sample-size
-   gates that let Stage 7's policies actually change behavior (5+ traces
-   per domain for the tool policy and the confidence-calibration policy) —
-   that's expected and by design, not a bug. Run the problem set a few
-   more times (or add more problems to the JSON file) to build up enough
-   history to see `check_value`, `declining_strategies`, and `weak_areas`
-   populate with real signal.
+   At ~14 problems per domain, this comfortably crosses the
+   minimum-sample-size gates that let Stage 7's policies actually change
+   behavior (5+ traces per domain for the tool policy and the
+   confidence-calibration policy) — so after running the full set once,
+   `check_value`, `declining_strategies`, and `weak_areas` should already
+   show real signal rather than empty/insufficient-data results. (If
+   you're running a smaller or custom problem set instead, that's when
+   you'd still need multiple passes or more problems to clear those gates
+   — see the note on gate thresholds under "Getting more problems" below.)
 
 5. Once there's enough history, run a curriculum round:
    ```bash
@@ -309,7 +314,7 @@ data/
   knowledge_graph_edges.json  Seed edges over those 13 formulas (derives_from/special_case_of/
                               requires_assumption relationships)
   problem_sets/
-    intro_physics_set.json     25 problems spanning all 15 domain tags, for problem_set_cli.py
+    intro_physics_set.json     206 problems spanning all 15 domain tags, for problem_set_cli.py
 tests/
   test_trace.py         Trace roundtrip + episodic memory read/write
   test_planner.py         Decomposition, JSON-parsing robustness, retry/failure paths
@@ -355,7 +360,7 @@ memory/
 pytest tests/ -v
 ```
 
-All 243 tests run offline (no LM Studio required) using `MockLLMClient`.
+All 252 tests run offline (no LM Studio required) using `MockLLMClient`.
 The physics tools themselves (SymPy solving, SciPy integration), the Math
 Check's re-substitution verification, and the knowledge graph's validity
 queries are exercised with real computation, not mocked — only the LLM
@@ -776,7 +781,7 @@ passed `check_validity` correctly.
 
 ## Getting more problems to run against
 
-Three ways to scale up beyond the 25-problem starter set, roughly in
+Three ways to scale up beyond the 206-problem starter set, roughly in
 order of effort:
 
 1. **Bulk-generate with `generate_problem_set_cli.py`** (built for exactly
@@ -796,13 +801,13 @@ order of effort:
    re-run `problem_set_cli.py` against it as many times as you want
    without regenerating.
 
-2. **Parametrize the existing 24 by hand.** Every problem in
+2. **Parametrize existing problems by hand.** Every problem in
    `intro_physics_set.json` has explicit numeric values — copy one, change
    the numbers, give it a new `id`. Zero LLM calls, zero risk of a
    malformed or physically nonsensical generated problem, but it only
-   exercises the same 24 *scenarios* repeatedly, not new ones — useful
-   for building up Stage 7's per-domain sample counts quickly, less useful
-   for finding new failure modes the way the electron problem did.
+   exercises the same *scenarios* repeatedly, not new ones — useful for
+   building up Stage 7's per-domain sample counts quickly, less useful for
+   finding new failure modes the way the electron problem did.
 
 3. **Adapt problems from an existing textbook or problem bank** (e.g. an
    OpenStax physics text, or a published problem set) as inspiration,
@@ -817,6 +822,22 @@ order of effort:
 Whichever way you add problems, keep the same `{"id", "domain_hint",
 "problem_text"}` shape so `problem_set_cli.py` and `inspect_trace_cli.py`
 both work with them unchanged.
+
+**Gate thresholds, for reference** — these are what actually determine
+whether you have "enough" problems, not any specific total count:
+
+| Policy | Threshold | Scope |
+|---|---|---|
+| `ToolSelectionPolicy` | 5 uses | per (domain, tool) pair |
+| `VerificationDepthPolicy` | 5 traces | per domain |
+| `flag_declining_strategies` | 5 uses | per (domain, error_type, strategy) |
+| `ProceduralMemory.best_strategy_for` | 3 uses | per (domain, error_type, strategy) |
+
+The 206-problem set (~14 per domain) clears the per-domain gates on the
+first full pass; the per-`(domain, tool)` and per-`(domain, error_type,
+strategy)` gates depend on how consistently the same tool or correction
+strategy actually gets used within a domain, which varies problem to
+problem — not something a flat per-domain count guarantees by itself.
 
 ## Fixes from real-world testing against LM Studio
 
@@ -951,6 +972,40 @@ the right move, not evidence the fix is wrong — the trade-off is longer
 waits, and a `max_tokens` cut set too low will make that specific model's
 calls fail cleanly every time rather than hang, which is strictly better
 but still means "increase the cap" is the actual fix needed for that model.
+
+**Bug 6 — bulk problem generation kept failing with an empty model
+response, and raising `max_tokens` alone made it worse, not better.**
+After Bug 5's fix, a real batch run against Gemma showed no crashes but a
+substantial fraction of generations failing with
+`No JSON object found in model output: ''` — a genuinely empty response,
+not malformed JSON. Raising `max_tokens` from 2048 to 8192 didn't reduce
+how often this happened; a comparison run with the higher cap actually
+succeeded on *fewer* problems (44 vs. 52). That negative result rules out
+simple token starvation and points instead to a "thinking"-style model
+spending an unbounded, prompt-dependent share of its budget on an internal
+reasoning phase before ever starting the visible answer — a bigger cap
+just gives it more room to think longer, not proportionally more room to
+answer. **Fix:** rather than a bigger token budget, `ProblemGenerator`
+now retries at a **lower temperature** after any failed attempt (empty
+response, malformed JSON, or a raw call exception) — high temperature
+(0.9, deliberately set for generation diversity) is exactly the setting
+most likely to produce a degenerate completion, and backing off to a
+conservative `retry_temperature` (default 0.3, configurable) trades some
+diversity specifically to prioritize getting a usable response at all.
+Empty responses also now get their own explicit, readable error message
+instead of inheriting `extract_json`'s generic "no JSON object found."
+Two smaller companion changes: `generate_problem_set_cli.py`'s default
+retry budget went from 1 to 2 attempts beyond the first (configurable via
+`--max-retries`), since this looks like a stochastic per-call failure
+where more attempts compounds toward success; and the "avoid duplicating"
+list is now capped to the most recent 3 prior problems rather than every
+one generated so far in a domain, removing unbounded prompt growth as a
+plausible contributor to later problems in a batch failing more often
+than earlier ones. None of this can fix whatever a specific model is
+actually doing internally — that's genuinely outside this codebase's
+control — but it gives failures more chances to resolve themselves via a
+lever (temperature) that's directly relevant to *this* failure mode,
+unlike the token budget, which the data showed wasn't.
 
 Let me know if you'd like to do that further testing round, revisit
 anything in Stages 1-8, or take the project somewhere the original

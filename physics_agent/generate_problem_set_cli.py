@@ -38,8 +38,23 @@ from .tools.literature import LiteratureSearchTool
 # to converge on the same handful of scenarios (block-on-incline, etc.).
 DEFAULT_GENERATION_TEMPERATURE = 0.9
 
+# Found in practice to matter more than raising max_tokens did for the
+# "model returns an empty response" failure mode (see
+# ProblemGenerator's docstring) -- more attempts, each backing off to a
+# lower temperature, measurably helps a stochastic per-call failure in a
+# way that a bigger token budget alone did not.
+DEFAULT_MAX_RETRIES = 2
 
-def _build_generator(dry_run: bool, config: Config) -> ProblemGenerator:
+# How many of a domain's own previously-generated problems get included in
+# the "avoid duplicating" list. Deliberately NOT unbounded (previously all
+# prior problems in the domain were included) -- keeping the prompt's
+# length independent of how far into a domain's batch you are removes one
+# plausible contributor to later-index generations failing more often than
+# earlier ones in the same domain.
+MAX_AVOID_LIST_ENTRIES = 3
+
+
+def _build_generator(dry_run: bool, config: Config, max_retries: int) -> ProblemGenerator:
     if dry_run:
         llm = MockLLMClient()
     else:
@@ -52,7 +67,7 @@ def _build_generator(dry_run: bool, config: Config) -> ProblemGenerator:
             max_tokens=config.lm_studio_max_tokens,
         )
     literature_tool = None if dry_run else LiteratureSearchTool()
-    return ProblemGenerator(llm, literature_tool=literature_tool)
+    return ProblemGenerator(llm, literature_tool=literature_tool, max_retries=max_retries)
 
 
 def generate_for_domains(
@@ -61,9 +76,10 @@ def generate_for_domains(
     dry_run: bool = False,
     config: Optional[Config] = None,
     id_prefix: str = "gen",
+    max_retries: int = DEFAULT_MAX_RETRIES,
 ) -> List[Dict[str, Any]]:
     config = config or Config()
-    generator = _build_generator(dry_run, config)
+    generator = _build_generator(dry_run, config, max_retries)
 
     problems: List[Dict[str, Any]] = []
     for domain in domains:
@@ -75,8 +91,11 @@ def generate_for_domains(
             "weight": 0,
         }
         for i in range(n_per_domain):
+            # Only the most recent few, not the whole growing history --
+            # see MAX_AVOID_LIST_ENTRIES above.
+            avoid = generated_texts[-MAX_AVOID_LIST_ENTRIES:]
             try:
-                result = generator.generate(signal, avoid=generated_texts)
+                result = generator.generate(signal, avoid=avoid)
             except Exception as e:
                 # generator.generate() already converts both bad-JSON and
                 # raw LLM-call failures into a plain ValueError internally,
@@ -118,6 +137,18 @@ def main() -> None:
         help=f"Domain tags to generate for (default: all {len(DOMAIN_TAXONOMY)} known tags)",
     )
     parser.add_argument("--n-per-domain", type=int, default=3, help="How many problems to generate per domain")
+    parser.add_argument(
+        "--max-retries",
+        type=int,
+        default=DEFAULT_MAX_RETRIES,
+        help=(
+            f"Retry attempts per problem beyond the first if generation fails "
+            f"(default: {DEFAULT_MAX_RETRIES}). Each retry uses a lower "
+            "temperature than the first attempt -- see ProblemGenerator's "
+            "docstring for why. Raise this if you're seeing many "
+            "'generation failed, skipping' messages."
+        ),
+    )
     parser.add_argument("--out", default="data/problem_sets/expanded_set.json", help="Output path (overwritten)")
     parser.add_argument(
         "--append",
@@ -133,7 +164,9 @@ def main() -> None:
         raise SystemExit(f"Unknown domain tag(s): {sorted(unknown)}. Valid tags: {DOMAIN_TAXONOMY}")
 
     print(f"Generating {args.n_per_domain} problem(s) each for {len(domains)} domain(s)...\n")
-    new_problems = generate_for_domains(domains, args.n_per_domain, dry_run=args.dry_run)
+    new_problems = generate_for_domains(
+        domains, args.n_per_domain, dry_run=args.dry_run, max_retries=args.max_retries
+    )
 
     if args.append:
         existing = load_existing(args.append)
