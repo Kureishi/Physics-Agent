@@ -360,7 +360,7 @@ memory/
 pytest tests/ -v
 ```
 
-All 252 tests run offline (no LM Studio required) using `MockLLMClient`.
+All 256 tests run offline (no LM Studio required) using `MockLLMClient`.
 The physics tools themselves (SymPy solving, SciPy integration), the Math
 Check's re-substitution verification, and the knowledge graph's validity
 queries are exercised with real computation, not mocked — only the LLM
@@ -1006,6 +1006,70 @@ actually doing internally — that's genuinely outside this codebase's
 control — but it gives failures more chances to resolve themselves via a
 lever (temperature) that's directly relevant to *this* failure mode,
 unlike the token budget, which the data showed wasn't.
+
+**Bug 7 — a self-inflicted regression: `MathCheck` was flagging correct
+answers as wrong, essentially every time `SymbolicMathTool`'s
+direct-evaluation fallback (Bug 2's fix) fired.** Found by analyzing a
+real accumulated `memory/` directory from an actual run (183 solved
+traces) rather than a single failing case. The mechanism: when
+`solve_for` isn't actually a free symbol in the expression — e.g. a model
+computing `m * (v_f - v_i)` and labeling the result `delta_p`, which never
+appears in that expression at all — `SymbolicMathTool` correctly falls
+back to evaluating the expression directly. But `MathCheck`'s
+re-substitution verification was never updated to recognize that same
+shape: it substitutes the reported solution back in for a symbol that
+isn't present, which SymPy silently treats as a no-op, so the "residual"
+it computes is just the original expression's own unchanged value — a
+number that's essentially never zero. **This made `MathCheck` fail on
+every direct evaluation, regardless of whether the answer was correct.**
+
+The scale of it, measured directly against the real data rather than
+estimated: the fallback fired in **199 rounds across 183 traces**, and
+**190 of those (95.5%) were incorrectly flagged as a math failure**. Of
+the 33 traces whose *final* recorded failure included "math," **all 33
+(100%) would pass with the fix** — meaning this dataset contains zero
+confirmed genuine algebra errors caught by this check; every single one
+was this false positive. **10 problems were reported
+`unresolved_max_revisions`** — all 3 revisions burned, marked as failed —
+**where math was the only thing "wrong,"** meaning those were very likely
+solved correctly on the first attempt and the agent wasted its entire
+revision budget chasing a bug that didn't exist. The damage compounds
+downstream: semantic memory's per-fact confidence, which updates via
+`success = not trace.checks_failed`, was punished for facts that had
+nothing to do with the failure — `kin-001` and `grav-001` (both dragged
+down to ~0.4-0.5 in the uploaded data) were hit 5 and 2 times respectively
+by traces whose *only* failure was this phantom check. Every downstream
+Stage 7 statistic that reads from `ProceduralMemory` or `ErrorMemory` —
+`rederive_math`'s success rate, `algebra_error`'s recorded frequency — was
+learning from a signal that was, in this dataset, never actually real.
+
+**Fix:** `MathCheck._verify_solutions` now checks the same condition
+`SymbolicMathTool` itself uses before falling back to direct evaluation
+(non-`Eq` expression, `solve_for` absent from its free symbols) and skips
+re-substitution verification entirely in that case, since there's no
+equation constraint to check — the reported value simply *is* the
+expression's value by definition. Verified directly against the exact
+real failing case from the uploaded data (`Δp = m(v_f - v_i) = -12.75`,
+correctly computed, previously always failed) and confirmed the fix
+doesn't over-apply: a genuine equation where the solve-for variable *does*
+appear (including one using the same variable names, to make sure the
+skip is checking free-symbol presence and not just guessing from
+variable names) still goes through full verification and still correctly
+fails on a wrong solution.
+
+**If you have your own accumulated `memory/` directory from before this
+fix, it's contaminated and worth discarding rather than continuing to
+build on.** Given the 100% false-positive rate measured above, there's no
+way to cleanly separate genuine signal from bug artifacts in
+`error_memory.json`'s `algebra_error` entries, `procedural.json`'s
+`rederive_math` success rates, or the confidence values in
+`semantic_seed.json` for any fact that ever got associated with a math
+failure — all of it should be treated as unreliable. `episodic.jsonl`'s
+individual traces are still an accurate record of what actually happened
+(the trace itself isn't wrong, just the check's verdict baked into it),
+so it's fine to keep for reference, but Stage 7's policies would be
+learning from corrupted history if pointed at the derived memory files
+without resetting them first.
 
 Let me know if you'd like to do that further testing round, revisit
 anything in Stages 1-8, or take the project somewhere the original

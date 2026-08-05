@@ -6,6 +6,24 @@ Purely deterministic, no LLM involved: re-substitutes each symbolic_math
 tool call's reported solution back into its original equation and verifies
 the equation actually holds. This catches algebra errors independent of
 whether the underlying physics setup was correct (that's PhysicsCheck's job).
+
+Does NOT attempt re-substitution verification for a direct-evaluation
+result -- SymbolicMathTool's fallback for when `solve_for` was never
+actually a free symbol in the (substituted) expression, e.g. a model
+computing "m * (v_f - v_i)" and labeling the result "delta_p" even though
+delta_p never appears in that expression at all. That fallback's "solution"
+IS the expression's own value by definition; there's no equation
+constraint it's meant to satisfy. Re-substituting a symbol that was never
+present is a silent SymPy no-op, so naively residual-checking it computes
+the expression's own unchanged value as the "residual" -- a number that's
+essentially never zero, which would fail this check on every direct
+evaluation regardless of whether the computed value is correct. This was
+found to be a real, severe false positive in practice: 199 of 183 traces
+in one real run triggered the tool's evaluate-fallback, and 190 of those
+(95.5%) were incorrectly flagged as a math failure by this check before
+the fix below, corrupting the self-correction loop's revision behavior,
+semantic-memory confidence updates, and every downstream Stage 7 statistic
+that reads from them.
 """
 from __future__ import annotations
 
@@ -71,6 +89,25 @@ class MathCheck:
             subs_symbols = {sympy.symbols(k): v for k, v in substitutions.items()}
         except (sympy.SympifyError, SyntaxError, TypeError) as e:
             return {"passed": False, "details": f"Could not re-parse expression for verification: {e}"}
+
+        # Same condition SymbolicMathTool itself checks before falling back
+        # to direct evaluation (see its docstring): a bare expression (not
+        # an Eq) where solve_for was never a free symbol to begin with.
+        # There's no equation constraint to re-verify against here -- the
+        # reported "solution" IS just this expression's value.
+        expr_substituted_for_check = expr.subs(subs_symbols) if subs_symbols else expr
+        if (
+            not isinstance(expr, sympy.Equality)
+            and symbol not in expr.free_symbols
+            and not expr_substituted_for_check.free_symbols
+        ):
+            return {
+                "passed": True,
+                "details": (
+                    f"'{solve_for}' was a direct evaluation of {expr_str}, not a solved "
+                    "equation -- re-substitution verification doesn't apply."
+                ),
+            }
 
         # For Eq(a, b), verify a - b == 0 after substitution. A bare
         # expression (no Eq) is checked against zero directly.
