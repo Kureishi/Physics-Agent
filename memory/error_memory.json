@@ -1,0 +1,365 @@
+{
+  "reasoning_inconsistency::energy+gravitation": {
+    "id": "reasoning_inconsistency::energy+gravitation",
+    "signature": "reasoning_inconsistency::energy+gravitation",
+    "error_type": "reasoning_inconsistency",
+    "domain_tags": [
+      "energy",
+      "gravitation"
+    ],
+    "root_cause": "Logic check failed (internal inconsistency in the write-up): The solution is incomplete and cuts off mid-sentence, failing to address subtasks 3, 4, and 5.",
+    "fix_applied": "resynthesize",
+    "resolved": false,
+    "frequency": 8,
+    "first_seen": 1786017589.3475108,
+    "last_seen": 1786021294.7214572
+  },
+  "reasoning_inconsistency::gravitation": {
+    "id": "reasoning_inconsistency::gravitation",
+    "signature": "reasoning_inconsistency::gravitation",
+    "error_type": "reasoning_inconsistency",
+    "domain_tags": [
+      "gravitation"
+    ],
+    "root_cause": "Logic check failed (internal inconsistency in the write-up): the solution is incomplete and does not reach a final answer",
+    "fix_applied": "resynthesize",
+    "resolved": true,
+    "frequency": 6,
+    "first_seen": 1786017943.2105513,
+    "last_seen": 1786023171.144846
+  },
+  "reasoning_inconsistency::dynamics+gravitation": {
+    "id": "reasoning_inconsistency::dynamics+gravitation",
+    "signature": "reasoning_inconsistency::dynamics+gravitation",
+    "error_type": "reasoning_inconsistency",
+    "domain_tags": [
+      "dynamics",
+      "gravitation"
+    ],
+    "root_cause": "Logic check failed (internal inconsistency in the write-up): No initial solution was provided to evaluate.",
+    "fix_applied": "resynthesize",
+    "resolved": false,
+    "frequency": 3,
+    "first_seen": 1786018074.6403124,
+    "last_seen": 1786018074.6418836
+  },
+  "reasoning_inconsistency::optics": {
+    "id": "reasoning_inconsistency::optics",
+    "signature": "reasoning_inconsistency::optics",
+    "error_type": "reasoning_inconsistency",
+    "domain_tags": [
+      "optics"
+    ],
+    "root_cause": "Logic check failed (internal inconsistency in the write-up): The solution is incomplete and cuts off mid-sentence in step 3.; The final numerical answer is not provided.",
+    "fix_applied": "resynthesize",
+    "resolved": false,
+    "frequency": 6,
+    "first_seen": 1786018498.6777415,
+    "last_seen": 1786023376.0876486
+  },
+  "reasoning_inconsistency::dynamics+fluid-mechanics": {
+    "id": "reasoning_inconsistency::dynamics+fluid-mechanics",
+    "signature": "reasoning_inconsistency::dynamics+fluid-mechanics",
+    "error_type": "reasoning_inconsistency",
+    "domain_tags": [
+      "dynamics",
+      "fluid-mechanics"
+    ],
+    "root_cause": "Logic check failed (internal inconsistency in the write-up): The solution is incomplete; it cuts off during the numerical calculation step and does not provide a final answer.",
+    "fix_applied": "resynthesize",
+    "resolved": true,
+    "frequency": 2,
+    "first_seen": 1786018704.0371761,
+    "last_seen": 1786018704.037737
+  },
+  "reasoning_inconsistency::kinematics+special-relativity": {
+    "id": "reasoning_inconsistency::kinematics+special-relativity",
+    "signature": "reasoning_inconsistency::kinematics+special-relativity",
+    "error_type": "reasoning_inconsistency",
+    "domain_tags": [
+      "kinematics",
+      "special-relativity"
+    ],
+    "root_cause": "Logic check failed (internal inconsistency in the write-up): The solution is incomplete and cuts off before providing the final calculation and result.",
+    "fix_applied": "resynthesize",
+    "resolved": true,
+    "frequency": 1,
+    "first_seen": 1786018815.169728,
+    "last_seen": 1786018815.169728
+  },
+  "reasoning_inconsistency::statistical-mechanics": {
+    "id": "reasoning_inconsistency::statistical-mechanics",
+    "signature": "reasoning_inconsistency::statistical-mechanics",
+    "error_type": "reasoning_inconsistency",
+    "domain_tags": [
+      "statistical-mechanics"
+    ],
+    "root_cause": "Logic check failed (internal inconsistency in the write-up): The solution is incomplete; it ends abruptly during the numerical substitution step without performing the calculation or providing the final answer.",
+    "fix_applied": "resynthesize",
+    "resolved": false,
+    "frequency": 16,
+    "first_seen": 1786018965.9100063,
+    "last_seen": 1786024757.5666955
+  },
+  "reasoning_inconsistency::kinematics": {
+    "id": "reasoning_inconsistency::kinematics",
+    "signature": "reasoning_inconsistency::kinematics",
+    "error_type": "reasoning_inconsistency",
+    "domain_tags": [
+      "kinematics"
+    ],
+    "root_cause": "Logic check failed (internal inconsistency in the write-up): The solution is incomplete; it stops after finding the time of flight and does not perform the subsequent subtasks of calculating the horizontal distance or checking units/final result.",
+    "fix_applied": "resynthesize",
+    "resolved": true,
+    "frequency": 3,
+    "first_seen": 1786019178.0455647,
+    "last_seen": 1786021640.7353973
+  },
+  "reasoning_inconsistency::dynamics": {
+    "id": "reasoning_inconsistency::dynamics",
+    "signature": "reasoning_inconsistency::dynamics",
+    "error_type": "reasoning_inconsistency",
+    "domain_tags": [
+      "dynamics"
+    ],
+    "root_cause": "Logic check failed (internal inconsistency in the write-up): The provided initial solution is empty and does not address any of the subtasks.",
+    "fix_applied": "resynthesize",
+    "resolved": false,
+    "frequency": 6,
+    "first_seen": 1786019370.4827838,
+    "last_seen": 1786022748.1380737
+  },
+  "reasoning_inconsistency::momentum": {
+    "id": "reasoning_inconsistency::momentum",
+    "signature": "reasoning_inconsistency::momentum",
+    "error_type": "reasoning_inconsistency",
+    "domain_tags": [
+      "momentum"
+    ],
+    "root_cause": "Logic check failed (internal inconsistency in the write-up): The solution is incomplete and ends abruptly mid-calculation.",
+    "fix_applied": "resynthesize",
+    "resolved": false,
+    "frequency": 9,
+    "first_seen": 1786019681.6260455,
+    "last_seen": 1786023036.4578238
+  },
+  "reasoning_inconsistency::dynamics+rotational-dynamics": {
+    "id": "reasoning_inconsistency::dynamics+rotational-dynamics",
+    "signature": "reasoning_inconsistency::dynamics+rotational-dynamics",
+    "error_type": "reasoning_inconsistency",
+    "domain_tags": [
+      "dynamics",
+      "rotational-dynamics"
+    ],
+    "root_cause": "Logic check failed (internal inconsistency in the write-up): The solution is incomplete and ends abruptly mid-sentence.; It does not address the remaining subtasks: setting up Newton's second law, applying the constraint equation, and solving the system of equations.",
+    "fix_applied": "resynthesize",
+    "resolved": false,
+    "frequency": 3,
+    "first_seen": 1786019850.9349148,
+    "last_seen": 1786019850.9362988
+  },
+  "reasoning_inconsistency::energy+thermodynamics": {
+    "id": "reasoning_inconsistency::energy+thermodynamics",
+    "signature": "reasoning_inconsistency::energy+thermodynamics",
+    "error_type": "reasoning_inconsistency",
+    "domain_tags": [
+      "energy",
+      "thermodynamics"
+    ],
+    "root_cause": "Logic check failed (internal inconsistency in the write-up): The solution is incomplete; it ends abruptly in the middle of a calculation without providing the final answer.",
+    "fix_applied": "resynthesize",
+    "resolved": true,
+    "frequency": 1,
+    "first_seen": 1786020126.8810513,
+    "last_seen": 1786020126.8810513
+  },
+  "reasoning_inconsistency::dynamics+electromagnetism": {
+    "id": "reasoning_inconsistency::dynamics+electromagnetism",
+    "signature": "reasoning_inconsistency::dynamics+electromagnetism",
+    "error_type": "reasoning_inconsistency",
+    "domain_tags": [
+      "dynamics",
+      "electromagnetism"
+    ],
+    "root_cause": "Logic check failed (internal inconsistency in the write-up): The solution is incomplete and ends abruptly without addressing the remaining subtasks (determining the equation, rearranging it, substituting values, and calculating the result).",
+    "fix_applied": "resynthesize",
+    "resolved": true,
+    "frequency": 1,
+    "first_seen": 1786020239.6960564,
+    "last_seen": 1786020239.6960564
+  },
+  "reasoning_inconsistency::nuclear-physics": {
+    "id": "reasoning_inconsistency::nuclear-physics",
+    "signature": "reasoning_inconsistency::nuclear-physics",
+    "error_type": "reasoning_inconsistency",
+    "domain_tags": [
+      "nuclear-physics"
+    ],
+    "root_cause": "Logic check failed (internal inconsistency in the write-up): The solution is incomplete and cuts off mid-sentence, failing to address subtasks 2 through 5.",
+    "fix_applied": "resynthesize",
+    "resolved": true,
+    "frequency": 3,
+    "first_seen": 1786020591.3563373,
+    "last_seen": 1786023873.6503878
+  },
+  "reasoning_inconsistency::thermodynamics": {
+    "id": "reasoning_inconsistency::thermodynamics",
+    "signature": "reasoning_inconsistency::thermodynamics",
+    "error_type": "reasoning_inconsistency",
+    "domain_tags": [
+      "thermodynamics"
+    ],
+    "root_cause": "Logic check failed (internal inconsistency in the write-up): The solution is incomplete and cuts off mid-sentence during the first subtask.; The solution does not address the second, third, or fourth subtasks.; There is no final answer provided.",
+    "fix_applied": "resynthesize",
+    "resolved": false,
+    "frequency": 3,
+    "first_seen": 1786020971.9284875,
+    "last_seen": 1786020971.9300015
+  },
+  "physics_conceptual_error::gravitation": {
+    "id": "physics_conceptual_error::gravitation",
+    "signature": "physics_conceptual_error::gravitation",
+    "error_type": "physics_conceptual_error",
+    "domain_tags": [
+      "gravitation"
+    ],
+    "root_cause": "Physics check failed (dimensional/conservation/validity issue): Check raised an unexpected exception: Error code: 400 - {'error': 'Engine protocol predict stream returned an error: {\"code\":500,\"message\":\"The model produced output that does not match the expected peg-gemma4 format\",\"type\":\"server_error\"}'}",
+    "fix_applied": "rederive_physics_setup",
+    "resolved": false,
+    "frequency": 1,
+    "first_seen": 1786021178.399724,
+    "last_seen": 1786021178.399724
+  },
+  "reasoning_inconsistency::quantum-mechanics": {
+    "id": "reasoning_inconsistency::quantum-mechanics",
+    "signature": "reasoning_inconsistency::quantum-mechanics",
+    "error_type": "reasoning_inconsistency",
+    "domain_tags": [
+      "quantum-mechanics"
+    ],
+    "root_cause": "Logic check failed (internal inconsistency in the write-up): The solution is incomplete; it cuts off during the calculation of the inner product in step 3 and does not address subtask 4 or provide a final answer.",
+    "fix_applied": "resynthesize",
+    "resolved": false,
+    "frequency": 7,
+    "first_seen": 1786021491.3743615,
+    "last_seen": 1786022576.9761376
+  },
+  "reasoning_inconsistency::electromagnetism": {
+    "id": "reasoning_inconsistency::electromagnetism",
+    "signature": "reasoning_inconsistency::electromagnetism",
+    "error_type": "reasoning_inconsistency",
+    "domain_tags": [
+      "electromagnetism"
+    ],
+    "root_cause": "Logic check failed (internal inconsistency in the write-up): The provided solution is empty and does not address any of the subtasks.",
+    "fix_applied": "resynthesize",
+    "resolved": true,
+    "frequency": 1,
+    "first_seen": 1786021825.7823563,
+    "last_seen": 1786021825.7823563
+  },
+  "reasoning_inconsistency::energy+special-relativity": {
+    "id": "reasoning_inconsistency::energy+special-relativity",
+    "signature": "reasoning_inconsistency::energy+special-relativity",
+    "error_type": "reasoning_inconsistency",
+    "domain_tags": [
+      "energy",
+      "special-relativity"
+    ],
+    "root_cause": "Logic check failed (internal inconsistency in the write-up): The solution is incomplete and cuts off mid-sentence.; It fails to address the remaining subtasks: calculating the Lorentz factor, applying the kinetic energy formula, and performing the final calculation.; No final answer is provided.",
+    "fix_applied": "resynthesize",
+    "resolved": true,
+    "frequency": 1,
+    "first_seen": 1786021961.4429417,
+    "last_seen": 1786021961.4429417
+  },
+  "reasoning_inconsistency::electromagnetism+quantum-mechanics": {
+    "id": "reasoning_inconsistency::electromagnetism+quantum-mechanics",
+    "signature": "reasoning_inconsistency::electromagnetism+quantum-mechanics",
+    "error_type": "reasoning_inconsistency",
+    "domain_tags": [
+      "electromagnetism",
+      "quantum-mechanics"
+    ],
+    "root_cause": "Logic check failed (internal inconsistency in the write-up): The initial solution is empty and does not address any of the subtasks.",
+    "fix_applied": "resynthesize",
+    "resolved": false,
+    "frequency": 3,
+    "first_seen": 1786022330.166534,
+    "last_seen": 1786022330.1683204
+  },
+  "reasoning_inconsistency::dynamics+energy": {
+    "id": "reasoning_inconsistency::dynamics+energy",
+    "signature": "reasoning_inconsistency::dynamics+energy",
+    "error_type": "reasoning_inconsistency",
+    "domain_tags": [
+      "dynamics",
+      "energy"
+    ],
+    "root_cause": "Logic check failed (internal inconsistency in the write-up): The solution is incomplete; it stops at step 5 without performing the final calculation or providing the final answer.",
+    "fix_applied": "resynthesize",
+    "resolved": true,
+    "frequency": 1,
+    "first_seen": 1786022867.8624134,
+    "last_seen": 1786022867.8624134
+  },
+  "reasoning_inconsistency::special-relativity": {
+    "id": "reasoning_inconsistency::special-relativity",
+    "signature": "reasoning_inconsistency::special-relativity",
+    "error_type": "reasoning_inconsistency",
+    "domain_tags": [
+      "special-relativity"
+    ],
+    "root_cause": "Logic check failed (internal inconsistency in the write-up): The initial solution is empty and does not address any of the subtasks.",
+    "fix_applied": "resynthesize",
+    "resolved": false,
+    "frequency": 3,
+    "first_seen": 1786023601.607925,
+    "last_seen": 1786023601.610617
+  },
+  "reasoning_inconsistency::electromagnetism+statistical-mechanics": {
+    "id": "reasoning_inconsistency::electromagnetism+statistical-mechanics",
+    "signature": "reasoning_inconsistency::electromagnetism+statistical-mechanics",
+    "error_type": "reasoning_inconsistency",
+    "domain_tags": [
+      "electromagnetism",
+      "statistical-mechanics"
+    ],
+    "root_cause": "Logic check failed (internal inconsistency in the write-up): No initial solution provided to evaluate.",
+    "fix_applied": "resynthesize",
+    "resolved": false,
+    "frequency": 6,
+    "first_seen": 1786023816.8035274,
+    "last_seen": 1786024549.2252214
+  },
+  "reasoning_inconsistency::energy+nuclear-physics": {
+    "id": "reasoning_inconsistency::energy+nuclear-physics",
+    "signature": "reasoning_inconsistency::energy+nuclear-physics",
+    "error_type": "reasoning_inconsistency",
+    "domain_tags": [
+      "energy",
+      "nuclear-physics"
+    ],
+    "root_cause": "Logic check failed (internal inconsistency in the write-up): In Step 1, the mass of the parent nucleus (Radium-226) is stated as 2026.0254 u, which contradicts the value of 226.0254 u used in the calculation in Step 2.",
+    "fix_applied": "resynthesize",
+    "resolved": true,
+    "frequency": 1,
+    "first_seen": 1786023924.926898,
+    "last_seen": 1786023924.926898
+  },
+  "reasoning_inconsistency::energy+statistical-mechanics": {
+    "id": "reasoning_inconsistency::energy+statistical-mechanics",
+    "signature": "reasoning_inconsistency::energy+statistical-mechanics",
+    "error_type": "reasoning_inconsistency",
+    "domain_tags": [
+      "energy",
+      "statistical-mechanics"
+    ],
+    "root_cause": "Logic check failed (internal inconsistency in the write-up): The provided solution is empty and does not address any of the subtasks.",
+    "fix_applied": "resynthesize",
+    "resolved": true,
+    "frequency": 2,
+    "first_seen": 1786024429.4159024,
+    "last_seen": 1786024429.4169385
+  }
+}

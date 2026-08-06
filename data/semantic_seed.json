@@ -3,169 +3,169 @@
     "id": "kin-001",
     "statement": "v = v0 + a*t (velocity as a function of constant acceleration and time)",
     "conditions": "Valid only for constant acceleration",
-    "confidence": 0.99,
+    "confidence": 0.5583867407135714,
     "provenance": "seed:classical-mechanics-standard",
     "tags": [
       "kinematics"
     ],
-    "last_validated": 0
+    "last_validated": 1786024757.5620165
   },
   {
     "id": "kin-002",
     "statement": "x = x0 + v0*t + 0.5*a*t^2 (position under constant acceleration)",
     "conditions": "Valid only for constant acceleration",
-    "confidence": 0.99,
+    "confidence": 0.49411620012335195,
     "provenance": "seed:classical-mechanics-standard",
     "tags": [
       "kinematics"
     ],
-    "last_validated": 0
+    "last_validated": 1786024757.5605206
   },
   {
     "id": "dyn-001",
     "statement": "F = m*a (Newton's second law)",
     "conditions": "Valid in inertial reference frames, non-relativistic speeds",
-    "confidence": 0.99,
+    "confidence": 0.843308276098685,
     "provenance": "seed:classical-mechanics-standard",
     "tags": [
       "dynamics"
     ],
-    "last_validated": 0
+    "last_validated": 1786022769.8457963
   },
   {
     "id": "eng-001",
     "statement": "KE = 0.5*m*v^2 (kinetic energy)",
     "conditions": "Non-relativistic (v << c)",
-    "confidence": 0.99,
+    "confidence": 0.9131066353917329,
     "provenance": "seed:classical-mechanics-standard",
     "tags": [
       "energy",
       "dynamics"
     ],
-    "last_validated": 0
+    "last_validated": 1786024429.414863
   },
   {
     "id": "eng-002",
     "statement": "U = m*g*h (gravitational potential energy near Earth's surface)",
     "conditions": "Valid for h small compared to Earth's radius, uniform g approximation",
-    "confidence": 0.98,
+    "confidence": 0.941132420349944,
     "provenance": "seed:classical-mechanics-standard",
     "tags": [
       "energy",
       "gravitation"
     ],
-    "last_validated": 0
+    "last_validated": 1786023688.4842188
   },
   {
     "id": "eng-003",
     "statement": "Conservation of mechanical energy: KE_i + U_i = KE_f + U_f",
     "conditions": "Valid only when no non-conservative forces (e.g. friction, air resistance) do work",
-    "confidence": 0.98,
+    "confidence": 0.990434062,
     "provenance": "seed:classical-mechanics-standard",
     "tags": [
       "energy"
     ],
-    "last_validated": 0
+    "last_validated": 1786022358.1840034
   },
   {
     "id": "mom-001",
     "statement": "p = m*v (linear momentum), conserved in isolated systems with no external net force",
     "conditions": "Non-relativistic; system must be isolated for conservation to apply",
-    "confidence": 0.99,
+    "confidence": 0.7867460124505848,
     "provenance": "seed:classical-mechanics-standard",
     "tags": [
       "momentum"
     ],
-    "last_validated": 0
+    "last_validated": 1786023436.6686895
   },
   {
     "id": "rot-001",
     "statement": "tau = I*alpha (rotational analog of F=ma), L = I*omega (angular momentum)",
     "conditions": "I depends on axis and mass distribution; rigid body assumption",
-    "confidence": 0.97,
+    "confidence": 0.9757,
     "provenance": "seed:classical-mechanics-standard",
     "tags": [
       "rotational-dynamics"
     ],
-    "last_validated": 0
+    "last_validated": 1786017044.5911655
   },
   {
     "id": "grav-001",
     "statement": "F = G*m1*m2/r^2 (Newton's law of universal gravitation)",
     "conditions": "Point masses or spherically symmetric bodies; non-relativistic regime",
-    "confidence": 0.99,
+    "confidence": 0.8518026719613394,
     "provenance": "seed:classical-mechanics-standard",
     "tags": [
       "gravitation"
     ],
-    "last_validated": 0
+    "last_validated": 1786023171.143004
   },
   {
     "id": "osc-001",
     "statement": "Simple harmonic motion: x(t) = A*cos(omega*t + phi), omega = sqrt(k/m)",
     "conditions": "Valid for ideal spring (Hooke's law regime), no damping",
-    "confidence": 0.97,
+    "confidence": 0.9931369622635118,
     "provenance": "seed:classical-mechanics-standard",
     "tags": [
       "oscillations-waves"
     ],
-    "last_validated": 0
+    "last_validated": 1786024655.8203316
   },
   {
     "id": "thermo-001",
     "statement": "PV = nRT (ideal gas law)",
     "conditions": "Valid for ideal gas approximation; breaks down at high pressure/low temperature",
-    "confidence": 0.97,
+    "confidence": 0.9060859837000002,
     "provenance": "seed:thermodynamics-standard",
     "tags": [
       "thermodynamics"
     ],
-    "last_validated": 0
+    "last_validated": 1786023235.735276
   },
   {
     "id": "em-001",
     "statement": "F = q*E (electric force on a charge), E = k*Q/r^2 (point charge field)",
     "conditions": "Point charge, vacuum/air, non-relativistic",
-    "confidence": 0.98,
+    "confidence": 0.7010055636600667,
     "provenance": "seed:electromagnetism-standard",
     "tags": [
       "electromagnetism"
     ],
-    "last_validated": 0
+    "last_validated": 1786024631.329203
   },
   {
     "id": "rel-001",
     "statement": "Relativistic kinetic energy: KE = (gamma - 1)*m*c^2, gamma = 1/sqrt(1 - v^2/c^2); reduces to 0.5*m*v^2 as v/c -> 0",
     "conditions": "Special relativity, inertial frames",
-    "confidence": 0.97,
+    "confidence": 0.7173825971177629,
     "provenance": "seed:special-relativity-standard",
     "tags": [
       "special-relativity",
       "energy"
     ],
-    "last_validated": 0
+    "last_validated": 1786024757.55808
   },
   {
     "id": "nuc-001",
     "statement": "Radioactive decay law: N(t) = N0*exp(-lambda*t); half-life T_half = ln(2)/lambda",
     "conditions": "Large number of nuclei (statistical/ensemble average, not valid for predicting a single nucleus's decay time)",
-    "confidence": 0.97,
+    "confidence": 0.9803170000000001,
     "provenance": "seed:nuclear-physics-standard",
     "tags": [
       "nuclear-physics"
     ],
-    "last_validated": 0
+    "last_validated": 1786023873.6490998
   },
   {
     "id": "nuc-002",
     "statement": "Nuclear binding energy: E = |delta_m|*c^2, where delta_m is the mass defect between separated nucleons and the bound nucleus",
     "conditions": "Mass defect measured in the nucleus's rest frame",
-    "confidence": 0.96,
+    "confidence": 0.771104530093088,
     "provenance": "seed:nuclear-physics-standard",
     "tags": [
       "nuclear-physics",
       "special-relativity"
     ],
-    "last_validated": 0
+    "last_validated": 1786024655.8199484
   }
 ]

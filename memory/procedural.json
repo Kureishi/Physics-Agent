@@ -1,0 +1,315 @@
+{
+  "energy+gravitation::reasoning_inconsistency::resynthesize": {
+    "id": "energy+gravitation::reasoning_inconsistency::resynthesize",
+    "domain_tags": [
+      "energy",
+      "gravitation"
+    ],
+    "error_type": "reasoning_inconsistency",
+    "strategy": "resynthesize",
+    "n_uses": 8,
+    "n_successes": 3,
+    "success_rate": 0.375,
+    "last_used": 1786021294.7210855
+  },
+  "gravitation::reasoning_inconsistency::resynthesize": {
+    "id": "gravitation::reasoning_inconsistency::resynthesize",
+    "domain_tags": [
+      "gravitation"
+    ],
+    "error_type": "reasoning_inconsistency",
+    "strategy": "resynthesize",
+    "n_uses": 6,
+    "n_successes": 1,
+    "success_rate": 0.16666666666666666,
+    "last_used": 1786023171.1441987
+  },
+  "dynamics+gravitation::reasoning_inconsistency::resynthesize": {
+    "id": "dynamics+gravitation::reasoning_inconsistency::resynthesize",
+    "domain_tags": [
+      "dynamics",
+      "gravitation"
+    ],
+    "error_type": "reasoning_inconsistency",
+    "strategy": "resynthesize",
+    "n_uses": 3,
+    "n_successes": 0,
+    "success_rate": 0.0,
+    "last_used": 1786018074.6415937
+  },
+  "optics::reasoning_inconsistency::resynthesize": {
+    "id": "optics::reasoning_inconsistency::resynthesize",
+    "domain_tags": [
+      "optics"
+    ],
+    "error_type": "reasoning_inconsistency",
+    "strategy": "resynthesize",
+    "n_uses": 6,
+    "n_successes": 0,
+    "success_rate": 0.0,
+    "last_used": 1786023376.086946
+  },
+  "dynamics+fluid-mechanics::reasoning_inconsistency::resynthesize": {
+    "id": "dynamics+fluid-mechanics::reasoning_inconsistency::resynthesize",
+    "domain_tags": [
+      "dynamics",
+      "fluid-mechanics"
+    ],
+    "error_type": "reasoning_inconsistency",
+    "strategy": "resynthesize",
+    "n_uses": 2,
+    "n_successes": 1,
+    "success_rate": 0.5,
+    "last_used": 1786018704.0374684
+  },
+  "kinematics+special-relativity::reasoning_inconsistency::resynthesize": {
+    "id": "kinematics+special-relativity::reasoning_inconsistency::resynthesize",
+    "domain_tags": [
+      "kinematics",
+      "special-relativity"
+    ],
+    "error_type": "reasoning_inconsistency",
+    "strategy": "resynthesize",
+    "n_uses": 1,
+    "n_successes": 1,
+    "success_rate": 1.0,
+    "last_used": 1786018815.1692772
+  },
+  "statistical-mechanics::reasoning_inconsistency::resynthesize": {
+    "id": "statistical-mechanics::reasoning_inconsistency::resynthesize",
+    "domain_tags": [
+      "statistical-mechanics"
+    ],
+    "error_type": "reasoning_inconsistency",
+    "strategy": "resynthesize",
+    "n_uses": 16,
+    "n_successes": 1,
+    "success_rate": 0.0625,
+    "last_used": 1786024757.566241
+  },
+  "kinematics::reasoning_inconsistency::resynthesize": {
+    "id": "kinematics::reasoning_inconsistency::resynthesize",
+    "domain_tags": [
+      "kinematics"
+    ],
+    "error_type": "reasoning_inconsistency",
+    "strategy": "resynthesize",
+    "n_uses": 3,
+    "n_successes": 2,
+    "success_rate": 0.6666666666666666,
+    "last_used": 1786021640.7350144
+  },
+  "dynamics::reasoning_inconsistency::resynthesize": {
+    "id": "dynamics::reasoning_inconsistency::resynthesize",
+    "domain_tags": [
+      "dynamics"
+    ],
+    "error_type": "reasoning_inconsistency",
+    "strategy": "resynthesize",
+    "n_uses": 6,
+    "n_successes": 0,
+    "success_rate": 0.0,
+    "last_used": 1786022748.1376836
+  },
+  "momentum::reasoning_inconsistency::resynthesize": {
+    "id": "momentum::reasoning_inconsistency::resynthesize",
+    "domain_tags": [
+      "momentum"
+    ],
+    "error_type": "reasoning_inconsistency",
+    "strategy": "resynthesize",
+    "n_uses": 9,
+    "n_successes": 0,
+    "success_rate": 0.0,
+    "last_used": 1786023036.457334
+  },
+  "dynamics+rotational-dynamics::reasoning_inconsistency::resynthesize": {
+    "id": "dynamics+rotational-dynamics::reasoning_inconsistency::resynthesize",
+    "domain_tags": [
+      "dynamics",
+      "rotational-dynamics"
+    ],
+    "error_type": "reasoning_inconsistency",
+    "strategy": "resynthesize",
+    "n_uses": 3,
+    "n_successes": 0,
+    "success_rate": 0.0,
+    "last_used": 1786019850.9359467
+  },
+  "energy+thermodynamics::reasoning_inconsistency::resynthesize": {
+    "id": "energy+thermodynamics::reasoning_inconsistency::resynthesize",
+    "domain_tags": [
+      "energy",
+      "thermodynamics"
+    ],
+    "error_type": "reasoning_inconsistency",
+    "strategy": "resynthesize",
+    "n_uses": 1,
+    "n_successes": 1,
+    "success_rate": 1.0,
+    "last_used": 1786020126.8805015
+  },
+  "dynamics+electromagnetism::reasoning_inconsistency::resynthesize": {
+    "id": "dynamics+electromagnetism::reasoning_inconsistency::resynthesize",
+    "domain_tags": [
+      "dynamics",
+      "electromagnetism"
+    ],
+    "error_type": "reasoning_inconsistency",
+    "strategy": "resynthesize",
+    "n_uses": 1,
+    "n_successes": 1,
+    "success_rate": 1.0,
+    "last_used": 1786020239.6953115
+  },
+  "nuclear-physics::reasoning_inconsistency::resynthesize": {
+    "id": "nuclear-physics::reasoning_inconsistency::resynthesize",
+    "domain_tags": [
+      "nuclear-physics"
+    ],
+    "error_type": "reasoning_inconsistency",
+    "strategy": "resynthesize",
+    "n_uses": 3,
+    "n_successes": 3,
+    "success_rate": 1.0,
+    "last_used": 1786023873.64969
+  },
+  "thermodynamics::reasoning_inconsistency::resynthesize": {
+    "id": "thermodynamics::reasoning_inconsistency::resynthesize",
+    "domain_tags": [
+      "thermodynamics"
+    ],
+    "error_type": "reasoning_inconsistency",
+    "strategy": "resynthesize",
+    "n_uses": 3,
+    "n_successes": 0,
+    "success_rate": 0.0,
+    "last_used": 1786020971.929624
+  },
+  "gravitation::physics_conceptual_error::rederive_physics_setup": {
+    "id": "gravitation::physics_conceptual_error::rederive_physics_setup",
+    "domain_tags": [
+      "gravitation"
+    ],
+    "error_type": "physics_conceptual_error",
+    "strategy": "rederive_physics_setup",
+    "n_uses": 1,
+    "n_successes": 0,
+    "success_rate": 0.0,
+    "last_used": 1786021178.3991635
+  },
+  "quantum-mechanics::reasoning_inconsistency::resynthesize": {
+    "id": "quantum-mechanics::reasoning_inconsistency::resynthesize",
+    "domain_tags": [
+      "quantum-mechanics"
+    ],
+    "error_type": "reasoning_inconsistency",
+    "strategy": "resynthesize",
+    "n_uses": 7,
+    "n_successes": 1,
+    "success_rate": 0.14285714285714285,
+    "last_used": 1786022576.975751
+  },
+  "electromagnetism::reasoning_inconsistency::resynthesize": {
+    "id": "electromagnetism::reasoning_inconsistency::resynthesize",
+    "domain_tags": [
+      "electromagnetism"
+    ],
+    "error_type": "reasoning_inconsistency",
+    "strategy": "resynthesize",
+    "n_uses": 1,
+    "n_successes": 1,
+    "success_rate": 1.0,
+    "last_used": 1786021825.7819293
+  },
+  "energy+special-relativity::reasoning_inconsistency::resynthesize": {
+    "id": "energy+special-relativity::reasoning_inconsistency::resynthesize",
+    "domain_tags": [
+      "energy",
+      "special-relativity"
+    ],
+    "error_type": "reasoning_inconsistency",
+    "strategy": "resynthesize",
+    "n_uses": 1,
+    "n_successes": 1,
+    "success_rate": 1.0,
+    "last_used": 1786021961.4424975
+  },
+  "electromagnetism+quantum-mechanics::reasoning_inconsistency::resynthesize": {
+    "id": "electromagnetism+quantum-mechanics::reasoning_inconsistency::resynthesize",
+    "domain_tags": [
+      "electromagnetism",
+      "quantum-mechanics"
+    ],
+    "error_type": "reasoning_inconsistency",
+    "strategy": "resynthesize",
+    "n_uses": 3,
+    "n_successes": 0,
+    "success_rate": 0.0,
+    "last_used": 1786022330.167904
+  },
+  "dynamics+energy::reasoning_inconsistency::resynthesize": {
+    "id": "dynamics+energy::reasoning_inconsistency::resynthesize",
+    "domain_tags": [
+      "dynamics",
+      "energy"
+    ],
+    "error_type": "reasoning_inconsistency",
+    "strategy": "resynthesize",
+    "n_uses": 1,
+    "n_successes": 1,
+    "success_rate": 1.0,
+    "last_used": 1786022867.8618906
+  },
+  "special-relativity::reasoning_inconsistency::resynthesize": {
+    "id": "special-relativity::reasoning_inconsistency::resynthesize",
+    "domain_tags": [
+      "special-relativity"
+    ],
+    "error_type": "reasoning_inconsistency",
+    "strategy": "resynthesize",
+    "n_uses": 3,
+    "n_successes": 0,
+    "success_rate": 0.0,
+    "last_used": 1786023601.6100128
+  },
+  "electromagnetism+statistical-mechanics::reasoning_inconsistency::resynthesize": {
+    "id": "electromagnetism+statistical-mechanics::reasoning_inconsistency::resynthesize",
+    "domain_tags": [
+      "electromagnetism",
+      "statistical-mechanics"
+    ],
+    "error_type": "reasoning_inconsistency",
+    "strategy": "resynthesize",
+    "n_uses": 6,
+    "n_successes": 0,
+    "success_rate": 0.0,
+    "last_used": 1786024549.2247634
+  },
+  "energy+nuclear-physics::reasoning_inconsistency::resynthesize": {
+    "id": "energy+nuclear-physics::reasoning_inconsistency::resynthesize",
+    "domain_tags": [
+      "energy",
+      "nuclear-physics"
+    ],
+    "error_type": "reasoning_inconsistency",
+    "strategy": "resynthesize",
+    "n_uses": 1,
+    "n_successes": 1,
+    "success_rate": 1.0,
+    "last_used": 1786023924.9261498
+  },
+  "energy+statistical-mechanics::reasoning_inconsistency::resynthesize": {
+    "id": "energy+statistical-mechanics::reasoning_inconsistency::resynthesize",
+    "domain_tags": [
+      "energy",
+      "statistical-mechanics"
+    ],
+    "error_type": "reasoning_inconsistency",
+    "strategy": "resynthesize",
+    "n_uses": 2,
+    "n_successes": 1,
+    "success_rate": 0.5,
+    "last_used": 1786024429.4164383
+  }
+}
