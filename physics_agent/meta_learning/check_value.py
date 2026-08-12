@@ -16,9 +16,9 @@ is useless." This module produces the report; it does not act on it.
 """
 from __future__ import annotations
 
-from typing import Any, Dict
+from typing import Any, Dict, List
 
-from ..trace import EpisodicMemory
+from ..trace import EpisodicMemory, Trace
 
 # Fixed vocabulary: the four checks that exist today. Included even if a
 # freshly-created episodic memory has zero traces yet, so the report shape
@@ -26,8 +26,15 @@ from ..trace import EpisodicMemory
 KNOWN_CHECKS = {"logic", "physics", "math", "confidence"}
 
 
-def compute_check_value_report(episodic_memory: EpisodicMemory) -> Dict[str, Dict[str, Any]]:
-    traces = [t for t in episodic_memory.read_all() if t.checks_run]
+def compute_check_value_for_traces(traces: List[Trace]) -> Dict[str, Dict[str, Any]]:
+    """
+    Same computation as compute_check_value_report, but over an
+    already-selected list of traces rather than a whole EpisodicMemory.
+    Factored out so other modules -- specifically anomaly.py, which needs
+    this computed separately over a "recent" and a "baseline" slice of the
+    same memory -- reuse the exact failure-counting logic rather than
+    re-implementing it and risking the two drifting apart.
+    """
     n_traces = len(traces)
 
     check_names = set(KNOWN_CHECKS)
@@ -52,3 +59,14 @@ def compute_check_value_report(episodic_memory: EpisodicMemory) -> Dict[str, Dic
         }
         for name in sorted(check_names)
     }
+
+
+def traces_with_checks_run(episodic_memory: EpisodicMemory) -> List[Trace]:
+    """The same filter compute_check_value_report applies before counting
+    -- exposed so anomaly.py slices the identical population instead of
+    re-deriving the filter itself."""
+    return [t for t in episodic_memory.read_all() if t.checks_run]
+
+
+def compute_check_value_report(episodic_memory: EpisodicMemory) -> Dict[str, Dict[str, Any]]:
+    return compute_check_value_for_traces(traces_with_checks_run(episodic_memory))

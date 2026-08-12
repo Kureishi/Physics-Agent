@@ -39,6 +39,22 @@ def main() -> None:
     for check_name, stats in sorted(report["check_value"].items()):
         print(f"  {check_name:10s}  n_traces={stats['n_traces']:4d}  catch_rate={stats['catch_rate']:.2%}")
 
+    anomalies = report["check_value_anomalies"]
+    print("\nCheck-value anomalies (recent catch rate vs. historical baseline):")
+    if anomalies["status"] == "insufficient_data":
+        print(
+            f"  (not enough history yet -- have {anomalies['n_baseline']} baseline + "
+            f"{anomalies['n_recent']} recent traces)"
+        )
+    elif not anomalies["flags"]:
+        print(
+            f"  (none -- checked {anomalies['n_baseline']} baseline vs. "
+            f"{anomalies['n_recent']} recent traces)"
+        )
+    else:
+        for flag in anomalies["flags"]:
+            print(f"  ** {flag['reason']} **")
+
     print("\nProcedural strategies flagged for declining success rate:")
     if not report["declining_strategies"]:
         print("  (none)")
@@ -53,6 +69,12 @@ def main() -> None:
         print("  (none identified yet)")
     for signal in report["weak_areas"]:
         print(f"  [{signal['source']}] {signal['reason']} (domains: {signal['domain_tags']})")
+
+    print("\nEscalations (flagged for human review, not just more practice):")
+    if not report["escalations"]:
+        print("  (none)")
+    for entry in report["escalations"]:
+        print(f"  [{entry['source']}] {entry['reason']} (domains: {entry['domain_tags']})")
 
 
 if __name__ == "__main__":

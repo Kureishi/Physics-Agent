@@ -13,11 +13,13 @@ from __future__ import annotations
 from typing import Any, Dict
 
 from .check_value import compute_check_value_report
+from .anomaly import detect_check_value_anomalies
 from .curriculum_signals import weak_areas
 from .pruning import flag_declining_strategies
 from ..knowledge_graph.graph import KnowledgeGraph
 from ..memory.error_memory import ErrorMemory
 from ..memory.procedural import ProceduralMemory
+from ..self_correction.escalation import detect_escalations
 from ..trace import EpisodicMemory
 
 
@@ -30,6 +32,8 @@ def build_report(
     return {
         "n_traces": len(episodic_memory),
         "check_value": compute_check_value_report(episodic_memory),
+        "check_value_anomalies": detect_check_value_anomalies(episodic_memory),
         "declining_strategies": flag_declining_strategies(procedural_memory),
         "weak_areas": weak_areas(episodic_memory, error_memory, knowledge_graph),
+        "escalations": detect_escalations(episodic_memory),
     }

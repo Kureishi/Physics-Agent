@@ -22,6 +22,22 @@ and `resolved` (did the specific check(s) that triggered this round's
 correction actually stop failing afterward) -- Stage 5's memory
 consolidation is what actually reads these two fields, so they're recorded
 here, at the only point where both are known.
+
+Escalation path (Safety Rails): `max_revisions` stops a runaway loop, but
+"stop and mark unresolved" and "stop and ask a person" are different
+outcomes, and until now this engine only had the first. The
+`escalate_verification` strategy (error_taxonomy's row for "confidence low,
+no specific check failed") already pulls in one independent check
+(literature search) as its one, specific corrective action -- if
+classify_error lands on escalate_verification again on a LATER round for
+the same trace, that means the independent check didn't move confidence
+either. At that point further revisions would just be guessing with no new
+signal to act on, so the loop stops early with resolution_status
+"escalated_for_human_review" instead of burning through the remaining
+revision budget repeating a check that already didn't help. Pattern-level
+escalation across many traces (e.g. one domain hitting
+unresolved_max_revisions repeatedly) is a separate, outer-loop concern --
+see self_correction/escalation.py.
 """
 from __future__ import annotations
 
@@ -62,6 +78,19 @@ class SelfCorrectionEngine:
             error_type, strategy, rationale = classify_error(trace)
             trace.error_type = error_type
 
+            already_escalated = any(
+                r["strategy"] == "escalate_verification" for r in trace.revision_history
+            )
+            if strategy == "escalate_verification" and already_escalated:
+                # The one specific corrective action for this error_type
+                # (an independent literature-search check) was already
+                # tried on an earlier round and confidence is still low --
+                # repeating it again wouldn't add new signal. Stop and
+                # flag for a person instead of spending more of the
+                # revision budget guessing.
+                trace.resolution_status = "escalated_for_human_review"
+                break
+
             if trace.revision_count >= self.max_revisions:
                 break  # safety rail: stop trying, ship best-effort as unresolved
 
@@ -101,7 +130,9 @@ class SelfCorrectionEngine:
         trace.final_answer = trace.initial_solution
         trace.time_to_solve_ms = (time.time() - trace.timestamp) * 1000
 
-        if trace.revision_count == 0:
+        if trace.resolution_status == "escalated_for_human_review":
+            pass  # already set inside the loop -- don't overwrite it below
+        elif trace.revision_count == 0:
             trace.resolution_status = "passed_initial"
         elif not trace.checks_failed:
             trace.resolution_status = "resolved_after_revision"

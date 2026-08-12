@@ -83,6 +83,82 @@ def test_engine_resolves_after_one_revision():
     assert trace.checks_failed == []
 
 
+def test_engine_escalates_for_human_review_when_confidence_stays_low_after_escalation():
+    # Confidence check always fails alone (no other check ever fails), so
+    # every round classifies as "low_confidence_no_specific_fault" ->
+    # strategy "escalate_verification". Round 0 should try that strategy;
+    # round 1 landing on the same strategy again means the independent
+    # check didn't help, and the engine should stop early rather than
+    # burn through max_revisions repeating it.
+    class AlwaysLowConfidenceCheck:
+        name = "confidence"
+
+        def run(self, trace):
+            return {"passed": False, "details": "confidence below threshold"}
+
+    llm = MockLLMClient()
+    orchestrator = ToolOrchestrator(llm)
+
+    from physics_agent.self_eval.logic_check import LogicCheck
+    from physics_agent.self_eval.physics_check import PhysicsCheck
+    from physics_agent.self_eval.math_check import MathCheck
+
+    self_eval = SelfEvaluationPipeline(
+        checks=[LogicCheck(llm), PhysicsCheck(llm), MathCheck(), AlwaysLowConfidenceCheck()]
+    )
+    engine = SelfCorrectionEngine(orchestrator, self_eval, max_revisions=5)
+
+    trace = _make_trace()
+    orchestrator.run(trace)
+    self_eval.run(trace)
+    assert trace.checks_failed == ["confidence"]  # sanity check on the fixture
+
+    engine.run(trace)
+
+    assert trace.resolution_status == "escalated_for_human_review"
+    # Escalated after the first attempt didn't help -- one revision spent
+    # on escalate_verification, then stop, well short of max_revisions=5.
+    assert trace.revision_count == 1
+    assert trace.revision_history[0]["strategy"] == "escalate_verification"
+
+
+def test_engine_tries_escalate_verification_once_before_escalating():
+    # A single round of low confidence, resolved by the escalation
+    # itself (confidence check passes afterward) -- should NOT trigger
+    # escalated_for_human_review, since the independent check helped.
+    call_count = {"n": 0}
+
+    class RecoveringConfidenceCheck:
+        name = "confidence"
+
+        def run(self, trace):
+            call_count["n"] += 1
+            if call_count["n"] == 1:
+                return {"passed": False, "details": "confidence below threshold"}
+            return {"passed": True, "details": "confidence recovered"}
+
+    llm = MockLLMClient()
+    orchestrator = ToolOrchestrator(llm)
+
+    from physics_agent.self_eval.logic_check import LogicCheck
+    from physics_agent.self_eval.physics_check import PhysicsCheck
+    from physics_agent.self_eval.math_check import MathCheck
+
+    self_eval = SelfEvaluationPipeline(
+        checks=[LogicCheck(llm), PhysicsCheck(llm), MathCheck(), RecoveringConfidenceCheck()]
+    )
+    engine = SelfCorrectionEngine(orchestrator, self_eval, max_revisions=3)
+
+    trace = _make_trace()
+    orchestrator.run(trace)
+    self_eval.run(trace)
+
+    engine.run(trace)
+
+    assert trace.resolution_status == "resolved_after_revision"
+    assert trace.revision_count == 1
+
+
 def test_engine_stops_at_max_revisions_when_never_resolved():
     class AlwaysFailingMathCheck:
         name = "math"

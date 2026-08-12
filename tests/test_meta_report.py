@@ -30,7 +30,14 @@ def env():
 def test_report_has_expected_top_level_keys(env):
     episodic, procedural, error_memory, graph = env
     report = build_report(episodic, procedural, error_memory, graph)
-    assert set(report.keys()) == {"n_traces", "check_value", "declining_strategies", "weak_areas"}
+    assert set(report.keys()) == {
+        "n_traces",
+        "check_value",
+        "check_value_anomalies",
+        "declining_strategies",
+        "weak_areas",
+        "escalations",
+    }
 
 
 def test_report_reflects_written_data(env):
