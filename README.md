@@ -22,7 +22,7 @@ measures (honestly, not just optimistically) whether the practice actually
 moved the underlying metric that was flagged. See `physics_agent/trace.py`
 for the full schema and a field-by-field note on which stage owns which field.
 
-## Six separate entry points
+## Entry points
 
 - **`python -m physics_agent.cli "<problem>"`** — solves one problem
   (Stages 1-7). What a person interacts with directly.
@@ -73,6 +73,26 @@ for the full schema and a field-by-field note on which stage owns which field.
   python -m physics_agent.generate_problem_set_cli --domains energy dynamics --n-per-domain 10
   python -m physics_agent.generate_problem_set_cli --n-per-domain 3 --append data/problem_sets/intro_physics_set.json
   python -m physics_agent.generate_problem_set_cli --n-per-domain 5 --max-retries 4   # if seeing many "generation failed" skips
+  ```
+- **`python -m physics_agent.canary_cli`** — solves the fixed, hand-verified
+  canary set (`data/canary_problems.json`) and grades the self-eval checks
+  against known-correct answers, not just against themselves; exits
+  nonzero if any check disagreed with ground truth. `--dry-run` is an
+  explicit structural smoke test only (the mock LLM ignores
+  problem-specific numbers, so it can't actually grade); `--report`
+  reviews past runs.
+  ```bash
+  python -m physics_agent.canary_cli
+  python -m physics_agent.canary_cli --report
+  ```
+- **`python -m physics_agent.scheduler_cli`** — the background
+  decision loop: decides for itself when to solve (from a queue), review,
+  or practice, instead of a person running each workflow by hand. See
+  "The Scheduling/Decision Loop" below.
+  ```bash
+  python -m physics_agent.scheduler_cli --once
+  python -m physics_agent.scheduler_cli --loop --interval-seconds 60
+  python -m physics_agent.scheduler_cli --report
   ```
 
 ## What this does right now
@@ -275,7 +295,14 @@ physics_agent/
   self_correction/
     error_taxonomy.py      classify_error: deterministic checks_failed -> (error_type, strategy)
     revision_planner.py     RevisionPlanner: strategy -> concrete orchestrator action
-    engine.py                 SelfCorrectionEngine: detect-revise-reverify loop + safety rail
+    engine.py                 SelfCorrectionEngine: detect-revise-reverify loop + safety rail +
+                              escalated_for_human_review outcome + strategy-override hook
+    escalation.py               detect_escalations: per-problem escalations + domains where
+                              unresolved_max_revisions recurs heavily (reporting only)
+  canary/
+    problems.py                CanaryProblem/load_canary_problems: the fixed, hand-verified set
+    grading.py                   Deterministic numeric grading, tool-output preferred over prose
+    runner.py                     CanaryRunner: solves + grades checks against ground truth
   memory/
     procedural.py            ProceduralMemory: strategy success rates per (domain, error_type)
     error_memory.py           ErrorMemory: recurring failure signatures, root cause, fix, frequency
@@ -288,7 +315,12 @@ physics_agent/
                               wired into ToolOrchestrator)
     verification_depth.py       VerificationDepthPolicy: calibrates confidence threshold per domain,
                               only ever raises it (ACTIVE -- wired into ConfidenceCheck)
+    strategy_override.py         StrategyOverridePolicy: replaces error_taxonomy's fixed default
+                              strategy once procedural memory has a stronger track record (ACTIVE
+                              -- wired into SelfCorrectionEngine)
     check_value.py               compute_check_value_report: per-check catch rate (reporting only)
+    anomaly.py                     detect_check_value_anomalies: recent catch rate vs. historical
+                              baseline per check, flags jump/collapse (reporting only)
     pruning.py                     flag_declining_strategies: read-only signal over procedural memory
     curriculum_signals.py            weak_areas: ranks recurring errors / unresolved traces / low-
                               confidence KG clusters, with structured fields (error_type, node_ids)
@@ -301,6 +333,11 @@ physics_agent/
                               before/after; CurriculumLog persists round results
     benchmark.py                   summarize: honest improved/regressed/unchanged breakdown
                               per signal source, across many rounds
+  scheduler/
+    queue.py                    ProblemQueue: FIFO over a problem-set-shaped JSON file
+    state.py                     SchedulerState: persisted cadence counters across restarts
+    scheduler.py                   Scheduler: run_cycle() decides solve/review/practice/idle,
+                              each logged as a Decision with its own reason
   trace.py            Trace schema + EpisodicMemory (JSONL append-only store, now with queries)
   retrieval.py        SemanticStore (Stage 1 retrieval + Stage 5 record_outcome confidence updates)
   cli.py              Solves one problem through the full Stage 1-7 pipeline
@@ -309,10 +346,14 @@ physics_agent/
   problem_set_cli.py     Batch harness: runs a whole JSON problem set through cli.run(), prints summary
   inspect_trace_cli.py    Dumps full detail (checks, revision history, rationale) for one trace
   generate_problem_set_cli.py  Bulk-generates new problems across domain tags, no weak-area data needed
+  canary_cli.py                 Solves + grades the fixed canary set against ground truth (Safety Rails)
+  scheduler_cli.py                Runs the background decision loop once, in a bounded/unbounded
+                              loop, or reports past decisions
 data/
   semantic_seed.json         Seed knowledge base (~13 core physics formulas across domains)
   knowledge_graph_edges.json  Seed edges over those 13 formulas (derives_from/special_case_of/
                               requires_assumption relationships)
+  canary_problems.json        10 hand-verified problems with computed expected answers (Safety Rails)
   problem_sets/
     intro_physics_set.json     206 problems spanning all 15 domain tags, for problem_set_cli.py
 tests/
@@ -347,11 +388,23 @@ tests/
   test_generate_problem_set_cli.py                     Domain coverage, unique ids, avoid-list growth
   test_llm_client.py                                     Timeout/max_tokens threading, per-call overrides
   test_json_utils.py                                     Backslash/LaTeX sanitization, incl. exact real crash
+  test_canary_grading.py                                 Numeric extraction, tool-output vs. prose preference
+  test_canary_problems.py                                Loading the fixed canary set, field validation
+  test_canary_runner.py                                  Full solve->grade->verdict classification
+  test_anomaly.py                                        Jump/collapse detection, threshold, insufficient data
+  test_escalation.py                                     Per-problem + recurring-domain escalation grouping
+  test_strategy_override.py                              Override bars: min uses, improvement margin, absolute floor
+  test_scheduler.py                                      Full solve/review/practice/idle decision integration
+  test_scheduler_queue.py                                FIFO semantics, persistence, external-file compatibility
+  test_scheduler_state.py                                Cadence counter persistence roundtrip
 memory/
   episodic.jsonl      Created at runtime — one JSON line per problem run
   procedural.json      Created at runtime — strategy success-rate table
   error_memory.json     Created at runtime — recurring failure catalog
   curriculum_log.jsonl   Created at runtime — one JSON line per curriculum round
+  canary_log.jsonl         Created at runtime — one JSON line per canary problem per run
+  scheduler_state.json      Created at runtime — scheduler cadence counters
+  scheduler_log.jsonl        Created at runtime — one JSON line per scheduler decision
 ```
 
 ## Running the tests
@@ -360,7 +413,7 @@ memory/
 pytest tests/ -v
 ```
 
-All 256 tests run offline (no LM Studio required) using `MockLLMClient`.
+All 337 tests run offline (no LM Studio required) using `MockLLMClient`.
 The physics tools themselves (SymPy solving, SciPy integration), the Math
 Check's re-substitution verification, and the knowledge graph's validity
 queries are exercised with real computation, not mocked — only the LLM
@@ -694,6 +747,124 @@ python -m physics_agent.curriculum_cli --report
   discarded. Generation failures (bad JSON after retries) are the one
   thing skipped outright, consistent with every other component's stance
   of not crashing the whole round over one bad sub-step.
+
+## Beyond the original 8 stages: Safety Rails, closing Stage 7, and a Scheduler
+
+A follow-up round of work, done against the already-complete 8-stage
+system above, picking up threads the Stage 7 design discussion had
+explicitly flagged as deliberately left undone rather than forgotten.
+
+### Safety Rails
+
+**Ground-truth canary problems.** `data/canary_problems.json` is a small
+(10-problem), hand-verified, fixed set spanning 10 of the 15 domains, each
+with a computed `expected_value` and a documented derivation
+(`verified_by`). `physics_agent/canary/` solves each one through the exact
+same pipeline as any other problem, then grades not just the *answer* but
+whether the self-eval checks *agreed with ground truth* — four possible
+verdicts (`correct_and_passed`, `correct_but_flagged`,
+`incorrect_but_passed`, `incorrect_and_flagged`), where the middle two are
+the interesting ones: a check disagreeing with a known-correct answer in
+either direction. This is a meaningfully different signal from anything
+else in the system, which otherwise only ever checks itself against
+itself. Grading prefers the deterministic `symbolic_math`/`simulation`
+tool output over parsing `trace.final_answer` prose (the same reasoning as
+Stage 3's "independent, deterministic re-derivation" principle), falling
+back to prose extraction only when no tool output is usable.
+`python -m physics_agent.canary_cli` runs the suite and exits nonzero on
+any concerning verdict; `--report` reviews history.
+
+**Check-value anomaly detection.** `meta_learning/anomaly.py` compares
+each self-eval check's catch rate over the most recent N traces (default
+20) against everything before that, flagging a `jump` or `collapse` past
+an absolute threshold (default 15 points). This exists specifically
+because of Bug 7 above: `MathCheck`'s catch rate jumping from ~5% to
+~87% on essentially the same data is exactly the shape that bug had, and
+would have surfaced it in one `meta_report` run instead of requiring a
+manual scan of 183 accumulated traces after the fact. Confirmed live, not
+just unit-tested: run against this project's own real accumulated
+`memory/episodic.jsonl`, it immediately found two genuine anomalies
+(`logic` and `confidence` both roughly tripling their catch rate over the
+last 20 traces) — a real signal worth investigating, surfaced by the tool
+built to surface it.
+
+**An escalation path distinct from `max_revisions`.** Previously, a trace
+that exhausted its revision budget only ever ended up
+`unresolved_max_revisions` — "stop and mark unresolved," with no "stop and
+ask a person" outcome. `self_correction/engine.py` now recognizes when the
+`escalate_verification` strategy (pulling in one independent
+literature-search check for a confidence-only failure) is selected *again*
+on a later round for the same trace — meaning the one independent check
+already tried didn't help — and stops early with a new
+`resolution_status`, `escalated_for_human_review`, instead of burning the
+remaining revision budget repeating an action that already failed to move
+confidence. Separately, `self_correction/escalation.py` looks across *many*
+traces for domains where `unresolved_max_revisions` recurs past a
+threshold (default 5) — a pattern, not a one-off hard problem — and flags
+that too. Both surface in `meta_report.py`'s new "Escalations" section.
+
+### Stage 7, closed: procedural memory actually overriding the error taxonomy
+
+The original Stage 7 notes above say it plainly: `ProceduralMemory.
+best_strategy_for` existed and was tested, but nothing read it to change
+behavior — `error_taxonomy.py`'s strategy mapping stayed a fixed lookup
+table. `meta_learning/strategy_override.py` closes that: once an
+alternative corrective strategy has a strong-enough track record for a
+specific `(domain, error_type)` pair, it replaces the taxonomy's
+hardcoded default. The bar for this is deliberately higher than
+`best_strategy_for`'s own floor of 3 uses — 5 uses minimum, and either a
+15-point improvement over the default's own tracked success rate (if the
+default has real data here too) or a 50%-or-better absolute success rate
+(if it doesn't) — because "trusted enough to report" and "trusted enough
+to act on automatically, unreviewed" aren't the same bar. This is the
+third policy (joining `ToolSelectionPolicy` and `VerificationDepthPolicy`)
+that changes live solving behavior rather than only reporting. Confirmed
+directly: with procedural memory seeded to show `resynthesize` resolving
+a math error 80% of the time versus the untested default `rederive_math`,
+the engine applied and archived `resynthesize`, not the taxonomy default
+— and a companion test with the identical seeded data but no policy
+attached confirmed the override is opt-in, not automatic just because the
+data exists.
+
+### The Scheduling/Decision Loop
+
+Every entry point above (`cli.py`, `curriculum_cli.py`, `meta_report.py`,
+`problem_set_cli.py`) is a manual trigger a person has to remember to run
+and decide *when* to run. `physics_agent/scheduler/` is the missing
+decision layer: `Scheduler.run_cycle()` does whatever combination of
+solving, reviewing, practicing is actually warranted right now, using the
+exact same underlying functions those CLIs already call rather than
+reimplementing any of them —
+
+1. **Solve** — pop one problem from a queue (`scheduler/queue.py`, the
+   same JSON shape as `data/problem_sets/*.json`, fillable by
+   `generate_problem_set_cli.py` or by hand) and run it through `cli.run`.
+2. **Review** — once `scheduler_review_every_n_solves` (default 20) new
+   solves have accumulated, run the exact `build_report()`
+   `meta_report.py` prints.
+3. **Practice** — once `weak_areas()`'s top signal clears a weight
+   threshold (default 5) *and* a cycle cooldown has passed since the last
+   round, run one `CurriculumRunner` round targeting it — decoupled from
+   whether a solve happened this specific cycle, so a persistently weak
+   domain still gets addressed even on an otherwise-idle cycle.
+
+Every action taken — including doing nothing — is logged as a `Decision`
+with a plain-English reason to `memory/scheduler_log.jsonl`, so an empty
+log is distinguishable from "never ran" rather than looking the same as
+"ran and correctly found nothing to do." `python -m
+physics_agent.scheduler_cli --once` runs a single cycle; `--loop
+--interval-seconds N [--max-cycles N]` keeps running (meant to sit under
+systemd/cron/nohup, not daemonize itself); `--report` reviews the
+decision history. Confirmed live against a real queued problem set: two
+cycles correctly solved both queued problems in order, and a third
+correctly went idle the moment the queue drained rather than doing nothing
+silently.
+
+All of the above is exercised by 337 tests (up from the original 256),
+all still offline via `MockLLMClient` — none of it required LM Studio to
+verify at the unit-test level, though every piece was also smoke-tested
+against this project's real accumulated `memory/` and a real `--dry-run`
+CLI invocation, not just fixtures.
 
 ## Where this leaves the design doc's roadmap
 

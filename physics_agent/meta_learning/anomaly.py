@@ -106,6 +106,7 @@ def detect_check_value_anomalies(
             continue
 
         direction = "jump" if delta > 0 else "collapse"
+        verb = "jumped" if direction == "jump" else "collapsed"
         flags.append(
             {
                 "check": name,
@@ -114,7 +115,7 @@ def detect_check_value_anomalies(
                 "recent_catch_rate": recent_rate,
                 "delta": delta,
                 "reason": (
-                    f"'{name}' catch rate {direction}ed from {baseline_rate:.1%} "
+                    f"'{name}' catch rate {verb} from {baseline_rate:.1%} "
                     f"(over {len(baseline_traces)} prior traces) to {recent_rate:.1%} "
                     f"(over {len(recent_traces)} recent traces)"
                 ),

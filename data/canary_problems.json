@@ -1,0 +1,92 @@
+[
+  {
+    "id": "canary-kin-01",
+    "domain_hint": "kinematics",
+    "problem_text": "A stone is dropped from rest from a height of 20 m. Ignoring air resistance and using g = 9.8 m/s^2, find its speed in meters per second (m/s) the instant it hits the ground.",
+    "expected_value": 19.798989873223330,
+    "relative_tolerance": 0.02,
+    "units": "m/s",
+    "verified_by": "v = sqrt(2*g*h) = sqrt(2*9.8*20)"
+  },
+  {
+    "id": "canary-dyn-01",
+    "domain_hint": "dynamics",
+    "problem_text": "A 2 kg block starts at rest at the top of a frictionless incline and slides down a vertical height of 5 m. Using energy conservation and g = 9.8 m/s^2, find its speed in meters per second (m/s) at the bottom.",
+    "expected_value": 9.899494936611665,
+    "relative_tolerance": 0.02,
+    "units": "m/s",
+    "verified_by": "v = sqrt(2*g*h) = sqrt(2*9.8*5); mass cancels"
+  },
+  {
+    "id": "canary-mom-01",
+    "domain_hint": "momentum",
+    "problem_text": "A 3 kg cart moving at 4 m/s collides with a stationary 1 kg cart and they stick together. Using conservation of momentum, find their common speed in meters per second (m/s) immediately after the collision.",
+    "expected_value": 3.0,
+    "relative_tolerance": 0.02,
+    "units": "m/s",
+    "verified_by": "v_f = m1*v1 / (m1+m2) = (3*4)/(3+1) = 3"
+  },
+  {
+    "id": "canary-rot-01",
+    "domain_hint": "rotational-dynamics",
+    "problem_text": "A rigid body with moment of inertia 2 kg*m^2 experiences a net torque of 10 N*m. Find the resulting angular acceleration in radians per second squared (rad/s^2).",
+    "expected_value": 5.0,
+    "relative_tolerance": 0.02,
+    "units": "rad/s^2",
+    "verified_by": "alpha = torque / I = 10/2 = 5"
+  },
+  {
+    "id": "canary-grav-01",
+    "domain_hint": "gravitation",
+    "problem_text": "Find the weight in newtons (N) of a 15 kg object at Earth's surface, using g = 9.8 m/s^2.",
+    "expected_value": 147.0,
+    "relative_tolerance": 0.02,
+    "units": "N",
+    "verified_by": "F = m*g = 15*9.8 = 147"
+  },
+  {
+    "id": "canary-osc-01",
+    "domain_hint": "oscillations-waves",
+    "problem_text": "A simple pendulum has a length of 2 m. Using g = 9.8 m/s^2 and the small-angle approximation, find its period of oscillation in seconds (s).",
+    "expected_value": 2.838453790227457,
+    "relative_tolerance": 0.03,
+    "units": "s",
+    "verified_by": "T = 2*pi*sqrt(L/g) = 2*pi*sqrt(2/9.8)"
+  },
+  {
+    "id": "canary-therm-01",
+    "domain_hint": "thermodynamics",
+    "problem_text": "2 mol of an ideal gas occupy a volume of 0.05 m^3 at a temperature of 300 K. Using R = 8.314 J/(mol*K), find the gas pressure in pascals (Pa) -- report the answer as a plain number of pascals, not kilopascals.",
+    "expected_value": 99768.0,
+    "relative_tolerance": 0.02,
+    "units": "Pa",
+    "verified_by": "P = nRT/V = (2*8.314*300)/0.05"
+  },
+  {
+    "id": "canary-em-01",
+    "domain_hint": "electromagnetism",
+    "problem_text": "Two point charges of +1 microcoulomb each are separated by 0.1 m in vacuum. Using k = 8.99e9 N*m^2/C^2, find the magnitude of the electrostatic force between them in newtons (N).",
+    "expected_value": 0.899,
+    "relative_tolerance": 0.02,
+    "units": "N",
+    "verified_by": "F = k*q1*q2/r^2 = 8.99e9*(1e-6)^2/(0.1)^2"
+  },
+  {
+    "id": "canary-rel-01",
+    "domain_hint": "special-relativity",
+    "problem_text": "A clock in a spaceship moving at 0.6c relative to Earth measures an elapsed time of 10 s for an onboard event. Find the elapsed time in seconds (s) for that same event as measured by an observer on Earth.",
+    "expected_value": 12.5,
+    "relative_tolerance": 0.02,
+    "units": "s",
+    "verified_by": "gamma = 1/sqrt(1-0.6^2) = 1.25; dt = gamma*dt0 = 12.5"
+  },
+  {
+    "id": "canary-qm-01",
+    "domain_hint": "quantum-mechanics",
+    "problem_text": "Find the energy in joules (J) of a single photon with frequency 5e14 Hz. Use h = 6.626e-34 J*s.",
+    "expected_value": 3.313e-19,
+    "relative_tolerance": 0.02,
+    "units": "J",
+    "verified_by": "E = h*f = 6.626e-34*5e14"
+  }
+]

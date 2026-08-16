@@ -38,14 +38,27 @@ revision budget repeating a check that already didn't help. Pattern-level
 escalation across many traces (e.g. one domain hitting
 unresolved_max_revisions repeatedly) is a separate, outer-loop concern --
 see self_correction/escalation.py.
+
+Strategy override (Stage 7, closing the loop left open on purpose): when a
+StrategyOverridePolicy is supplied, classify_error's hardcoded strategy for
+this (domain, error_type) pair can be replaced with whatever procedural
+memory has actually found to work best, once there's enough real data to
+trust it (see meta_learning/strategy_override.py for the exact bars). This
+happens BEFORE the escalation check above, using the strategy that will
+actually be applied and archived -- so if procedural memory has learned a
+better fix than "escalate and eventually give up" for a given confidence
+issue, that fix is what runs, and the escalation path only fires when
+there either isn't one yet or the taxonomy default is still winning.
 """
 from __future__ import annotations
 
 import time
 from dataclasses import asdict
+from typing import Optional
 
 from .error_taxonomy import classify_error
 from .revision_planner import RevisionPlanner
+from ..meta_learning.strategy_override import StrategyOverridePolicy
 from ..orchestrator import ToolOrchestrator
 from ..self_eval.pipeline import SelfEvaluationPipeline
 from ..trace import Trace
@@ -64,11 +77,13 @@ class SelfCorrectionEngine:
         orchestrator: ToolOrchestrator,
         self_eval_pipeline: SelfEvaluationPipeline,
         max_revisions: int = 3,
+        strategy_override_policy: Optional[StrategyOverridePolicy] = None,
     ):
         self.orchestrator = orchestrator
         self.self_eval = self_eval_pipeline
         self.revision_planner = RevisionPlanner(orchestrator)
         self.max_revisions = max_revisions
+        self.strategy_override_policy = strategy_override_policy
 
     def run(self, trace: Trace) -> Trace:
         while True:
@@ -77,6 +92,14 @@ class SelfCorrectionEngine:
 
             error_type, strategy, rationale = classify_error(trace)
             trace.error_type = error_type
+
+            if self.strategy_override_policy is not None:
+                overridden_strategy, override_reason = self.strategy_override_policy.override(
+                    trace.domain_tags, error_type, strategy
+                )
+                if override_reason:
+                    strategy = overridden_strategy
+                    rationale = f"{rationale} | {override_reason}"
 
             already_escalated = any(
                 r["strategy"] == "escalate_verification" for r in trace.revision_history

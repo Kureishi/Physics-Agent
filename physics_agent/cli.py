@@ -27,6 +27,7 @@ from .memory.error_memory import ErrorMemory
 from .memory.procedural import ProceduralMemory
 from .meta_learning.tool_policy import ToolSelectionPolicy
 from .meta_learning.verification_depth import VerificationDepthPolicy
+from .meta_learning.strategy_override import StrategyOverridePolicy
 from .orchestrator import ToolOrchestrator
 from .planner import TaskPlanner
 from .retrieval import SemanticStore
@@ -70,20 +71,27 @@ def run(
     error_memory = ErrorMemory(config.error_memory_path)
     consolidator = MemoryConsolidator(episodic, store, procedural, error_memory)
 
-    # Stage 7: policies computed fresh from accumulated episodic memory each
-    # run. At this project's scale that's cheap enough to just do live; a
-    # system solving at high volume would more likely cache these and
-    # recompute on a schedule rather than every single solve, but the
+    # Stage 7: policies computed fresh from accumulated memory each run
+    # (episodic traces for the first two, procedural memory for the
+    # third). At this project's scale that's cheap enough to just do
+    # live; a system solving at high volume would more likely cache these
+    # and recompute on a schedule rather than every single solve, but the
     # policies themselves don't change based on which of those you pick.
     tool_policy = ToolSelectionPolicy(episodic)
     verification_depth_policy = VerificationDepthPolicy(episodic)
+    strategy_override_policy = StrategyOverridePolicy(procedural)
 
     planner = TaskPlanner(llm)
     orchestrator = ToolOrchestrator(llm, tool_policy=tool_policy)
     self_eval = SelfEvaluationPipeline(
         llm, knowledge_graph=knowledge_graph, verification_depth_policy=verification_depth_policy
     )
-    self_correction = SelfCorrectionEngine(orchestrator, self_eval, max_revisions=config.max_revisions)
+    self_correction = SelfCorrectionEngine(
+        orchestrator,
+        self_eval,
+        max_revisions=config.max_revisions,
+        strategy_override_policy=strategy_override_policy,
+    )
 
     trace = Trace.new(problem_text)
     trace.source = source

@@ -1,4 +1,6 @@
 import json
+import tempfile
+from pathlib import Path
 
 from physics_agent.llm_client import MockLLMClient
 from physics_agent.orchestrator import ToolOrchestrator
@@ -157,6 +159,84 @@ def test_engine_tries_escalate_verification_once_before_escalating():
 
     assert trace.resolution_status == "resolved_after_revision"
     assert trace.revision_count == 1
+
+
+def test_engine_applies_strategy_override_instead_of_taxonomy_default():
+    class AlwaysFailingMathCheck:
+        name = "math"
+
+        def run(self, trace):
+            return {"passed": False, "details": "always wrong"}
+
+    llm = MockLLMClient()
+    orchestrator = ToolOrchestrator(llm)
+
+    from physics_agent.self_eval.logic_check import LogicCheck
+    from physics_agent.self_eval.physics_check import PhysicsCheck
+    from physics_agent.self_eval.confidence_check import ConfidenceCheck
+    from physics_agent.memory.procedural import ProceduralMemory
+    from physics_agent.meta_learning.strategy_override import StrategyOverridePolicy
+
+    with tempfile.TemporaryDirectory() as d:
+        procedural = ProceduralMemory(Path(d) / "procedural.json")
+        # error_taxonomy's fixed default for a math-only failure is
+        # "algebra_error" -> "rederive_math". Seed procedural memory so
+        # "resynthesize" has a strong, well-sampled track record for this
+        # exact (domain, error_type) pair -- enough to clear
+        # StrategyOverridePolicy's bars for an untested default.
+        for resolved in [True, True, True, True, False]:  # 80%
+            procedural.record_outcome(
+                ["dynamics", "energy"], "algebra_error", "resynthesize", resolved=resolved
+            )
+        policy = StrategyOverridePolicy(procedural)
+
+        self_eval = SelfEvaluationPipeline(
+            checks=[LogicCheck(llm), PhysicsCheck(llm), AlwaysFailingMathCheck(), ConfidenceCheck(llm)]
+        )
+        engine = SelfCorrectionEngine(
+            orchestrator, self_eval, max_revisions=1, strategy_override_policy=policy
+        )
+
+        trace = _make_trace()
+        orchestrator.run(trace)
+        self_eval.run(trace)
+
+        engine.run(trace)
+
+    assert trace.error_type == "algebra_error"  # taxonomy classification unchanged
+    assert trace.revision_history[0]["strategy"] == "resynthesize"  # but the applied strategy is overridden
+    assert "procedural memory" in trace.revision_history[0]["rationale"]
+
+
+def test_engine_without_override_policy_uses_taxonomy_default():
+    # Same seeded procedural data as above, but no policy passed to the
+    # engine -- confirms the override is opt-in, not automatic just
+    # because procedural memory happens to have data.
+    class AlwaysFailingMathCheck:
+        name = "math"
+
+        def run(self, trace):
+            return {"passed": False, "details": "always wrong"}
+
+    llm = MockLLMClient()
+    orchestrator = ToolOrchestrator(llm)
+
+    from physics_agent.self_eval.logic_check import LogicCheck
+    from physics_agent.self_eval.physics_check import PhysicsCheck
+    from physics_agent.self_eval.confidence_check import ConfidenceCheck
+
+    self_eval = SelfEvaluationPipeline(
+        checks=[LogicCheck(llm), PhysicsCheck(llm), AlwaysFailingMathCheck(), ConfidenceCheck(llm)]
+    )
+    engine = SelfCorrectionEngine(orchestrator, self_eval, max_revisions=1)
+
+    trace = _make_trace()
+    orchestrator.run(trace)
+    self_eval.run(trace)
+
+    engine.run(trace)
+
+    assert trace.revision_history[0]["strategy"] == "rederive_math"
 
 
 def test_engine_stops_at_max_revisions_when_never_resolved():

@@ -44,7 +44,48 @@ class Config:
     knowledge_graph_path: str = os.environ.get("KNOWLEDGE_GRAPH_PATH", "data/knowledge_graph_edges.json")
     curriculum_log_path: str = os.environ.get("CURRICULUM_LOG_PATH", "memory/curriculum_log.jsonl")
 
+    # Ground-truth canary problems (Safety Rails): a small, fixed,
+    # human-verified problem set (see data/canary_problems.json) solved
+    # through the full pipeline and graded against known-correct answers,
+    # independent of the pipeline's own self-consistency. canary_log_path
+    # accumulates one entry per canary per run, so drift in how often
+    # checks disagree with ground truth is visible over time.
+    canary_problems_path: str = os.environ.get("CANARY_PROBLEMS_PATH", "data/canary_problems.json")
+    canary_log_path: str = os.environ.get("CANARY_LOG_PATH", "memory/canary_log.jsonl")
+
     # Safety rail for the Stage 4 self-correction loop: stop retrying after
     # this many revision attempts and ship the best-effort answer marked
     # "unresolved_max_revisions" rather than looping indefinitely.
     max_revisions: int = int(os.environ.get("MAX_REVISIONS", "3"))
+
+    # Scheduling/Decision Loop: the background process that decides when to
+    # solve, review, and practice, instead of a person typing each command
+    # by hand. See physics_agent/scheduler/scheduler.py for the full design
+    # note; briefly: scheduler_queue_path is a plain problem-set-shaped JSON
+    # file (same schema as data/problem_sets/*.json) the scheduler consumes
+    # from and generate_problem_set_cli.py can refill; scheduler_state_path
+    # persists cadence counters across restarts; scheduler_log_path is the
+    # append-only decision log (one entry per action taken, with why).
+    scheduler_queue_path: str = os.environ.get("SCHEDULER_QUEUE_PATH", "data/problem_sets/scheduler_queue.json")
+    scheduler_state_path: str = os.environ.get("SCHEDULER_STATE_PATH", "memory/scheduler_state.json")
+    scheduler_log_path: str = os.environ.get("SCHEDULER_LOG_PATH", "memory/scheduler_log.jsonl")
+
+    # Run a meta-learning review (physics_agent.meta_learning.report.build_report)
+    # after this many problems have been solved since the last one.
+    scheduler_review_every_n_solves: int = int(os.environ.get("SCHEDULER_REVIEW_EVERY_N_SOLVES", "20"))
+
+    # A curriculum round is only triggered when the top weak_areas() signal's
+    # weight is at least this high -- the same "don't act on a one-off"
+    # philosophy as escalation.py's DEFAULT_MIN_RECURRING_UNRESOLVED.
+    scheduler_curriculum_weight_threshold: float = float(
+        os.environ.get("SCHEDULER_CURRICULUM_WEIGHT_THRESHOLD", "5")
+    )
+    # Even if the threshold above is crossed every single cycle (a
+    # persistently weak domain), don't run a curriculum round more often
+    # than once every this many cycles -- prevents one standing weakness
+    # from monopolizing every cycle's practice slot before its own most
+    # recent round has even been measured.
+    scheduler_curriculum_min_cycles_between_rounds: int = int(
+        os.environ.get("SCHEDULER_CURRICULUM_MIN_CYCLES_BETWEEN_ROUNDS", "5")
+    )
+    scheduler_curriculum_n_problems: int = int(os.environ.get("SCHEDULER_CURRICULUM_N_PROBLEMS", "1"))
