@@ -25,6 +25,12 @@ CurriculumRunner.run_round) rather than reimplementing any of them:
      scheduler_curriculum_min_cycles_between_rounds cycles have passed
      since the last curriculum round, run one CurriculumRunner round
      targeting it.
+  4. Grow -- once at least scheduler_growth_min_cycles_between_rounds
+     cycles have passed since the last growth round, check
+     knowledge_growth.find_candidate_facts() and commit any that clear
+     its bar via propose_and_add(). A heavier, rarer action than the
+     other three (it writes new persistent semantic-memory entries, not
+     just a report or a practice round), hence its own, larger cooldown.
 
 Review and practice are decoupled from whether a solve happened THIS
 cycle: review triggers off an accumulated solve count (so an idle queue
@@ -64,6 +70,7 @@ from ..knowledge_graph.graph import KnowledgeGraph
 from ..memory.error_memory import ErrorMemory
 from ..memory.procedural import ProceduralMemory
 from ..meta_learning.curriculum_signals import weak_areas
+from ..meta_learning.knowledge_growth import ProposedFactsRegistry, find_candidate_facts, propose_and_add
 from ..meta_learning.report import build_report
 from ..retrieval import SemanticStore
 from .queue import ProblemQueue
@@ -74,7 +81,7 @@ from ..trace import EpisodicMemory
 @dataclass
 class Decision:
     timestamp: float
-    action: str  # "solve" | "review" | "practice" | "idle"
+    action: str  # "solve" | "review" | "practice" | "grow" | "idle"
     reason: str
     details: Dict[str, Any]
 
@@ -129,6 +136,7 @@ class Scheduler:
         """
         self.state.total_cycles += 1
         self.state.cycles_since_last_curriculum += 1
+        self.state.cycles_since_last_growth += 1
 
         decisions: List[Decision] = []
 
@@ -144,6 +152,10 @@ class Scheduler:
         if practice_decision is not None:
             decisions.append(practice_decision)
 
+        grow_decision = self._maybe_grow()
+        if grow_decision is not None:
+            decisions.append(grow_decision)
+
         if not decisions:
             decisions.append(
                 Decision(
@@ -153,8 +165,10 @@ class Scheduler:
                         "queue is empty, a review isn't due yet "
                         f"({self.state.solves_since_last_review}/"
                         f"{self.config.scheduler_review_every_n_solves} solves since last review), "
-                        "and no weak-area signal currently clears the practice threshold "
-                        "(or a curriculum round ran too recently)"
+                        "no weak-area signal currently clears the practice threshold "
+                        "(or a curriculum round ran too recently), "
+                        "and no repeated-expression signal clears the growth threshold "
+                        "(or a growth round ran too recently)"
                     ),
                     details={},
                 )
@@ -279,5 +293,45 @@ class Scheduler:
                 "targeted_signal": top_signal,
                 "n_problems_generated": len(results),
                 "resulting_trace_ids": [r.resulting_trace_id for r in results],
+            },
+        )
+
+    def _maybe_grow(self) -> Optional[Decision]:
+        if self.state.cycles_since_last_growth < self.config.scheduler_growth_min_cycles_between_rounds:
+            return None
+
+        episodic = EpisodicMemory(self.config.episodic_memory_path)
+        candidates = find_candidate_facts(episodic)
+
+        if not candidates:
+            return None
+
+        semantic = SemanticStore(self.config.semantic_store_path)
+        registry = ProposedFactsRegistry(self.config.proposed_facts_registry_path)
+        added = propose_and_add(semantic, registry, candidates)
+
+        self.state.cycles_since_last_growth = 0
+
+        if not added:
+            # Candidates existed but every one had already been proposed
+            # in an earlier round -- still resets the cooldown (a real
+            # check happened) but isn't its own loggable "grow" event
+            # distinct from that earlier round.
+            return None
+
+        self.state.total_growth_rounds += 1
+
+        top = added[0]
+        return Decision(
+            timestamp=time.time(),
+            action="grow",
+            reason=(
+                f"{len(added)} repeated-expression signal(s) cleared the growth threshold "
+                f"(top: \"{top['statement']}\" used successfully across {top['n_observations']} "
+                "independently-solved problems); proposed as new low-confidence semantic fact(s)"
+            ),
+            details={
+                "n_facts_added": len(added),
+                "added": added,
             },
         )

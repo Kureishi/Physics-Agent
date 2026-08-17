@@ -8,7 +8,8 @@ knowledge graph) and either (a) computes a policy that changes future
 per-problem behavior, or (b) produces a report meant for a human or a
 later stage to act on.
 
-What actually changes future behavior (wired into Stages 2/3/4 in cli.py):
+What actually changes future behavior (wired into Stages 2/3/4 in cli.py,
+plus the scheduler for the last one):
   - tool_policy.ToolSelectionPolicy       -> filters ToolOrchestrator's
                                               offered tools per domain
   - verification_depth.VerificationDepthPolicy -> raises ConfidenceCheck's
@@ -20,6 +21,13 @@ What actually changes future behavior (wired into Stages 2/3/4 in cli.py):
                                               to actually work best for a
                                               given (domain, error_type),
                                               once there's enough data
+  - knowledge_growth.propose_and_add      -> commits new, low-confidence
+                                              semantic-memory facts from
+                                              tool-call expressions used
+                                              repeatedly across many
+                                              cleanly-resolved problems
+                                              (wired into the scheduler's
+                                              "grow" decision, not per-solve)
 
 What only reports, deliberately not acting automatically (see each
 module's docstring for why):

@@ -89,3 +89,19 @@ class Config:
         os.environ.get("SCHEDULER_CURRICULUM_MIN_CYCLES_BETWEEN_ROUNDS", "5")
     )
     scheduler_curriculum_n_problems: int = int(os.environ.get("SCHEDULER_CURRICULUM_N_PROBLEMS", "1"))
+
+    # Autonomous Knowledge Growth (Stage 7): where proposed self-derived
+    # semantic facts get tracked as already-proposed, so re-running the
+    # growth step doesn't add the same fact twice. See
+    # physics_agent/meta_learning/knowledge_growth.py for the full design
+    # note.
+    proposed_facts_registry_path: str = os.environ.get(
+        "PROPOSED_FACTS_REGISTRY_PATH", "memory/proposed_facts.json"
+    )
+    # Like scheduler_curriculum_min_cycles_between_rounds, but for growth
+    # rounds -- set higher by default (growth writes new persistent
+    # knowledge, a heavier action than a practice round) so it isn't
+    # checked as eagerly.
+    scheduler_growth_min_cycles_between_rounds: int = int(
+        os.environ.get("SCHEDULER_GROWTH_MIN_CYCLES_BETWEEN_ROUNDS", "10")
+    )

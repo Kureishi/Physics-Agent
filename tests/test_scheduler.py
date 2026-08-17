@@ -7,7 +7,7 @@ from physics_agent.config import Config
 from physics_agent.memory.error_memory import ErrorMemory
 from physics_agent.scheduler.queue import ProblemQueue
 from physics_agent.scheduler.scheduler import DecisionLog, Scheduler
-from physics_agent.trace import EpisodicMemory
+from physics_agent.trace import EpisodicMemory, Trace, ToolCall
 
 
 @pytest.fixture
@@ -25,11 +25,13 @@ def config(tmp_path):
         scheduler_queue_path=str(tmp_path / "queue.json"),
         scheduler_state_path=str(tmp_path / "scheduler_state.json"),
         scheduler_log_path=str(tmp_path / "scheduler_log.jsonl"),
-        # Defaults that keep review/practice from firing accidentally in
-        # tests that aren't specifically exercising them.
+        proposed_facts_registry_path=str(tmp_path / "proposed_facts.json"),
+        # Defaults that keep review/practice/growth from firing
+        # accidentally in tests that aren't specifically exercising them.
         scheduler_review_every_n_solves=1000,
         scheduler_curriculum_weight_threshold=1000,
         scheduler_curriculum_min_cycles_between_rounds=1000,
+        scheduler_growth_min_cycles_between_rounds=1000,
     )
 
 
@@ -213,3 +215,95 @@ def test_run_loop_runs_bounded_number_of_cycles(config):
 
     assert scheduler.state.total_cycles == 3
     assert len(calls) == 2  # slept between cycles, not after the last one
+
+
+def _seed_repeated_expression(config, n=5, expression="Eq(m*g*h, 0.5*m*v**2)", domain_tags=None):
+    memory = EpisodicMemory(config.episodic_memory_path)
+    output = json.dumps(
+        {
+            "expression": expression,
+            "solve_for": "v",
+            "substitutions": {},
+            "solutions": ["9.9"],
+            "solutions_numeric": [9.9],
+        }
+    )
+    for _ in range(n):
+        t = Trace.new("x")
+        t.domain_tags = domain_tags or ["dynamics"]
+        t.resolution_status = "passed_initial"
+        t.tool_calls = [ToolCall(tool="symbolic_math", input="{}", output=output, latency_ms=5.0)]
+        memory.write(t)
+
+
+def test_growth_does_not_trigger_before_cooldown(config):
+    config.scheduler_growth_min_cycles_between_rounds = 3
+    _seed_repeated_expression(config)
+
+    scheduler = Scheduler(config, dry_run=True)
+    decisions = scheduler.run_cycle()  # cycles_since_last_growth becomes 1, below 3
+    assert not any(d.action == "grow" for d in decisions)
+
+
+def test_growth_triggers_and_adds_semantic_fact(config):
+    config.scheduler_growth_min_cycles_between_rounds = 1
+    _seed_repeated_expression(config, n=5)
+
+    scheduler = Scheduler(config, dry_run=True)
+    decisions = scheduler.run_cycle()
+
+    grow_decisions = [d for d in decisions if d.action == "grow"]
+    assert len(grow_decisions) == 1
+    assert grow_decisions[0].details["n_facts_added"] == 1
+    assert scheduler.state.total_growth_rounds == 1
+    assert scheduler.state.cycles_since_last_growth == 0
+
+    from physics_agent.retrieval import SemanticStore
+
+    semantic = SemanticStore(config.semantic_store_path)
+    assert len(semantic.entries) == 1
+    assert semantic.entries[0]["confidence"] == 0.3
+    assert "self_derived" in semantic.entries[0]["provenance"]
+
+
+def test_growth_does_not_trigger_with_no_candidates(config):
+    config.scheduler_growth_min_cycles_between_rounds = 1
+    # No episodic history at all.
+    scheduler = Scheduler(config, dry_run=True)
+    decisions = scheduler.run_cycle()
+    assert not any(d.action == "grow" for d in decisions)
+
+
+def test_growth_does_not_redecide_an_already_proposed_candidate(config):
+    config.scheduler_growth_min_cycles_between_rounds = 1
+    _seed_repeated_expression(config, n=5)
+
+    scheduler = Scheduler(config, dry_run=True)
+    decisions1 = scheduler.run_cycle()
+    assert any(d.action == "grow" for d in decisions1)
+    assert scheduler.state.total_growth_rounds == 1
+
+    # Cooldown was reset to 0 by the first round; force it past the
+    # threshold again to simulate cycles passing, without adding any NEW
+    # episodic data -- the same candidate is still the only one there.
+    scheduler.state.cycles_since_last_growth = 5
+    decisions2 = scheduler.run_cycle()
+
+    assert not any(d.action == "grow" for d in decisions2)
+    assert scheduler.state.total_growth_rounds == 1  # unchanged -- nothing new added
+
+    from physics_agent.retrieval import SemanticStore
+
+    semantic = SemanticStore(config.semantic_store_path)
+    assert len(semantic.entries) == 1  # still just the one fact, not duplicated
+
+
+def test_growth_can_fire_on_an_otherwise_idle_cycle(config):
+    config.scheduler_growth_min_cycles_between_rounds = 1
+    _seed_repeated_expression(config, n=5)
+
+    scheduler = Scheduler(config, dry_run=True)
+    decisions = scheduler.run_cycle()
+
+    assert not any(d.action == "solve" for d in decisions)  # queue was empty
+    assert any(d.action == "grow" for d in decisions)

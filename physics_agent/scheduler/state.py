@@ -28,8 +28,10 @@ class SchedulerState:
     total_solves: int = 0
     total_reviews: int = 0
     total_curriculum_rounds: int = 0
+    total_growth_rounds: int = 0
     solves_since_last_review: int = 0
     cycles_since_last_curriculum: int = 0
+    cycles_since_last_growth: int = 0
 
     def to_dict(self):
         return asdict(self)

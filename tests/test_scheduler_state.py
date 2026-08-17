@@ -14,8 +14,10 @@ def test_save_and_load_roundtrip(tmp_path):
         total_solves=3,
         total_reviews=1,
         total_curriculum_rounds=1,
+        total_growth_rounds=2,
         solves_since_last_review=2,
         cycles_since_last_curriculum=4,
+        cycles_since_last_growth=1,
     )
     save_state(path, state)
 

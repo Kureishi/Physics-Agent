@@ -94,6 +94,15 @@ for the full schema and a field-by-field note on which stage owns which field.
   python -m physics_agent.scheduler_cli --loop --interval-seconds 60
   python -m physics_agent.scheduler_cli --report
   ```
+- **`python -m physics_agent.knowledge_growth_cli`** — checks for
+  repeated tool-call expressions across many cleanly-solved traces and
+  proposes them as new, low-confidence semantic facts (`--dry-run-proposals`
+  to preview without committing; `--min-observations N` to lower the bar).
+  Also runs periodically as the scheduler's "grow" decision.
+  ```bash
+  python -m physics_agent.knowledge_growth_cli --dry-run-proposals
+  python -m physics_agent.knowledge_growth_cli
+  ```
 
 ## What this does right now
 
@@ -321,6 +330,9 @@ physics_agent/
     check_value.py               compute_check_value_report: per-check catch rate (reporting only)
     anomaly.py                     detect_check_value_anomalies: recent catch rate vs. historical
                               baseline per check, flags jump/collapse (reporting only)
+    knowledge_growth.py            find_candidate_facts/propose_and_add: proposes new low-
+                              confidence semantic facts from repeated tool-call expressions
+                              (ACTIVE -- wired into the scheduler's "grow" decision)
     pruning.py                     flag_declining_strategies: read-only signal over procedural memory
     curriculum_signals.py            weak_areas: ranks recurring errors / unresolved traces / low-
                               confidence KG clusters, with structured fields (error_type, node_ids)
@@ -336,7 +348,7 @@ physics_agent/
   scheduler/
     queue.py                    ProblemQueue: FIFO over a problem-set-shaped JSON file
     state.py                     SchedulerState: persisted cadence counters across restarts
-    scheduler.py                   Scheduler: run_cycle() decides solve/review/practice/idle,
+    scheduler.py                   Scheduler: run_cycle() decides solve/review/practice/grow/idle,
                               each logged as a Decision with its own reason
   trace.py            Trace schema + EpisodicMemory (JSONL append-only store, now with queries)
   retrieval.py        SemanticStore (Stage 1 retrieval + Stage 5 record_outcome confidence updates)
@@ -349,8 +361,11 @@ physics_agent/
   canary_cli.py                 Solves + grades the fixed canary set against ground truth (Safety Rails)
   scheduler_cli.py                Runs the background decision loop once, in a bounded/unbounded
                               loop, or reports past decisions
+  knowledge_growth_cli.py           Proposes new semantic facts from repeated tool use, or previews
+                              candidates without committing (Autonomous Knowledge Growth)
 data/
-  semantic_seed.json         Seed knowledge base (~13 core physics formulas across domains)
+  semantic_seed.json         Seed knowledge base (~13 core physics formulas across domains) --
+                              also where self-derived facts (Knowledge Growth) get appended
   knowledge_graph_edges.json  Seed edges over those 13 formulas (derives_from/special_case_of/
                               requires_assumption relationships)
   canary_problems.json        10 hand-verified problems with computed expected answers (Safety Rails)
@@ -397,6 +412,7 @@ tests/
   test_scheduler.py                                      Full solve/review/practice/idle decision integration
   test_scheduler_queue.py                                FIFO semantics, persistence, external-file compatibility
   test_scheduler_state.py                                Cadence counter persistence roundtrip
+  test_knowledge_growth.py                               Candidate detection, propose_and_add, idempotent registry
 memory/
   episodic.jsonl      Created at runtime — one JSON line per problem run
   procedural.json      Created at runtime — strategy success-rate table
@@ -405,6 +421,7 @@ memory/
   canary_log.jsonl         Created at runtime — one JSON line per canary problem per run
   scheduler_state.json      Created at runtime — scheduler cadence counters
   scheduler_log.jsonl        Created at runtime — one JSON line per scheduler decision
+  proposed_facts.json          Created at runtime — signature -> entry_id registry (Knowledge Growth)
 ```
 
 ## Running the tests
@@ -413,7 +430,7 @@ memory/
 pytest tests/ -v
 ```
 
-All 337 tests run offline (no LM Studio required) using `MockLLMClient`.
+All 361 tests run offline (no LM Studio required) using `MockLLMClient`.
 The physics tools themselves (SymPy solving, SciPy integration), the Math
 Check's re-substitution verification, and the knowledge graph's validity
 queries are exercised with real computation, not mocked — only the LLM
@@ -748,7 +765,7 @@ python -m physics_agent.curriculum_cli --report
   thing skipped outright, consistent with every other component's stance
   of not crashing the whole round over one bad sub-step.
 
-## Beyond the original 8 stages: Safety Rails, closing Stage 7, and a Scheduler
+## Beyond the original 8 stages: Safety Rails, closing Stage 7, a Scheduler, and Knowledge Growth
 
 A follow-up round of work, done against the already-complete 8-stage
 system above, picking up threads the Stage 7 design discussion had
@@ -826,15 +843,76 @@ the engine applied and archived `resynthesize`, not the taxonomy default
 attached confirmed the override is opt-in, not automatic just because the
 data exists.
 
+### Autonomous Knowledge Growth
+
+Every fact in `data/semantic_seed.json` and every edge in
+`data/knowledge_graph_edges.json` was hand-written before this round of
+work — there was no mechanism for the agent to notice it kept re-deriving
+the same formula from scratch across many problems and propose adding it
+as its own memory entry. `meta_learning/knowledge_growth.py` closes that,
+narrowly: it looks at the `symbolic_math` tool-call `expression` behind
+every cleanly-resolved trace's *final* round (per Stage 4's own invariant
+that `trace.tool_calls` holds only the current, passing candidate by the
+time solving finishes — not a stale pre-correction attempt), and when the
+same expression (whitespace-normalized) recurs across at least
+`MIN_OBSERVATIONS_TO_PROPOSE` (default 5) independently-solved traces, it
+becomes a candidate for a new semantic-memory fact.
+
+Two clearly separated steps, like every other Stage 7 signal:
+`find_candidate_facts()` is read-only; `propose_and_add()` is what
+actually calls `SemanticStore.add()` for candidates that clear the bar and
+haven't been proposed before (tracked in a small persisted registry,
+`memory/proposed_facts.json`, keyed by a hash of the expression signature,
+so re-running this doesn't duplicate the same fact every time). A
+proposed fact starts at confidence 0.3 — well below every seeded fact
+(roughly 0.85–0.99) — with `provenance` explicitly labeled
+`self_derived` and `conditions` honestly stating that validity hasn't been
+characterized by a person, unlike a seeded fact's curated conditions text.
+From there it's refined exactly like any other fact: future solves that
+retrieve it nudge its confidence via the same `record_outcome` seeded
+facts already use.
+
+This is a documented, deliberate simplification, not an oversight: matching
+is a plain normalized-string comparison, not symbolic equivalence
+checking, so `Eq(m*g*h, 0.5*m*v**2)` and the algebraically-identical
+`Eq(v**2, 2*g*h)` track as two separate candidates rather than being
+recognized as the same physics. The proposed "statement" is built directly
+from the tool call itself (e.g. `"Eq(m*g*h, 0.5*m*v**2), solved for v"`)
+rather than LLM-paraphrased into confident prose nobody has vetted the
+wording of. And no attempt is made to detect whether a seeded fact's
+hand-written prose already covers the same physics as a self-derived
+expression signature — the two vocabularies essentially never collide as
+strings, so a resulting near-duplicate is accepted as low-cost (a second,
+low-confidence description isn't a correctness bug) rather than engineered
+around.
+
+`python -m physics_agent.knowledge_growth_cli` runs it standalone
+(`--dry-run-proposals` to preview without committing, `--min-observations
+N` to lower the bar); it also runs as a fourth scheduler decision,
+**Grow**, gated by its own, longer cooldown
+(`scheduler_growth_min_cycles_between_rounds`, default 10 cycles — writing
+new persistent knowledge is a heavier action than a practice round, so it
+isn't checked as eagerly) and logged the same way solve/review/practice
+are. Confirmed directly against this project's own real accumulated
+`memory/episodic.jsonl`: at a lowered threshold of 2 observations, it
+correctly surfaced 6 genuine repeated-formula patterns — the thin-lens
+equation (used 4 times across separate optics problems),
+momentum-conservation, mass-defect-to-energy conversion, and others — and
+committing them added exactly 6 new low-confidence entries to
+`semantic_seed.json`, each correctly tagged `self_derived` at confidence
+0.3. Re-running immediately afterward correctly added nothing (`"All
+qualifying candidates were already proposed in an earlier run"`),
+confirming the idempotence the registry exists for.
+
 ### The Scheduling/Decision Loop
 
 Every entry point above (`cli.py`, `curriculum_cli.py`, `meta_report.py`,
 `problem_set_cli.py`) is a manual trigger a person has to remember to run
 and decide *when* to run. `physics_agent/scheduler/` is the missing
 decision layer: `Scheduler.run_cycle()` does whatever combination of
-solving, reviewing, practicing is actually warranted right now, using the
-exact same underlying functions those CLIs already call rather than
-reimplementing any of them —
+solving, reviewing, practicing, and growing is actually warranted right
+now, using the exact same underlying functions those CLIs already call
+rather than reimplementing any of them —
 
 1. **Solve** — pop one problem from a queue (`scheduler/queue.py`, the
    same JSON shape as `data/problem_sets/*.json`, fillable by
@@ -847,6 +925,9 @@ reimplementing any of them —
    round, run one `CurriculumRunner` round targeting it — decoupled from
    whether a solve happened this specific cycle, so a persistently weak
    domain still gets addressed even on an otherwise-idle cycle.
+4. **Grow** — once its own, longer cycle cooldown has passed, check
+   `knowledge_growth.find_candidate_facts()` and commit any that clear the
+   bar via `propose_and_add()`. See "Autonomous Knowledge Growth" above.
 
 Every action taken — including doing nothing — is logged as a `Decision`
 with a plain-English reason to `memory/scheduler_log.jsonl`, so an empty
@@ -860,7 +941,7 @@ cycles correctly solved both queued problems in order, and a third
 correctly went idle the moment the queue drained rather than doing nothing
 silently.
 
-All of the above is exercised by 337 tests (up from the original 256),
+All of the above is exercised by 361 tests (up from the original 256),
 all still offline via `MockLLMClient` — none of it required LM Studio to
 verify at the unit-test level, though every piece was also smoke-tested
 against this project's real accumulated `memory/` and a real `--dry-run`
