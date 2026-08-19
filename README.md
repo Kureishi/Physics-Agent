@@ -289,7 +289,8 @@ physics_agent/
                      planner/orchestrator/self-eval checks/problem generator
   planner.py         TaskPlanner: domain classification + subtask decomposition        (Stage 1)
   retrieval.py        SemanticStore: keyword-scored retrieval over seeded physics facts  (Stage 1)
-  orchestrator.py     ToolOrchestrator: tool selection, execution, solution synthesis   (Stage 2)
+  orchestrator.py     ToolOrchestrator: tool selection, execution, solution synthesis with
+                      retry-on-empty-response   (Stage 2)
   tools/
     registry.py        ToolRegistry + domain-tag -> tool hints ("Physics Tool Selection")
     symbolic_math.py    SymbolicMathTool: SymPy-backed equation solving
@@ -377,14 +378,16 @@ tests/
   test_retrieval.py       Keyword scoring, domain-tag bonus, persistence, confidence updates
   test_tools.py            SymPy/SciPy/arXiv tools: correctness + failure handling
   test_registry.py          Domain-tag -> tool hint mapping
-  test_orchestrator.py       Tool selection/execution/synthesis/revision + tool_policy wiring
+  test_orchestrator.py       Tool selection/execution/synthesis/revision, tool_policy wiring,
+                      and synthesis retry-on-empty-response (Bug 8)
   test_logic_check.py         LogicCheck behavior + retry/failure handling
   test_physics_check.py        Cross-tool agreement, knowledge graph validity, LLM critique
   test_math_check.py            Re-substitution verification, correct + incorrect solutions
   test_confidence_check.py       Threshold behavior, clamping + threshold_policy wiring
   test_self_eval_pipeline.py      Full pipeline, crash isolation, knowledge graph wiring
   test_error_taxonomy.py           Every classification rule + priority ordering
-  test_self_correction_engine.py    Full loop: resolves, exhausts retries, archives history
+  test_self_correction_engine.py    Full loop: resolves, exhausts retries, archives history,
+                      generalized escalation (Bug 9)
   test_procedural_memory.py          Success-rate tracking, key normalization, min-uses gating
   test_error_memory.py                Recurrence frequency, signature grouping, persistence
   test_memory_consolidator.py          All four memory types updated correctly from one trace
@@ -430,7 +433,7 @@ memory/
 pytest tests/ -v
 ```
 
-All 361 tests run offline (no LM Studio required) using `MockLLMClient`.
+All 370 tests run offline (no LM Studio required) using `MockLLMClient`.
 The physics tools themselves (SymPy solving, SciPy integration), the Math
 Check's re-substitution verification, and the knowledge graph's validity
 queries are exercised with real computation, not mocked — only the LLM
@@ -808,17 +811,27 @@ built to surface it.
 **An escalation path distinct from `max_revisions`.** Previously, a trace
 that exhausted its revision budget only ever ended up
 `unresolved_max_revisions` — "stop and mark unresolved," with no "stop and
-ask a person" outcome. `self_correction/engine.py` now recognizes when the
-`escalate_verification` strategy (pulling in one independent
-literature-search check for a confidence-only failure) is selected *again*
-on a later round for the same trace — meaning the one independent check
-already tried didn't help — and stops early with a new
-`resolution_status`, `escalated_for_human_review`, instead of burning the
-remaining revision budget repeating an action that already failed to move
-confidence. Separately, `self_correction/escalation.py` looks across *many*
-traces for domains where `unresolved_max_revisions` recurs past a
-threshold (default 5) — a pattern, not a one-off hard problem — and flags
-that too. Both surface in `meta_report.py`'s new "Escalations" section.
+ask a person" outcome. `self_correction/engine.py` now recognizes when a
+correction strategy is selected *again* on a later round for the same
+trace after every earlier use of that exact strategy failed to resolve
+anything — meaning repeating it again wouldn't add new signal — and stops
+early with a new `resolution_status`, `escalated_for_human_review`,
+instead of burning the remaining revision budget on an action already
+shown not to work in this trace. (A strategy that *did* succeed once, then
+gets reused later for a newly-appeared issue, isn't penalized — only a
+strategy with a track record of pure failure triggers this.) This started
+narrower — originally scoped just to `escalate_verification` repeating —
+and was generalized after a real accumulated run showed the same shape on
+a much more common path: `resynthesize` sitting at a flat 0% success rate
+across several domains, each trace still burning all 3 revisions before
+landing on `unresolved_max_revisions` regardless. Applied retroactively to
+that real data, the generalized version would have caught **19 of 19** of
+those unresolved traces early instead of letting every one of them
+exhaust its revision budget. Separately, `self_correction/escalation.py`
+looks across *many* traces for domains where `unresolved_max_revisions`
+recurs past a threshold (default 5) — a pattern, not a one-off hard
+problem — and flags that too. Both surface in `meta_report.py`'s new
+"Escalations" section.
 
 ### Stage 7, closed: procedural memory actually overriding the error taxonomy
 
@@ -941,7 +954,7 @@ cycles correctly solved both queued problems in order, and a third
 correctly went idle the moment the queue drained rather than doing nothing
 silently.
 
-All of the above is exercised by 361 tests (up from the original 256),
+All of the above is exercised by 370 tests (up from the original 256),
 all still offline via `MockLLMClient` — none of it required LM Studio to
 verify at the unit-test level, though every piece was also smoke-tested
 against this project's real accumulated `memory/` and a real `--dry-run`
@@ -1308,6 +1321,53 @@ appear (including one using the same variable names, to make sure the
 skip is checking free-symbol presence and not just guessing from
 variable names) still goes through full verification and still correctly
 fails on a wrong solution.
+
+**Bug 8 — synthesis had no retry on an empty LLM response, and the
+correction strategy for it didn't change anything about the retry.**
+Found the same way as Bug 7: analyzing a real accumulated `memory/`
+directory (205 solved traces) rather than a single failing case. Of the
+19 traces that ended up `unresolved_max_revisions`, **13 (68%) had a
+completely empty `trace.initial_solution`** — not a wrong answer, an
+empty string. `Logic Check` correctly caught this every time ("No initial
+solution provided to evaluate"), and `error_taxonomy` correctly routed it
+to `resynthesize` — but `_synthesize_solution` was a single, bare LLM
+call with no retry logic at all, so `resynthesize` just called that same
+un-retried function again, with nothing different about the second (or
+third) attempt to make another empty response less likely.
+`ProceduralMemory` shows the scale: `resynthesize` sat at a **flat 0%
+success rate** across statistical-mechanics (0/14 uses), quantum-mechanics
+(0/9), and five other domain combinations — not a verification bug like
+Bug 7, but a real generation gap the verification layer was correctly,
+repeatedly, and unproductively catching.
+
+The fix already existed elsewhere in this codebase for the same failure
+mode: `ProblemGenerator` (used by `curriculum_cli.py` /
+`generate_problem_set_cli.py`) already retries on an empty response with a
+lower temperature, built for exactly this "model returns empty" pattern
+during problem generation — it just was never ported to the solving
+path's synthesis step. **Fix:** `_synthesize_solution` now retries (once,
+by default, matching `ProblemGenerator`'s own default) at a lower
+temperature (0.1) on an empty or whitespace-only response, and raises a
+clear `RuntimeError` if every attempt comes back empty, rather than
+silently accepting `""` and letting three revision rounds discover that
+slowly. Verified against the real data: retroactively applying the
+generalized escalation check below to those same 19 unresolved traces,
+**19/19** would now stop early instead of exhausting their revision
+budget on a fix that was never going to work.
+
+**Bug 9 — the escalation path (added as a Safety Rail, see below) was
+scoped too narrowly to catch its own motivating case.** Built to stop a
+trace from repeating a corrective action that had already failed —
+originally only watched for `escalate_verification` specifically
+repeating. Bug 8's data showed the far more common version of the same
+shape happening on a different strategy entirely (`resynthesize`,
+sitting at 0% success across several domains) without ever tripping it.
+**Fix:** generalized to any strategy — if the one about to be applied was
+already tried earlier in the same trace and every prior use failed to
+resolve anything, escalate instead of repeating it; a strategy that
+succeeded once and gets legitimately reused later for a new issue isn't
+penalized. See "An escalation path distinct from `max_revisions`" above
+for the full mechanism and the 19/19 retroactive result.
 
 **If you have your own accumulated `memory/` directory from before this
 fix, it's contaminated and worth discarding rather than continuing to
