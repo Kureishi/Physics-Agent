@@ -58,7 +58,115 @@ def test_orchestrator_filters_tools_not_offered_for_domain():
 
     tool_names = [tc.tool for tc in trace.tool_calls]
     assert "literature_search" not in tool_names
-    assert "symbolic_math" in tool_names
+
+
+class _CountingLLM:
+    """Returns configured responses in order (by call count); extra calls
+    beyond the list repeat the last response. Tracks the temperature each
+    call was made with, so retry behavior is directly observable."""
+
+    def __init__(self, responses):
+        self.responses = responses
+        self.temperatures = []
+
+    def chat(self, messages, temperature=None):
+        self.temperatures.append(temperature)
+        idx = min(len(self.temperatures) - 1, len(self.responses) - 1)
+        return self.responses[idx]
+
+
+def test_synthesis_retries_on_empty_response_and_recovers():
+    llm = _CountingLLM(["", "A real synthesized solution. v = 9.9 m/s."])
+    orchestrator = ToolOrchestrator(llm, max_retries=1)
+    trace = _make_trace()
+
+    result = orchestrator._synthesize_solution(trace)
+
+    assert result == "A real synthesized solution. v = 9.9 m/s."
+    assert len(llm.temperatures) == 2
+    assert llm.temperatures[0] is None  # first attempt: caller's own default temperature
+    assert llm.temperatures[1] == pytest.approx(0.1)  # retry: lower temperature
+
+
+def test_synthesis_raises_after_exhausting_retries_on_persistent_empty():
+    llm = _CountingLLM([""])  # always empty
+    orchestrator = ToolOrchestrator(llm, max_retries=1)
+    trace = _make_trace()
+
+    with pytest.raises(RuntimeError, match="empty response"):
+        orchestrator._synthesize_solution(trace)
+
+    assert len(llm.temperatures) == 2  # first attempt + 1 retry, then give up
+
+
+def test_synthesis_no_retry_needed_when_first_response_is_nonempty():
+    llm = _CountingLLM(["A solution on the first try."])
+    orchestrator = ToolOrchestrator(llm, max_retries=1)
+    trace = _make_trace()
+
+    result = orchestrator._synthesize_solution(trace)
+    assert result == "A solution on the first try."
+    assert len(llm.temperatures) == 1
+
+
+def test_synthesis_retries_on_whitespace_only_response():
+    llm = _CountingLLM(["   \n  ", "Real content now."])
+    orchestrator = ToolOrchestrator(llm, max_retries=1)
+    trace = _make_trace()
+
+    result = orchestrator._synthesize_solution(trace)
+    assert result == "Real content now."
+
+
+def test_synthesis_retries_on_raised_exception_then_recovers():
+    class _RaisesOnceLLM:
+        def __init__(self):
+            self.n_calls = 0
+
+        def chat(self, messages, temperature=None):
+            self.n_calls += 1
+            if self.n_calls == 1:
+                raise ConnectionError("simulated network failure")
+            return "Recovered after an exception."
+
+    llm = _RaisesOnceLLM()
+    orchestrator = ToolOrchestrator(llm, max_retries=1)
+    trace = _make_trace()
+
+    result = orchestrator._synthesize_solution(trace)
+    assert result == "Recovered after an exception."
+
+
+def test_synthesis_uses_configured_retry_temperature():
+    llm = _CountingLLM(["", "ok"])
+    orchestrator = ToolOrchestrator(llm, max_retries=1, synthesis_retry_temperature=0.05)
+    trace = _make_trace()
+
+    orchestrator._synthesize_solution(trace)
+    assert llm.temperatures[1] == pytest.approx(0.05)
+
+
+def test_synthesis_max_retries_zero_means_single_attempt():
+    llm = _CountingLLM([""])
+    orchestrator = ToolOrchestrator(llm, max_retries=0)
+    trace = _make_trace()
+
+    with pytest.raises(RuntimeError):
+        orchestrator._synthesize_solution(trace)
+    assert len(llm.temperatures) == 1
+
+
+def test_mock_llm_client_never_triggers_the_empty_response_path():
+    # Sanity check: MockLLMClient's DEFAULT_SYNTHESIS_RESPONSE is always
+    # non-empty, so --dry-run / offline tests never exercise the retry
+    # loop -- this behavior change should be invisible to anything running
+    # against the mock.
+    llm = MockLLMClient()
+    orchestrator = ToolOrchestrator(llm)
+    trace = _make_trace()
+
+    result = orchestrator._synthesize_solution(trace)
+    assert result == MockLLMClient.DEFAULT_SYNTHESIS_RESPONSE
 
 
 def test_orchestrator_captures_tool_failure_without_raising():

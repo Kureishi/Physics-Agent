@@ -18,6 +18,26 @@ knowledge), this:
 trace.initial_solution is the "Initial Solution" box in the architecture
 diagram. Everything from here on (self-evaluation, error detection,
 revision) is a later stage operating on this trace.
+
+Synthesis retries on an empty response (found via a real accumulated run,
+not speculatively): the same "model returns empty / truncated-mid-sentence
+with no error" failure mode ProblemGenerator's docstring documents in
+detail for problem generation also happens during solving's synthesis
+step, and for the same likely reason (a "thinking"-style model spending
+its budget on an internal reasoning phase before any visible answer).
+Before this fix, _synthesize_solution had no retry at all -- an empty
+completion was accepted as-is, `trace.initial_solution` ended up `""`,
+Logic Check correctly failed it ("No initial solution provided to
+evaluate"), and Stage 4's `resynthesize` strategy (the correction Stage 4
+picks for a Logic-only failure) called this same un-retried function
+again -- with nothing different about the retry to make a second empty
+response less likely. Measured directly against one real run: 13 of 19
+unresolved-after-max-revisions traces had an empty initial_solution, and
+several domains showed `resynthesize` sitting at a flat 0% success rate
+across many uses -- not a verification bug, a generation gap that the
+verification layer was correctly (but unproductively) catching over and
+over. See _synthesize_solution below for the fix, which mirrors
+ProblemGenerator's retry-with-lower-temperature approach directly.
 """
 from __future__ import annotations
 
@@ -71,7 +91,14 @@ same reasoning.
 
 
 class ToolOrchestrator:
-    def __init__(self, llm_client, registry: ToolRegistry = None, max_retries: int = 1, tool_policy=None):
+    def __init__(
+        self,
+        llm_client,
+        registry: ToolRegistry = None,
+        max_retries: int = 1,
+        tool_policy=None,
+        synthesis_retry_temperature: float = 0.1,
+    ):
         self.llm = llm_client
         self.registry = registry or ToolRegistry()
         self.max_retries = max_retries
@@ -80,6 +107,13 @@ class ToolOrchestrator:
         # tools' presence in past first-attempts correlated with not
         # needing any correction. None preserves pre-Stage-7 behavior exactly.
         self.tool_policy = tool_policy
+        # Used for every synthesis retry after the first (see module
+        # docstring): solving already defaults to a low temperature (0.2),
+        # so this only needs to nudge lower still -- unlike
+        # ProblemGenerator's retry_temperature (0.3), which is a much
+        # bigger drop from its deliberately-high 0.9 generation-diversity
+        # default.
+        self.synthesis_retry_temperature = synthesis_retry_temperature
 
     # -- tool selection -------------------------------------------------
 
@@ -172,6 +206,27 @@ class ToolOrchestrator:
     # -- synthesis ----------------------------------------------------------
 
     def _synthesize_solution(self, trace: Trace, feedback: Optional[str] = None) -> str:
+        """
+        Retries on an empty response, same failure mode and same fix
+        shape as ProblemGenerator.generate() (see that module's docstring
+        for the full "why lower temperature, not higher max_tokens"
+        reasoning) -- see this module's own docstring for why this retry
+        was missing here specifically and what it cost in practice.
+
+        Raises RuntimeError if every attempt comes back empty. This is a
+        deliberate change from the old silent-empty-string behavior:
+        letting an empty trace.initial_solution flow forward just meant
+        Logic Check would (correctly) fail it, `resynthesize` would call
+        this same function again with nothing different about the retry,
+        and three revisions later the trace ends up unresolved anyway --
+        just slower, and with the underlying cause (no LLM output at all)
+        undistinguished from a genuine reasoning failure in the trace.
+        Raising here instead surfaces the real cause immediately.
+        cli.run() does not currently catch this, matching how any other
+        LLM-call failure (e.g. LM Studio not running) already propagates
+        uncaught today; problem_set_cli.py's own per-problem try/except
+        already isolates a batch run from a single problem raising here.
+        """
         tool_results_summary = [
             {"tool": tc.tool, "input": tc.input, "output": tc.output} for tc in trace.tool_calls
         ]
@@ -188,7 +243,44 @@ class ToolOrchestrator:
             {"role": "system", "content": _SYNTHESIS_SYSTEM_PROMPT},
             {"role": "user", "content": user_content},
         ]
-        return self.llm.chat(messages)
+
+        last_err: Optional[Exception] = None
+        for attempt in range(self.max_retries + 1):
+            # First attempt uses the client's own configured temperature
+            # (solving defaults to 0.2); every retry after that uses the
+            # lower synthesis_retry_temperature instead, for the same
+            # reason ProblemGenerator's retry_temperature exists: an
+            # empty/degenerate completion is a classic high-temperature
+            # sampling failure, and retrying at the same temperature that
+            # just failed has no particular reason to succeed differently.
+            call_temperature = None if attempt == 0 else self.synthesis_retry_temperature
+            try:
+                raw = self.llm.chat(messages, temperature=call_temperature)
+            except Exception as e:
+                last_err = e
+                raw = ""
+
+            if raw and raw.strip():
+                return raw
+
+            last_err = last_err or ValueError("empty response")
+            messages.append({"role": "assistant", "content": raw})
+            messages.append(
+                {
+                    "role": "user",
+                    "content": (
+                        "That response was empty. Provide the full written solution this "
+                        "time, ending with the final numeric or symbolic answer."
+                    ),
+                }
+            )
+
+        raise RuntimeError(
+            f"Synthesis produced an empty response after {self.max_retries + 1} attempt(s): "
+            f"{last_err}. Likely the model spent its full token budget on an internal "
+            "reasoning phase before producing any visible answer -- see ProblemGenerator's "
+            "docstring for the same failure mode found during problem generation."
+        )
 
     # -- public entry points ---------------------------------------------------
 

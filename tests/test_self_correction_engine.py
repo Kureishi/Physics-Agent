@@ -239,7 +239,14 @@ def test_engine_without_override_policy_uses_taxonomy_default():
     assert trace.revision_history[0]["strategy"] == "rederive_math"
 
 
-def test_engine_stops_at_max_revisions_when_never_resolved():
+def test_engine_escalates_when_the_same_strategy_never_resolves_anything():
+    # Generalized escalation (see engine.py's docstring): a strategy that
+    # keeps getting reapplied to a check that never once stops failing
+    # after it should escalate for human review well before max_revisions
+    # is exhausted -- rather than mechanically repeating an action already
+    # shown, in this trace, not to work. This is the exact shape a real
+    # accumulated run surfaced: `resynthesize` sitting at a flat 0% success
+    # rate across many uses in several domains.
     class AlwaysFailingMathCheck:
         name = "math"
 
@@ -256,7 +263,7 @@ def test_engine_stops_at_max_revisions_when_never_resolved():
     self_eval = SelfEvaluationPipeline(
         checks=[LogicCheck(llm), PhysicsCheck(llm), AlwaysFailingMathCheck(), ConfidenceCheck(llm)]
     )
-    engine = SelfCorrectionEngine(orchestrator, self_eval, max_revisions=2)
+    engine = SelfCorrectionEngine(orchestrator, self_eval, max_revisions=3)
 
     trace = _make_trace()
     orchestrator.run(trace)
@@ -264,12 +271,70 @@ def test_engine_stops_at_max_revisions_when_never_resolved():
 
     engine.run(trace)
 
-    assert trace.revision_count == 2  # hit the safety rail, stopped trying
-    assert trace.resolution_status == "unresolved_max_revisions"
+    # Escalates after the strategy's first attempt fails to resolve
+    # anything, well short of the 3-revision cap -- not "stopped and
+    # marked unresolved," but "stopped and flagged for a person."
+    assert trace.resolution_status == "escalated_for_human_review"
+    assert trace.revision_count == 1
     assert trace.error_type == "algebra_error"
+    assert len(trace.revision_history) == 1
+    assert trace.revision_history[0]["strategy"] == "rederive_math"
+    assert trace.revision_history[0]["resolved"] is False
+
+
+def test_engine_still_reaches_max_revisions_when_no_single_strategy_repeats_unsuccessfully():
+    # The safety rail (max_revisions) is still reachable: if fixing one
+    # check's failure coincides with a different check flaring up each
+    # round, no single strategy ever accumulates two straight failed uses,
+    # so escalation correctly stays out of the way and the revision cap
+    # is what eventually stops the loop.
+    class TogglingCheck:
+        def __init__(self, name, fail_on_calls):
+            self.name = name
+            self._fail_on_calls = set(fail_on_calls)
+            self.n_calls = 0
+
+        def run(self, trace):
+            self.n_calls += 1
+            if self.n_calls in self._fail_on_calls:
+                return {"passed": False, "details": f"{self.name} fails on call {self.n_calls}"}
+            return {"passed": True, "details": "ok"}
+
+    # call 1 (before engine.run): math fails, physics passes
+    # call 2 (after round 0's rederive_math): math passes, physics fails
+    # call 3 (after round 1's rederive_physics_setup): math fails again,
+    #   physics passes -- math's ONE prior use (round 0) was resolved
+    #   (still_failing came up empty against call 2's result), so
+    #   reapplying rederive_math here does not count as "previously
+    #   ineffective" and escalation correctly does not fire.
+    math_check = TogglingCheck("math", fail_on_calls={1, 3})
+    physics_check = TogglingCheck("physics", fail_on_calls={2})
+
+    llm = MockLLMClient()
+    orchestrator = ToolOrchestrator(llm)
+
+    from physics_agent.self_eval.logic_check import LogicCheck
+    from physics_agent.self_eval.confidence_check import ConfidenceCheck
+
+    self_eval = SelfEvaluationPipeline(
+        checks=[LogicCheck(llm), physics_check, math_check, ConfidenceCheck(llm)]
+    )
+    engine = SelfCorrectionEngine(orchestrator, self_eval, max_revisions=2)
+
+    trace = _make_trace()
+    orchestrator.run(trace)
+    self_eval.run(trace)  # call 1
+
+    engine.run(trace)
+
+    assert trace.resolution_status == "unresolved_max_revisions"
+    assert trace.revision_count == 2
     assert len(trace.revision_history) == 2
-    assert all(r["resolved"] is False for r in trace.revision_history)
-    assert trace.checks_failed == ["math"]  # still failing when we gave up
+    assert trace.revision_history[0]["strategy"] == "rederive_math"
+    assert trace.revision_history[0]["resolved"] is True
+    assert trace.revision_history[1]["strategy"] == "rederive_physics_setup"
+    assert trace.revision_history[1]["resolved"] is True
+    assert trace.checks_failed == ["math"]  # still failing (call 3) when we gave up
 
 
 def test_engine_records_revision_history_snapshot_before_overwriting():

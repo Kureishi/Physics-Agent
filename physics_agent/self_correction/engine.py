@@ -25,19 +25,26 @@ here, at the only point where both are known.
 
 Escalation path (Safety Rails): `max_revisions` stops a runaway loop, but
 "stop and mark unresolved" and "stop and ask a person" are different
-outcomes, and until now this engine only had the first. The
-`escalate_verification` strategy (error_taxonomy's row for "confidence low,
-no specific check failed") already pulls in one independent check
-(literature search) as its one, specific corrective action -- if
-classify_error lands on escalate_verification again on a LATER round for
-the same trace, that means the independent check didn't move confidence
-either. At that point further revisions would just be guessing with no new
-signal to act on, so the loop stops early with resolution_status
-"escalated_for_human_review" instead of burning through the remaining
-revision budget repeating a check that already didn't help. Pattern-level
-escalation across many traces (e.g. one domain hitting
-unresolved_max_revisions repeatedly) is a separate, outer-loop concern --
-see self_correction/escalation.py.
+outcomes, and until now this engine only had the first. Originally this
+checked only for `escalate_verification` (error_taxonomy's row for
+"confidence low, no specific check failed") repeating -- but a real
+accumulated run surfaced a broader version of the same problem: `resynthesize`
+(the correction for a Logic-only failure) sitting at a flat 0% success
+rate across several domains, each trace still burning all 3 revisions
+before landing on `unresolved_max_revisions`, because nothing was watching
+for "this exact strategy was already tried in this trace and didn't help,
+and it's about to run again." The check now generalizes to any strategy:
+if the strategy classify_error (or an override) is about to apply was
+already tried earlier in this same trace and every one of those earlier
+uses failed to resolve what it targeted, further revisions would just be
+repeating an action already shown not to work -- so the loop stops early
+with resolution_status "escalated_for_human_review" instead of spending
+the rest of the revision budget on it. (A strategy that WAS resolved on
+an earlier use, then needed again later for a newly-appeared issue, is
+not penalized -- only strategies with zero successful uses in this trace
+trigger this.) Pattern-level escalation across many traces (e.g. one
+domain hitting unresolved_max_revisions repeatedly) is a separate,
+outer-loop concern -- see self_correction/escalation.py.
 
 Strategy override (Stage 7, closing the loop left open on purpose): when a
 StrategyOverridePolicy is supplied, classify_error's hardcoded strategy for
@@ -101,16 +108,17 @@ class SelfCorrectionEngine:
                     strategy = overridden_strategy
                     rationale = f"{rationale} | {override_reason}"
 
-            already_escalated = any(
-                r["strategy"] == "escalate_verification" for r in trace.revision_history
+            prior_uses_of_strategy = [r for r in trace.revision_history if r["strategy"] == strategy]
+            strategy_previously_ineffective = bool(prior_uses_of_strategy) and all(
+                r["resolved"] is False for r in prior_uses_of_strategy
             )
-            if strategy == "escalate_verification" and already_escalated:
-                # The one specific corrective action for this error_type
-                # (an independent literature-search check) was already
-                # tried on an earlier round and confidence is still low --
-                # repeating it again wouldn't add new signal. Stop and
-                # flag for a person instead of spending more of the
-                # revision budget guessing.
+            if strategy_previously_ineffective:
+                # This exact strategy was already tried on one or more
+                # earlier rounds in this trace and never once resolved
+                # what it targeted -- repeating it again wouldn't add new
+                # signal, just spend more of the revision budget on an
+                # action already shown not to work here. Stop and flag
+                # for a person instead of guessing again.
                 trace.resolution_status = "escalated_for_human_review"
                 break
 
